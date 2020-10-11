@@ -15,7 +15,7 @@ dim表示采样样本的维度；numM表示GMM模型的子高斯模型个数；m
 ###
 设置
 
-fig1.png
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Pattern%20recognition/image/fig1.png)
 
 dim = 1;numM = 4;meanRange = [0,20];CovRange = [0,1];Cov = 0.5;numdata = 250
 
@@ -23,7 +23,7 @@ alpha = classData.RandGenerateGMMalpha(numM)
 
 theta = classData.RandMeanGenerateGMMthetaWithIndividualVariable(numM, dim, meanRange, Cov)
 
-fig2.png
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Pattern%20recognition/image/fig2.png)
 
 dim = 2;numM = 4;meanRange = [0,20];CovRange = [0,1];Cov = 0.5;numdata = 250
 
@@ -31,7 +31,7 @@ alpha = classData.RandGenerateGMMalpha(numM)
 
 theta = classData.RandMeanGenerateGMMthetaWithIndividualVariable(numM, dim, meanRange, Cov)
 
-fig3.png
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Pattern%20recognition/image/fig3.png)
 
 dim = 2;numM = 4;meanRange = [0,20];CovRange = [0,1];Cov = 0.5;numdata = 250
 
@@ -39,7 +39,7 @@ alpha = classData.AverageGenerateGMMalpha(numM)
 
 theta = classData.RandMeanGenerateGMMthetaWithIndividualVariable(numM, dim, meanRange, Cov)
 
-fig4.png
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Pattern%20recognition/image/fig4.png)
 
 dim = 2;numM = 4;meanRange = [0,20];CovRange = [0,1];Cov = 0.5;numdata = 250
 
@@ -47,7 +47,7 @@ alpha = classData.AverageGenerateGMMalpha(numM)
 
 theta = classData.RandGenerateGMMtheta(numM, dim, meanRange, CovRange)
 
-fig5.png
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Pattern%20recognition/image/fig5.png)
 
 dim = 2;numM = 4;meanRange = [0,20];CovRange = [0,1];Cov = 0.5;numdata = 250
 
@@ -55,7 +55,7 @@ alpha = classData.AverageGenerateGMMalpha(numM)
 
 theta = classData.RandGenerateGMMthetaWithIndividualVariable(numM,dim,meanRange,CovRange)
 
-fig6.png
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Pattern%20recognition/image/fig6.png)
 
 dim = 3;numM = 4;meanRange = [0,20];CovRange = [0,1];Cov = 0.5;numdata = 250
 
@@ -63,7 +63,7 @@ alpha = classData.RandGenerateGMMalpha(numM)
 
 theta = classData.RandMeanGenerateGMMthetaWithIndividualVariable(numM, dim, meanRange, Cov)
 
-fig7.png
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Pattern%20recognition/image/fig7.png)
 
 dim = 2;numM = 20;meanRange = [0,20];CovRange = [0,1];Cov = 0.5;numdata = 250
 
@@ -71,7 +71,7 @@ alpha = classData.RandGenerateGMMalpha(numM)
 
 theta = classData.RandMeanGenerateGMMthetaWithIndividualVariable(numM, dim, meanRange, Cov)
 
-fig8.png
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Pattern%20recognition/image/fig8.png)
 
 dim = 5;numM = 20;meanRange = [0,20];CovRange = [0,1];Cov = 0.5;numdata = 250
 
