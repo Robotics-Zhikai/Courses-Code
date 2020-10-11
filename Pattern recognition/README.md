@@ -77,5 +77,7 @@ alpha = classData.RandGenerateGMMalpha(numM)
 
 theta = classData.RandMeanGenerateGMMthetaWithIndividualVariable(numM, dim, meanRange, Cov)
 
+在这个问题中，dim=5，超出了三维绘制的维度，因此只取前三个维度进行绘制
+
 ## 概率密度函数的参数估计（Parameter estimation algorithm）
 
