@@ -99,7 +99,7 @@ def ShowData(data):
             print("维度大于3了,图片不能完整的反应实貌，因此只取前三个维度")
     else:
         abnormalDisp.error("不支持0维的情况")
-    plt.show()
+
     return
 
 def RandGenerateGMMalpha(numM):
