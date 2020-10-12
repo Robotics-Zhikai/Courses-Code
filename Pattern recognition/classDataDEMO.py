@@ -1,7 +1,7 @@
 import numpy as np
 import classData
 import matplotlib.pyplot as plt
-
+import ParEstAlgorithm
 import math
 
 dim = 5
@@ -19,6 +19,10 @@ theta = classData.RandMeanGenerateGMMthetaWithIndividualVariable(numM, dim, mean
 # theta = classData.RandGenerateGMMtheta(numM, dim, meanRange, CovRange)
 # theta = classData.RandGenerateGMMthetaWithIndividualVariable(numM,dim,meanRange,CovRange)
 OriginData = classData.GenrateGMMdata(alpha, theta, numdata, dim)
+
+PureData = classData.ExtractPureData(OriginData)
+ParEstAlgorithm.K_means(PureData,numM)
+
 
 # print(OriginData[0][0][1])
 print(alpha)

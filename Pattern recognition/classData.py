@@ -192,6 +192,13 @@ def GenrateGMMdata(alpha,theta,numdata,dim):
         data.append(datatmp1)
     return data
 
+def ExtractPureData(DataContainDy):
+    #从带有标签类别的数据中提取出纯数据，即把标签去掉
+    PureData = []
+    for i in range(len(DataContainDy)):
+        PureData.append(DataContainDy[i][0])
+    return PureData
+
 # GenrateGMMdata([0.1,0.3,0.4,0.2],[[[1],[3]],[[1],[3]],[[1],[3]],[[1],[3]]],10,1)
 # data1 = GenerateGauseData([0],[1],280,1)
 # data1 = GenerateGauseData([0,2],[[1,0],[0,1]],280,2)
