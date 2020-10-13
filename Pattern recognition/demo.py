@@ -3,14 +3,15 @@ import classData
 import matplotlib.pyplot as plt
 import ParEstAlgorithm
 import math
+import coverage
 
 dim = 2
-numM = 5
-meanRange = [0,60]
+numM = 10
+meanRange = [0,25]
 CovRange = [0,1]
 Cov = 0.5
 numdata = 450
-
+np.random.seed(1) #使得每次都随机都一样
 # alpha = classData.RandGenerateGMMalpha(numM) #随机决定alpha的值，alpha的各元素之和应为1
 alpha = classData.AverageGenerateGMMalpha(numM) #平均决定alpha的值
 
@@ -24,7 +25,7 @@ PureData = classData.ExtractPureData(OriginData)
 
 classData.ShowData(OriginData)
 
-classData.ShowData(ParEstAlgorithm.K_means(PureData,numM,OriginData))
+classData.ShowData(ParEstAlgorithm.K_means(PureData,numM))
 
 plt.show()
 

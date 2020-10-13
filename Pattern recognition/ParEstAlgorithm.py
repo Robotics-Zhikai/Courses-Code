@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import pandas as pd
 
 def norm(vector):
     if isinstance(vector,float)==1:
@@ -10,8 +11,8 @@ def norm(vector):
     sum = math.sqrt(sum)
     return sum
 
-def K_means(PureData,K,OriginData):
-    #OriginData是原始的带有标签的数据
+def K_means(PureData,K): #OriginData):
+    #OriginData是原始的带有标签的数据 可选
     #K表示分成K类
     #PureData是不带标签的纯数据
     # 输出是经过Kmeans估计的带有类别标签的数据
@@ -51,6 +52,7 @@ def K_means(PureData,K,OriginData):
 
     ####################################################################################################
     #在数据集中随机选取K个初始聚类中心点
+    np.random.seed(0) #使得每次都随机的聚类中心点都一样
     CentersOfmeans = []
     randommatrix = np.random.randint(0,len(PureData),K)
     for i in range(K):
@@ -68,6 +70,10 @@ def K_means(PureData,K,OriginData):
     #         if OriginData[i][1]==j:
     #             CentersOfmeans[j] = OriginData[i][0]
     ####################################################################################################
+
+
+    # CentersOfmeanscsv = pd.DataFrame({'InitCenter':CentersOfmeans})
+    # CentersOfmeanscsv.to_csv("test.csv",index=False,sep=',')
 
 
     LastDyList = []
@@ -107,6 +113,7 @@ def K_means(PureData,K,OriginData):
                 CentersOfmeans[i] = CentersOfmeans[i]/CountVisit[i]
         for i in range(len(DyList)):
             LastDyList[i] = DyList[i]
+
 
 
     return dataContainDy
