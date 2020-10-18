@@ -1,4 +1,4 @@
-function xout = NewtonDownhillSolve(Func_str,initvalue,lamda,error)
+function xout = NewtonDownhillSolveLamda(Func_str,initvalue,lamda,error)
     syms x
     initFunc_str = str2sym(Func_str);
     Func_str = str2sym(Func_str);
