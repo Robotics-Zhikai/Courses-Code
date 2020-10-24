@@ -34,7 +34,25 @@ BroydonRank_1_Solve([{'x0*x1-x2^2-1'},{'x0*x1*x2+x1^2-x0^2-2'},{'exp(x0)+x2-exp(
 
 NewtonDownhillSolveLamda('(x-1)^2*(2*x-1)',0.55,1.2,10e-5) %通过修改下山因子可以改变收敛性
 NewtonDownhillSolveLamda('(x-1)^2*(2*x-1)',0.7,2,10e-5) %通过修改下山因子可以改变收敛性
-NewtonDownhillSolveLamda('(x-1)^2*(2*x-1)',0.55,2,10e-5)
+% NewtonDownhillSolveLamda('(x-1)^2*(2*x-1)',0.55,2,10e-5)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%第二部分实验 高斯列主元消去法
+A1 = [1e-8 2 3;-1 3.712 4.623;-2 1.072 5.643];
+b1 = [1;2;3];
+A2 = [4,-2,4;-2,17,10;-4,10,9];
+b2 = [10;3;7];
+x1 = GaussianElimination(A1,b1)
+x2 = GaussianElimination(A2,b2)
+
+x1Column = GaussianColumnElimination(A1,b1)
+x2Column = GaussianColumnElimination(A2,b2)
+
+
+
+
 
 
 
@@ -49,4 +67,3 @@ NewtonDownhillSolveLamda('(x-1)^2*(2*x-1)',0.55,2,10e-5)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%
