@@ -49,11 +49,37 @@ x2 = GaussianElimination(A2,b2)
 
 x1Column = GaussianColumnElimination(A1,b1)
 x2Column = GaussianColumnElimination(A2,b2)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%第三部分实验 龙格现象的产生和克服
+fucStr = '1/(1+25*x^2)';
+qujian = [-1,1];
+PointsUniform = UniformSamplefunction(fucStr,qujian,7);
+PointsRandom = RandomSamplefunction(fucStr,qujian,20);
 
+Points = PointsRandom;
 
+figure
+plot(Points(1,:),Points(2,:),'.');
+hold on 
+[Outn_x,ValueList] = LagrangeInterpolation(Points,13);
+plot(qujian(1):0.01:qujian(2),subs(Outn_x,qujian(1):0.01:qujian(2)),'.');
+hold on 
+plot(ValueList(1,:),ValueList(2,:),'o');
+axis([-1,1,-4,4])
 
+figure
+LinearInterpolationresult = PieceLinearInterpolation(Points);
+stepplot = 0.001;
+for i = 1:size(LinearInterpolationresult,2)
+    X = LinearInterpolationresult{1,i}(1):stepplot:LinearInterpolationresult{1,i}(2);
+    plot(X,subs(LinearInterpolationresult{2,i},X),'.');
+    hold on 
+end
 
+ThreeMomentInterpolation(Points,'first',[0.0740 -0.0740])
 
 
 
@@ -67,3 +93,5 @@ x2Column = GaussianColumnElimination(A2,b2)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
