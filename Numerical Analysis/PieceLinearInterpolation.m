@@ -1,5 +1,6 @@
 function result = PieceLinearInterpolation(ValueList) 
 %分段线性插值
+%result的第一行为分段的小区间 第二行为对应区间的表达式
     if size(ValueList,2)<=1
         error('无法插值');
     end

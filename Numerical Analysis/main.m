@@ -56,42 +56,132 @@ x2Column = GaussianColumnElimination(A2,b2)
 %第三部分实验 龙格现象的产生和克服
 fucStr = '1/(1+25*x^2)';
 qujian = [-1,1];
-PointsUniform = UniformSamplefunction(fucStr,qujian,7);
-PointsRandom = RandomSamplefunction(fucStr,qujian,20);
+
+N = 15;
+PointsUniform = UniformSamplefunction(fucStr,qujian,N);
+PointsRandom = RandomSamplefunction(fucStr,qujian,N);
 
 Points = PointsRandom;
-
 figure
-plot(Points(1,:),Points(2,:),'.');
-hold on 
-[Outn_x,ValueList] = LagrangeInterpolation(Points,13);
+% plot(Points(1,:),Points(2,:),'-');
+% hold on 
+PlotFuc(fucStr,qujian,'b-');
+hold on
+[Outn_x,ValueList] = LagrangeInterpolation(Points,N-1);
 plot(qujian(1):0.01:qujian(2),subs(Outn_x,qujian(1):0.01:qujian(2)),'.');
 hold on 
 plot(ValueList(1,:),ValueList(2,:),'o');
 axis([-1,1,-4,4])
+title('随机采样数据;拉格朗日插值;.为拉格朗日插值函数;。为用到的插值点')
 
 figure
 LinearInterpolationresult = PieceLinearInterpolation(Points);
 stepplot = 0.001;
-for i = 1:size(LinearInterpolationresult,2)
-    X = LinearInterpolationresult{1,i}(1):stepplot:LinearInterpolationresult{1,i}(2);
-    plot(X,subs(LinearInterpolationresult{2,i},X),'.');
-    hold on 
-end
+PlotMultiSubFuc(LinearInterpolationresult,stepplot,'r-')
+hold on
+PlotFuc(fucStr,qujian,'b-');
+hold on 
+plot(Points(1,:),Points(2,:),'o');
+hold on 
+title('随机采样数据;分段线性插值')
 
-ThreeMomentInterpolation(Points,'first',[0.0740 -0.0740])
+figure
+subplot(131)
+result1 = ThreeMomentInterpolation(Points,'first',[0.0740 -0.0740]);
+PlotMultiSubFuc(result1,stepplot,'r-')
+hold on
+PlotFuc(fucStr,qujian,'b-');
+plot(Points(1,:),Points(2,:),'o');
+hold on 
+title('随机采样数据;第一边界条件的三弯矩插值')
+
+subplot(132)
+result2 = ThreeMomentInterpolation(Points,'second',[1 1]);
+PlotMultiSubFuc(result2,stepplot,'r-')
+hold on
+PlotFuc(fucStr,qujian,'b-');
+plot(Points(1,:),Points(2,:),'o');
+hold on 
+title('随机采样数据;第二边界条件的三弯矩插值')
+
+subplot(133)
+result3 = ThreeMomentInterpolation(Points,'third');
+PlotMultiSubFuc(result3,stepplot,'r-')
+hold on
+PlotFuc(fucStr,qujian,'b-');
+plot(Points(1,:),Points(2,:),'o');
+hold on 
+title('随机采样数据;周期边界条件的三弯矩插值')
 
 
 
+Points = PointsUniform;
+figure
+% plot(Points(1,:),Points(2,:),'-');
+% hold on 
+PlotFuc(fucStr,qujian,'b-');
+hold on
+[Outn_x,ValueList] = LagrangeInterpolation(Points,N-1);
+plot(qujian(1):0.01:qujian(2),subs(Outn_x,qujian(1):0.01:qujian(2)),'.');
+hold on 
+plot(ValueList(1,:),ValueList(2,:),'o');
+axis([-1,1,-4,4])
+title('均匀采样数据;拉格朗日插值;.为拉格朗日插值函数;。为用到的插值点')
 
+figure
+LinearInterpolationresult = PieceLinearInterpolation(Points);
+stepplot = 0.001;
+PlotMultiSubFuc(LinearInterpolationresult,stepplot,'r-')
+hold on
+PlotFuc(fucStr,qujian,'b-');
+plot(Points(1,:),Points(2,:),'o');
+hold on 
+title('均匀采样数据;分段线性插值')
 
+figure
+subplot(131)
+result1 = ThreeMomentInterpolation(Points,'first',[0.0740 -0.0740]);
+PlotMultiSubFuc(result1,stepplot,'r-')
+hold on
+PlotFuc(fucStr,qujian,'b-');
+plot(Points(1,:),Points(2,:),'o');
+hold on 
+title('均匀采样数据;第一边界条件的三弯矩插值')
 
+subplot(132)
+result2 = ThreeMomentInterpolation(Points,'second',[1 1]);
+PlotMultiSubFuc(result2,stepplot,'r-')
+hold on
+PlotFuc(fucStr,qujian,'b-');
+plot(Points(1,:),Points(2,:),'o');
+hold on 
+title('均匀采样数据;第二边界条件的三弯矩插值')
 
-
-
-
-
+subplot(133)
+result3 = ThreeMomentInterpolation(Points,'third');
+PlotMultiSubFuc(result3,stepplot,'r-')
+hold on
+PlotFuc(fucStr,qujian,'b-');
+plot(Points(1,:),Points(2,:),'o');
+hold on 
+title('均匀采样数据;周期边界条件的三弯矩插值')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function PlotMultiSubFuc(result,stepplot,linetype)
+%     stepplot = 0.001;
+    for i = 1:size(result,2)
+        X = result{1,i}(1):stepplot:result{1,i}(2);
+        plot(X,subs(result{2,i},X),linetype);
+        hold on 
+    end
+end
+
+function PlotFuc(fucStr,qujian,linetype) %输入为[x;f(x)]序列
+    fucStr = str2sym(fucStr);
+    Step = (qujian(2)-qujian(1))/1000;
+    X = qujian(1):Step:qujian(2);
+    plot(X,subs(fucStr,X),linetype);
+end
+
 
 
