@@ -14,20 +14,6 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 ## 龙格现象的产生和克服
 涉及到拉格朗日插值、分段线性插值、为了克服龙格现象的三次样条插值（第一边界条件、第二边界条件、周期边界条件）。在三次样条插值的求解过程中，涉及到第二部分线性方程组的求解，进行了bug修复。编写了基于递归的任意阶差商的计算函数。以下是实验结果：
 
-采样点N = 50
-
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/1.png)
-
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/4.png)
-
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/2.png)
-
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/5.png)
-
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/3.png)
-
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/6.png)
-
 采样点N = 15
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/7.png)
@@ -42,4 +28,18 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/12.png)
 
-可以发现，在三次样条插值中均匀的采样数据点效果好于随机的采样数据点；对于均匀的采样数据来说，增加采样点的个数三次样条插值的效果没有明显改善，但是对随机采样数据来说，增加采样点的个数三次样条插值的效果有明显改善；对于拉格朗日插值来说，均匀采样的数据点效果好于随机采样的数据点，均有龙格现象。
+采样点N = 50
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/1.png)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/4.png)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/2.png)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/5.png)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/3.png)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/6.png)
+
+可以发现，在三次样条插值中均匀的采样数据点效果好于随机的采样数据点；对于均匀的采样数据来说，增加采样点的个数三次样条插值的效果没有明显改善，但是对随机采样数据来说，增加采样点的个数三次样条插值的效果有明显改善；对于拉格朗日插值来说，均匀采样的数据点效果好于随机采样的数据点，均有龙格现象；对于均匀采样的数据来说，随着采样点数的增加，龙格现象愈发明显。
