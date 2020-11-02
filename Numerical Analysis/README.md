@@ -17,42 +17,29 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 采样点N = 50
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/1.png)
-<img src="https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/1.png" width="400" height="400"/><br/>
-
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/2.png)
-<img src="https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/2.png" width="400" height="400"/><br/>
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/3.png)
-<img src="https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/3.png" width="400" height="400"/><br/>
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/4.png)
-<img src="https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/4.png" width="400" height="400"/><br/>
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/5.png)
-<img src="https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/5.png" width="400" height="400"/><br/>
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/6.png)
-<img src="https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/6.png" width="400" height="400"/><br/>
 
 采样点N = 15
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/7.png)
-<img src="https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/7.png" width="400" height="400"/><br/>
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/8.png)
-<img src="https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/8.png" width="400" height="400"/><br/>
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/9.png)
-<img src="https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/9.png" width="400" height="400"/><br/>
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/10.png)
-<img src="https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/10.png" width="400" height="400"/><br/>
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/11.png)
-<img src="https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/11.png" width="400" height="400"/><br/>
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/12.png)
-<img src="https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/12.png" width="400" height="400"/><br/>
 
 可以发现，
