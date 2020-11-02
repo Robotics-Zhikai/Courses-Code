@@ -14,6 +14,8 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 ## 龙格现象的产生和克服
 涉及到拉格朗日插值、分段线性插值、为了克服龙格现象的三次样条插值（第一边界条件、第二边界条件、周期边界条件）。在三次样条插值的求解过程中，涉及到第二部分线性方程组的求解，进行了bug修复。编写了基于递归的任意阶差商的计算函数。以下是实验结果：
 
+结果中，蓝色曲线为原函数，1/(1+25*x^2),红色曲线为对应的插值函数
+
 采样点N = 15
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/7.png)
