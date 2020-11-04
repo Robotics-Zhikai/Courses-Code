@@ -48,6 +48,7 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 
 ## 曲线拟合的最小二乘法
 实现的是工大版数值分析原理P166页的递推式
+
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/13.png)
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/14.png)
