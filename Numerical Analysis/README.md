@@ -45,3 +45,13 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/6.png)
 
 可以发现，在三次样条插值中均匀的采样数据点效果好于随机的采样数据点；对于均匀的采样数据来说，增加采样点的个数三次样条插值的效果没有明显改善，但是对随机采样数据来说，增加采样点的个数三次样条插值的效果有明显改善；对于拉格朗日插值来说，均匀采样的数据点效果好于随机采样的数据点，均有龙格现象；对于均匀采样的数据来说，随着采样点数的增加，龙格现象愈发明显。
+
+## 曲线拟合的最小二乘法
+实现的是工大版数值分析原理P166页的递推式
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/13.png)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/14.png)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/15.png)
+
+这是对一些点的拟合，发现效果不是特别好，只在数据量少的时候有用。当数据非线性明显且分布范围广泛时效果非常差。

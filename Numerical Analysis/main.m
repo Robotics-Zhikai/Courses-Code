@@ -167,6 +167,55 @@ hold on
 title('均匀采样数据;周期边界条件的三弯矩插值')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%第四部分 曲线拟合的最小二乘法
+x = [3 4 5 6 7 8 9];
+fx = [2.01 2.98 3.50 5.02 5.47 6.02 7.05];
+Data = [x;fx];
+[fitFuc,Error] = CurveFitLeastSquareApproximation(Data);
+figure
+plot(x,fx,'.');
+hold on 
+X = min(Data(1,:)):0.1:max(Data(1,:));
+plot(X,subs(fitFuc,X),'-');
+
+
+Data = [];
+Data(1,:) = 0:0.1:1; %似乎只有小范围内的 数据量小的 用实现的最小二乘结果才像那么回事
+Data(2,:) = 3*Data(1,:).^3+4*Data(1,:).^4;
+[fitFuc,Error] = CurveFitLeastSquareApproximation(Data);
+figure
+plot(Data(1,:),Data(2,:),'.');
+hold on 
+X = min(Data(1,:)):0.1:max(Data(1,:));
+plot(X,subs(fitFuc,X),'-');
+
+%效果差
+% Data = [];
+% Data(1,:) = 0:0.1:2;
+% Data(2,:) = exp(Data(1,:));
+% [fitFuc,Error] = CurveFitLeastSquareApproximation(Data)
+% figure
+% plot(Data(1,:),Data(2,:),'.');
+% hold on 
+% X = min(Data(1,:)):0.1:max(Data(1,:));
+% plot(X,subs(fitFuc,X),'-');
+
+
+Data = [0 0.25 0.5 0.75 1;0.1 0.35 0.81 1.09 1.96];
+[fitFuc,Error] = CurveFitLeastSquareApproximation(Data);
+figure
+plot(Data(1,:),Data(2,:),'.');
+hold on 
+X = min(Data(1,:)):0.1:max(Data(1,:));
+plot(X,subs(fitFuc,X),'-');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
 function PlotMultiSubFuc(result,stepplot,linetype)
 %     stepplot = 0.001;
     for i = 1:size(result,2)
