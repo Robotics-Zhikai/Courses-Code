@@ -1,6 +1,7 @@
 #include <iostream>
 #include "main.h"
 #include "another.h"
+#include "CLASS.h"
 using namespace std;
 
 namespace Exercise
@@ -20,9 +21,24 @@ namespace Exercise1
 
 int ivar = 10;
 
+int inlinetest()
+{
+	return 2;
+}
 
 void main()
 {
+	cout << testinline() << endl;
+	cout << inlinetest() << endl;
+	
+	int a = 5;
+	int * Locate_a = &a;
+	int ** locloc_a = &Locate_a;
+	int *** loclocloc_a = &locloc_a;
+	cout << Locate_a << endl;
+	cout << locloc_a << endl;
+	cout << loclocloc_a << endl;
+	
 	//using namespace Exercise;
 	using Exercise::ivar;
 	//using Exercise::dvar;
