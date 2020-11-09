@@ -11,10 +11,11 @@ for i = 1:VarNum
 end
 
 
-
+% Seq = IteratedFunc(Func_str,InitValue,InterationNum,ERROR)
 Seq = IteratedFunc('(exp(-x))/2',0.5,15);
 Seq = IteratedFunc('(cos(x)+sin(x))/4',10,15);
 Seq = IteratedFunc('x-(4-2^x-x)/(-log(2)*2^x-1)',10,152);
+Seq = IteratedFunc('x1-(x1*exp(x1)-1)/(x1*exp(x1)-x0*exp(x0))*(x1-x0)',[0.5,0.6],10)
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -31,6 +32,7 @@ NewtonSolve('(x-1)^2*(2*x-1)',0.85,10e-8) %说明不同的初值会收敛到不同的解
 SecantNewtonSolve('(x-1)^2*(2*x-1)',0.4,0.6,0.001) %割线法求方程的解
 
 BroydonRank_1_Solve([{'x0*x1-x2^2-1'},{'x0*x1*x2+x1^2-x0^2-2'},{'exp(x0)+x2-exp(x1)-3'}],[1,1,1],10e-5)
+BroydonRank_1_Solve([{'4*x0^2+x1^2+2*x0*x1-x1-2'},{'2*x0^2+3*x0*x1+x1^2-3'}],[1,2],0.5*10e-5)
 
 NewtonDownhillSolveLamda('(x-1)^2*(2*x-1)',0.55,1.2,10e-5) %通过修改下山因子可以改变收敛性
 NewtonDownhillSolveLamda('(x-1)^2*(2*x-1)',0.7,2,10e-5) %通过修改下山因子可以改变收敛性
