@@ -4,6 +4,40 @@
 #include "CLASS.h"
 using namespace std;
 
+class Y;
+class X
+{
+public:
+	Y & Yreference(Y tmpY);
+	X * dataX;
+	int d;
+	X & s;
+};
+
+class Y
+{
+	Y(X xdata)
+	{
+		Ydata = xdata.d;
+	}
+	int Ydata;
+};
+
+class screen
+{
+public:
+	screen() = default;
+	screen(int data1) :data(data1){}
+	screen & display()
+	{
+		return *this;
+	}
+	//const screen & display() const { return *this; }
+	screen display() const { return *this; }
+	void changedata(int s) { data=s ; }
+	int data;
+};
+
 namespace Exercise
 {
 	int ivar = 0;
@@ -28,6 +62,14 @@ int inlinetest()
 
 void main()
 {
+	const screen constscreen(5);
+	screen tmpscreen(2);
+	screen tmpscreen1(3);
+	tmpscreen1 = tmpscreen; //似乎编译器自己重载了一个赋值operator
+	constscreen.display() = tmpscreen; //这个非引用 为什么还能做左值 因为编译器把该表达式翻译为了operator = 
+	//在effective C++中有表述
+	constscreen.display().changedata(100); // 不会对constscreen做任何操作
+
 	cout << testinline() << endl;
 	cout << inlinetest() << endl;
 	
