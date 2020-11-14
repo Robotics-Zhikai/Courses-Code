@@ -70,6 +70,42 @@ int & CastConstZK(const int &tmp)
 	return const_cast<int &>(tmp); //把const属性抛掉了，不推荐，因为入口的参数应该是不可改变的
 }
 
+typedef string Type;
+Type initVal();
+class Excercise 
+{
+public :
+	//typedef double Type; //如果加在这里的话就可以隐藏了外层的typedef
+	Type SetVal(Type parm);
+	Type initVal() { ::Type s; return s; };
+private:
+	int val;
+	typedef double Type;
+	Type nima; //重定义名字 是不允许的 但是编译器不会报错 
+};
+
+//Excercise::Type initVal() //加在这里的话由于Type是private 不可访问 但是如果再加一个Excercise限定符 就可以访问了
+//{
+//
+//}
+
+Type Excercise::SetVal(::Type parm) //Type是string类型的
+{
+	::Type str; //必须得加全局域，否则与类中的函数是不兼容的。
+	initVal();
+	return str;
+}
+
+typedef int Notclass;
+void func()
+{
+	//在普通函数里 这样是合法的 但是在类中 类似这样的用法会由于类先处理声明再处理定义的特殊设定而导致非法。
+	Notclass s1 = 2;
+	typedef double Notclass;
+	Notclass s = 1;
+}
+
+
 void main()
 {
 	try
