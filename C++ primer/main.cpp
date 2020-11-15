@@ -23,20 +23,32 @@ class Y
 	int Ydata;
 };
 
+
+
 class screen
 {
 public:
-	screen() = default;
-	screen(int data1) :data(data1){}
+	screen() = default; //加上这个即便有其他构造函数也可以进行编译器自己合成的默认构造函数
+	screen(int data1 = 5) :data(data1){} //在有screen()=default存在的情况下 直接声明时会不知道到底该调用哪个函数
+	//同时有这两个构造函数的写法是非常错误的，因为默认构造函数不知道到底该调哪个 但是编译通过是没有问题的
+
+	screen(int s,int s1) :data(1), DATA2(3), DATA1(DATA2) {} //这样初始化是错误的，由于成员初始化是有顺序的
+	//这样初始化的话，会出现变量内存储的是垃圾值
 	screen & display()
 	{
 		return *this;
 	}
+	screen(std::istream & is) { int x; is >> x; }
 	//const screen & display() const { return *this; }
 	screen display() const { return *this; }
 	void changedata(int s) { data=s ; }
-	int data;
+	int data = 6;
+private:
+	int DATA1 = 7;
+	int DATA2 = 8;
 };
+
+
 
 namespace Exercise
 {
@@ -69,6 +81,8 @@ int & CastConstZK(const int &tmp)
 {
 	return const_cast<int &>(tmp); //把const属性抛掉了，不推荐，因为入口的参数应该是不可改变的
 }
+
+
 
 typedef string Type;
 Type initVal();
@@ -106,10 +120,41 @@ void func()
 }
 
 
+class Nodefault
+{
+public:
+	Nodefault(const std::string &);
+	Nodefault(int) { cout << "执行实际干活的函数了" << endl; };
+	Nodefault() :Nodefault(1) { cout << "执行到委托构造函数了" << endl; } //委托构造函数
+};
+class C
+{
+public:
+	C() : data() {}
+//public:
+private:
+	Nodefault data;
+};
+
+
 void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		C ctmp;
+		cout << endl;
+		vector<C> tmpvectornodefault(10,ctmp);
+		Nodefault nodefaulttmp;
+		vector<Nodefault> tmpvectornodefault1(10, nodefaulttmp);
+		cout << endl;
+		vector<Nodefault> tmpvectornodefault2(10); //这样的话是构造十次
+		cout << endl;
+		vector<Nodefault> tmpvectornodefault3(10, Nodefault(1)); //这样的只构造一次，然后复制十次
+		////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 		////这下边这个本来应该是未定义的行为的，但是可能VS2015编译器有一些优化，就可以对声明为const的值进行修改
 		////但我认为，未定义的行为可能是本来声明为const，但是有这些行为使得const的值变化了，造成难以预计的程序运行后果
 		////意味着程序具有设计缺陷，编译可能在所有平台都是可以通过的，只不过与标准相悖
@@ -138,6 +183,12 @@ void main()
 		vector<int> vectorint(1,1);
 		vectorint.push_back(10);
 		const screen constscreen(5);
+		screen tmpscreen2(3,4);
+		//screen tmpscreen3; //此时会报错包含多个默认构造函数
+
+		/*screen tmpscreen4(); //此时会报错必须定义类类型，因为他把tmpscreen4()看成了函数声明
+		cout << tmpscreen4.data << endl;*/
+
 		screen tmpscreen(2);
 		screen tmpscreen1(3);
 		tmpscreen1 = tmpscreen; //似乎编译器自己重载了一个赋值operator
