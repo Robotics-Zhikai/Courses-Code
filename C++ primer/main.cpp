@@ -123,9 +123,13 @@ void func()
 class Nodefault
 {
 public:
+	~Nodefault() { cout << "析构" << endl; }
 	Nodefault(const std::string &);
-	Nodefault(int) { cout << "执行实际干活的函数了" << endl; };
+	Nodefault(int i):data(i){ cout << "执行实际干活的函数了" << endl; };
 	Nodefault() :Nodefault(1) { cout << "执行到委托构造函数了" << endl; } //委托构造函数
+	const Nodefault & returnRef(const Nodefault& constref) { return constref; }
+	Nodefault & returnrefnotconst(Nodefault & ref) { return ref; }
+	int data;
 };
 class C
 {
@@ -141,6 +145,37 @@ void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		int n1118 = 1;
+		int &n11181 = n1118;
+		int &n11182 = n11181;
+		n1118 = 3; //可以对引用多次命名
+
+		Nodefault moren;
+		const Nodefault &moren1 = moren.returnRef(moren);
+		const Nodefault &moren2 = moren.returnRef(2);
+		//把整数隐式转换为了临时的类，如果没有输入参数为整数的构造函数的话会报错没有适当的参数类型转换
+
+		//Nodefault & moren3 = moren.returnrefnotconst(3);
+		////上式是会报错的，报错必须是可修改的左值。
+		////由C++primer P55可知道，常引用可以绑定在临时量上，但是非常引用不可以绑定在临时量上。
+		////上式是先隐式构造了一临时量，然后期望将该临时量绑定在一非常量引用上，这是非法的
+
+		Nodefault moren5;
+		Nodefault & moren6 = moren.returnrefnotconst(moren5); //这样就可以了 将非常量引用绑定在了变量上
+
+		moren5.data++;
+		const Nodefault&ref2tmp = Nodefault(6); 
+		//在内存中有的，因为可以绑定常引用，没有调用析构函数 结合下一条语句可见临时量的释放与否是灵活的
+		Nodefault(6); //临时变量出了这条语句后就不可访问了, 释放了内存了,调用了析构函数
+
+		Nodefault(6).returnRef(moren1); //临时变量只能是只读的
+		Nodefault(6).returnrefnotconst(moren5).data++; //就是把moren5的data++了一下
+		//Nodefault(6).returnRef(moren1).data++; //由于const的限制，使得不能被修改
+		//Nodefault(6).data++; //报错表达式必须是可修改的左值，是因为是临时变量，不能被修改
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		C ctmp;
 		cout << endl;
