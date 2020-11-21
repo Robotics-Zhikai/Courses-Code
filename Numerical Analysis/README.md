@@ -11,8 +11,8 @@
 
 * 2. [期末复习总结](#期末复习总结)
   * 2.0 [数学基础](#数学基础) 
-  * 2.1 [非线性方程（组）的数值解法](#非线性方程（组）的数值解法) 
-  * 2.2 [线性方程（组）的数值解法](#线性方程（组）的数值解法)
+  * 2.1 [非线性方程(组)的数值解法](#非线性方程(组)的数值解法) 
+  * 2.2 [线性方程(组)的数值解法](#线性方程(组)的数值解法)
   * 2.3 [插值法与数值逼近](#插值法与数值逼近)
   * 2.4 [数值积分](#数值积分)
   * 2.5 [矩阵特征值与特征向量的计算](#矩阵特征值与特征向量的计算)
@@ -83,12 +83,12 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image2.jpeg)
 
-## 非线性方程（组）的数值解法
+## 非线性方程(组)的数值解法
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image3.jpeg)
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image4.jpeg)
 
-## 线性方程（组）的数值解法
+## 线性方程(组)的数值解法
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image5.jpeg)
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image6.jpeg)
