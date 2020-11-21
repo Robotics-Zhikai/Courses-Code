@@ -1,13 +1,11 @@
 # Numerical Analysis
-哈尔滨工业大学硕士研究生学位课——数值分析
-
+哈尔滨工业大学硕士研究生学位课——数值分析。包含实验代码和期末复习总结
 # 目录
-
 * 1. [实验](#实验)
-  *1.1 [非线性方程求解](#非线性方程求解)
-  *1.2 [线性方程组的求解](#线性方程组的求解)
-  *1.3 [龙格现象的产生和克服](#龙格现象的产生和克服)
-  *1.4 [曲线拟合的最小二乘法](#曲线拟合的最小二乘法)
+  * 1.1 [非线性方程求解](#非线性方程求解)
+  * 1.2 [线性方程组的求解](#线性方程组的求解)
+  * 1.3 [龙格现象的产生和克服](#龙格现象的产生和克服)
+  * 1.4 [曲线拟合的最小二乘法](#曲线拟合的最小二乘法)
 
 * 2. [期末复习总结](#期末复习总结)
   * 2.0 [数学基础](#数学基础) 
@@ -77,7 +75,7 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 这是对一些点的拟合，发现效果不是特别好，只在数据量少的时候有用。当数据非线性明显且分布范围广泛时效果非常差。
 
 # 期末复习总结
-
+第一次上传这些图片时由于手机拍照时姿势不对，图片有自动旋转，造成上传GitHub之后图片方向不对，重新按照相同的姿势拍照使得图片都朝一个方向再重新上传就解决了方向不对这个问题。
 ## 数学基础
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image1.jpeg)
 
@@ -94,6 +92,8 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image6.jpeg)
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image7.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image7.5.jpg)
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image8.jpeg)
 
