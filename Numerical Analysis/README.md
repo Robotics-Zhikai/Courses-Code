@@ -63,7 +63,7 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 
 <img src=https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image3.png style=transform:rotate(0deg)>
 
-<img src=https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image4.png style=transform:rotate(0deg)>
+<img src=https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image4.jpeg style=transform:rotate(0deg)>
 
 <img src=https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image5.png style=transform:rotate(0deg)>
 
