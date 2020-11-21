@@ -56,3 +56,5 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/15.png)
 
 这是对一些点的拟合，发现效果不是特别好，只在数据量少的时候有用。当数据非线性明显且分布范围广泛时效果非常差。
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image15.png)
