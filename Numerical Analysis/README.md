@@ -1,16 +1,17 @@
 # Numerical Analysis
+哈尔滨工业大学硕士研究生学位课——数值分析
+# 目录
 
-## 目录
-
-1. [数值分析实验](#数值分析实验)
-2. [Prerequisites](#prerequisites)
+1. [实验](#数值分析实验)
+2. [期末复习总结](#期末复习总结)
+* 2.1 [数学基础](#数学基础) 
 3. [Individual Versions](#individual-versions)
 4. [Architecture](#architecture)
 5. [Installation](#installation)
 6. [Quick Starts](#quick-starts)
 7. [Documents](#documents)
 
-# 数值分析实验
+# 实验
 ## 非线性方程求解
 涉及到二分法、牛顿法（单点迭代）、割线法（多点迭代），拟牛顿法（秩为1的Broydon方法），牛顿下山法
 
@@ -68,6 +69,9 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 
 这是对一些点的拟合，发现效果不是特别好，只在数据量少的时候有用。当数据非线性明显且分布范围广泛时效果非常差。
 
+# 期末复习总结
+
+## 数学基础
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image1.jpeg)
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image2.jpeg)
