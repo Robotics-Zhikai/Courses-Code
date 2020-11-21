@@ -57,13 +57,12 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 
 这是对一些点的拟合，发现效果不是特别好，只在数据量少的时候有用。当数据非线性明显且分布范围广泛时效果非常差。
 
-<img src=https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image1.png style=transform:rotate(0deg)>
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image1.jpeg)
 
-<img src=https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image2.png style=transform:rotate(0deg)>
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image2.jpeg)
 
-<img src=https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image3.png style=transform:rotate(0deg)>
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image3.jpeg)
 
-<img src=https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image4.jpeg style=transform:rotate(0deg)>
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image4.jpeg)
 
-<img src=https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image5.png style=transform:rotate(0deg)>
-
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image5.jpeg)
