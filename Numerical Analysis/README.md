@@ -67,36 +67,36 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image5.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image6.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image6.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image7.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image7.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image8.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image8.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image9.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image9.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image10.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image10.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image11.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image11.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image12.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image12.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image13.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image13.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image14.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image14.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image15.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image15.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image16.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image16.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image17.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image17.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image18.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image18.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image19.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image19.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image20.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image20.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image21.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image21.jpeg)
 
-![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image22.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image22.jpeg)
