@@ -9,7 +9,7 @@
   *1.3 [龙格现象的产生和克服](#1.3龙格现象的产生和克服)
   *1.4 [曲线拟合的最小二乘法](#1.4曲线拟合的最小二乘法)
 * 2. [期末复习总结](#2.期末复习总结)
-  * 2.0 [数学基础](#2.0数学基础) 
+  * 2.0 [数学基础](#数学基础) 
   * 2.1 [非线性方程（组）的数值解法](#2.1非线性方程（组）的数值解法) 
   * 2.2 [线性方程（组）的数值解法](#2.2线性方程（组）的数值解法)
   * 2.3 [插值法与数值逼近](#2.3插值法与数值逼近)
@@ -77,7 +77,7 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 
 # 2.期末复习总结
 
-## 2.0数学基础
+## 数学基础
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image1.jpeg)
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/image2.jpeg)
