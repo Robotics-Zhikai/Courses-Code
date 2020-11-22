@@ -2,6 +2,8 @@
 #include "main.h"
 #include "another.h"
 #include "CLASS.h"
+#include "CP5_ex7_41.h"
+#include "CP5_ex7_53.h"
 using namespace std;
 
 class Y;
@@ -145,6 +147,58 @@ void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//练习7.53
+		Debug Debug0;
+		Debug Debug1(true,false,true);
+		Debug Debug2(2, 3, 1);
+
+		double debuga=3, debugb=2, debugc=1;
+		Debug Debug3(debuga, debugb, debugc);
+		//要想发挥constexpr的属性，必须在声明变量时前边加上constexpr。
+		//否则如果不加的话，还是可以通过变量赋值的，constexpr形同虚设
+		cout << Debug3.get_bw();
+		Debug3.set_bw(0);  //这样是可以修改的
+		cout << Debug3.get_bw();
+
+		//constexpr Debug Debug4_1(debuga, debugb, debugc); //会报错表达式中必须含有常量
+		constexpr Debug Debug4(3, 2, 1); //这样由常量赋值后，就正确了。
+		Debug4.get_bw();
+		//Debug4.set_bw(0); //这个是报错的，因为Debug4声明保证了其内部的值在编译时就已经确定，程序运行时是不能搞的
+		
+		Debug Debug5(true);
+		bool boolva = 1;
+		Debug Debug6(boolva);
+		const Debug Debug7(true);//不是在编译期就确定值的常量 跟constexpr没什么关系
+		//constexpr Debug Debug8(true);//报错：表达式必须含有常量值
+		//在构造函数中，并没有对Debug(bool b ) :bw(b), io(b), other(b)这个构造函数声明constexpr
+		//而如果在构造函数中声明了constexpr，则上边这一行不报错。意味着可以构造constexpr类型
+
+		//综上，constexpr是一个比较广泛的选项，可以进一步提升代码安全性也可以退一步不声明constexpr当成普通的来处理
+		////////////////////////////////////////////////////////////////////////////////////////////
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//练习7.49
+		Sales_data Sales_data0("333");
+		Sales_data & Sales_data1 = Sales_data0.returnRef(Sales_data("333"));
+		//期望返回一个临时变量的引用，虽然不会报错，但是Sales_data1的值是默认构造构造出来的，没有"333"
+		//上边这个似乎会拷贝构造一个 目前还不清楚为什么返回一个局部引用还work
+		Sales_data & Sales_data2 = Sales_data0.returnRef(Sales_data0);
+		//期望返回Sales_data0的引用，因为其不是一个临时变量，因此真实值确实是"333"
+
+		Sales_data Sales_data3;
+		Sales_data & Sales_data4 = Sales_data0.combine(Sales_data3);
+
+		Sales_data Sales_data5("345");
+		Sales_data Sales_data6 = Sales_data0.returnValue(Sales_data5);
+
+		double sad = 4;
+		//如果加上explicit，那么将不能按照下边的操作进行隐式转化
+		Sales_data0.combine(3.3);//自动隐式转化成了一个const Sales_data
+		Sales_data0.combine(sad);//临时变量一定是const型的 因为即便是double型变量进行隐式转换，调用的构造函数都是const类型
+		////////////////////////////////////////////////////////////////////////////////////////////
+
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		int n1118 = 1;
 		int &n11181 = n1118;

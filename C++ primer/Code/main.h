@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <allocators>
+#include <string>
 //namespace Exercise
 //{
 //	int ivar = 0;
