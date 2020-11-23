@@ -214,10 +214,64 @@ X = min(Data(1,:)):0.1:max(Data(1,:));
 plot(X,subs(fitFuc,X),'-');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%第五部分 龙贝格积分法
+fucstr = 'x^3';
+qujian = [6,100];
+n = 10;
+Trapezoid_Integer = double(Multi_Trapezoid_Integer(fucstr,n,qujian))
+Simpson_Integer = double(Multi_Simpson_Integer(fucstr,n,qujian)) 
+Cotes_Integer = double(Multi_Cotes_Integer(fucstr,n,qujian))
+[Romberg_Integervalue,T] = Romberg_Integer(fucstr,qujian,1e-15)
 
+fucstr = '(sin(x))/x';
+qujian = [0,1];
+n = 10;
+Trapezoid_Integer = double(Multi_Trapezoid_Integer(fucstr,n,qujian))
+Simpson_Integer = double(Multi_Simpson_Integer(fucstr,n,qujian)) 
+Cotes_Integer = double(Multi_Cotes_Integer(fucstr,n,qujian))
+[Romberg_Integervalue,T] = Romberg_Integer(fucstr,qujian,1e-15)
 
+fucstr = 'x^2';
+qujian = [0,1];
+n = 10;
+Trapezoid_Integer = double(Multi_Trapezoid_Integer(fucstr,n,qujian))
+Simpson_Integer = double(Multi_Simpson_Integer(fucstr,n,qujian)) 
+Cotes_Integer = double(Multi_Cotes_Integer(fucstr,n,qujian))
+[Romberg_Integervalue,T] = Romberg_Integer(fucstr,qujian,1e-15)
 
+fucstr = '1/x';
+qujian = [-4,5];%这种目前暂时无法处理 中间有间断点处函数无界
+n = 10;
+Trapezoid_Integer = double(Multi_Trapezoid_Integer(fucstr,n,qujian))
+Simpson_Integer = double(Multi_Simpson_Integer(fucstr,n,qujian)) 
+Cotes_Integer = double(Multi_Cotes_Integer(fucstr,n,qujian))
+[Romberg_Integervalue,T] = Romberg_Integer(fucstr,qujian,1e-15)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%第六部分 常微分方程初值问题的数值解法
+%基本问题是dy/dx = f(x,y) y0给定
+N = 25;
+
+fucstr = 'x+y';
+init = [0,-1];
+qujian = [0,1];
+h = (max(qujian)-min(qujian))/N;
+stepnum = 100;
+seqRunge_kutta = Runge_kutta(fucstr,init,h,qujian,stepnum)
+seqPredictCorrection_PMECME_Mode = PredictCorrection_PMECME_Mode(fucstr,init,h,qujian,stepnum)
+
+fucstr = '2/x*y+x^2*exp(x)';
+init = [1,0];
+qujian = [1,3];
+h = (max(qujian)-min(qujian))/N;
+stepnum = 100;
+seqRunge_kutta = Runge_kutta(fucstr,init,h,qujian,stepnum)
+seqPredictCorrection_PMECME_Mode = PredictCorrection_PMECME_Mode(fucstr,init,h,qujian,stepnum)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function PlotMultiSubFuc(result,stepplot,linetype)
 %     stepplot = 0.001;
     for i = 1:size(result,2)
