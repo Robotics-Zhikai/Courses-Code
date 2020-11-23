@@ -45,7 +45,14 @@ public:
 	//Sales_data & combine(const Sales_data &s) { Sales_data s1; return s1; } //被调用的函数必须定义一个函数体，否则会出现无法解析的错误
 	Sales_data & comblne(Sales_data s) { Sales_data s1; return s1; /*返回局部变量的行为在任何时候都是极其错误的*/}
 
-
+	//Sales_data(Sales_data s);//报错拷贝构造函数不能带有Sales_data类型的参数。
+	/*explicit*/ Sales_data(const Sales_data &s,int s1=0) : bookNo(s.bookNo),units_sold(s.units_sold),revenue(s.revenue)
+	{ std::cout << "执行Sales_data拷贝构造函数" << std::endl; }
+	//如果加上explicit，所有将要隐式调用拷贝构造函数的地方都将报错 如return一个值类型，用=初始化一个变量，传值给形参
+	//如果有一个额外的形参，没有给默认值，那么就不当它为拷贝构造函数，编译器自己合成一个拷贝构造函数
+	//如果有默认值，那么就当它为拷贝构造函数
+	//如果额外的形参有默认值的大于等于2，那么将与其他构造函数冲突，不能通过编译
+	
 	///////////////////////////////////////////////
 
 
