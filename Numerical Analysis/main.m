@@ -168,6 +168,18 @@ plot(Points(1,:),Points(2,:),'o');
 hold on 
 title('均匀采样数据;周期边界条件的三弯矩插值')
 
+syms x;
+y = 1/(1+25*x^2);
+ytaylor = taylor(y,'order',151);
+range = [-0.2,0.2];
+k = 1;
+ynum = [];
+for i = range(1):0.01:range(2)
+    x = i;
+    ynum(1,k) = eval(ytaylor);
+    k = k+1;
+end
+ figure,plot(range(1):0.01:range(2),ynum,'-')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -241,37 +253,243 @@ Simpson_Integer = double(Multi_Simpson_Integer(fucstr,n,qujian))
 Cotes_Integer = double(Multi_Cotes_Integer(fucstr,n,qujian))
 [Romberg_Integervalue,T] = Romberg_Integer(fucstr,qujian,1e-15)
 
-fucstr = '1/x';
-qujian = [-4,5];%这种目前暂时无法处理 中间有间断点处函数无界
-n = 10;
-Trapezoid_Integer = double(Multi_Trapezoid_Integer(fucstr,n,qujian))
-Simpson_Integer = double(Multi_Simpson_Integer(fucstr,n,qujian)) 
-Cotes_Integer = double(Multi_Cotes_Integer(fucstr,n,qujian))
-[Romberg_Integervalue,T] = Romberg_Integer(fucstr,qujian,1e-15)
+% fucstr = '1/x';
+% qujian = [-4,5];%这种目前暂时无法处理 中间有间断点处函数无界
+% n = 10;
+% Trapezoid_Integer = double(Multi_Trapezoid_Integer(fucstr,n,qujian))
+% Simpson_Integer = double(Multi_Simpson_Integer(fucstr,n,qujian)) 
+% Cotes_Integer = double(Multi_Cotes_Integer(fucstr,n,qujian))
+% [Romberg_Integervalue,T] = Romberg_Integer(fucstr,qujian,1e-15)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %第六部分 常微分方程初值问题的数值解法
 %基本问题是dy/dx = f(x,y) y0给定
-N = 25;
-
 fucstr = 'x+y';
 init = [0,-1];
 qujian = [0,1];
-h = (max(qujian)-min(qujian))/N;
 stepnum = 100;
-seqRunge_kutta = Runge_kutta(fucstr,init,h,qujian,stepnum)
-seqPredictCorrection_PMECME_Mode = PredictCorrection_PMECME_Mode(fucstr,init,h,qujian,stepnum)
+[seqRunge_kutta5,seqPredictCorrection_PMECME_Mode5] = TestEx6(fucstr,init,qujian,5,stepnum);
+[seqRunge_kutta10,seqPredictCorrection_PMECME_Mode10] = TestEx6(fucstr,init,qujian,10,stepnum);
+[seqRunge_kutta20,seqPredictCorrection_PMECME_Mode20] = TestEx6(fucstr,init,qujian,20,stepnum);
+figure
+analyticStr = '-x-1';
+subplot(231)
+PlotError2Reality(analyticStr,seqRunge_kutta5) 
+title('Rungekutta5')
+subplot(234)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode5) 
+title('PMECMEMode5')
+subplot(232)
+PlotError2Reality(analyticStr,seqRunge_kutta10) 
+title('Rungekutta10')
+subplot(235)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode10) 
+title('PMECMEMode10')
+subplot(233)
+PlotError2Reality(analyticStr,seqRunge_kutta20)
+title('Rungekutta20')
+subplot(236)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode20) 
+title('PMECMEMode20')
+
+fucstr = '-y^2';
+init = [0,1];
+qujian = [0,1];
+stepnum = 100;
+[seqRunge_kutta5,seqPredictCorrection_PMECME_Mode5] = TestEx6(fucstr,init,qujian,5,stepnum);
+[seqRunge_kutta10,seqPredictCorrection_PMECME_Mode10] = TestEx6(fucstr,init,qujian,10,stepnum);
+[seqRunge_kutta20,seqPredictCorrection_PMECME_Mode20] = TestEx6(fucstr,init,qujian,20,stepnum);
+figure
+analyticStr = '1/(x+1)';
+subplot(231)
+PlotError2Reality(analyticStr,seqRunge_kutta5) 
+title('Rungekutta5')
+subplot(234)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode5) 
+title('PMECMEMode5')
+subplot(232)
+PlotError2Reality(analyticStr,seqRunge_kutta10) 
+title('Rungekutta10')
+subplot(235)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode10) 
+title('PMECMEMode10')
+subplot(233)
+PlotError2Reality(analyticStr,seqRunge_kutta20)
+title('Rungekutta20')
+subplot(236)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode20) 
+title('PMECMEMode20')
+
 
 fucstr = '2/x*y+x^2*exp(x)';
 init = [1,0];
 qujian = [1,3];
-h = (max(qujian)-min(qujian))/N;
 stepnum = 100;
-seqRunge_kutta = Runge_kutta(fucstr,init,h,qujian,stepnum)
-seqPredictCorrection_PMECME_Mode = PredictCorrection_PMECME_Mode(fucstr,init,h,qujian,stepnum)
+[seqRunge_kutta5,seqPredictCorrection_PMECME_Mode5] = TestEx6(fucstr,init,qujian,5,stepnum);
+[seqRunge_kutta10,seqPredictCorrection_PMECME_Mode10] = TestEx6(fucstr,init,qujian,10,stepnum);
+[seqRunge_kutta20,seqPredictCorrection_PMECME_Mode20] = TestEx6(fucstr,init,qujian,20,stepnum);
+figure
+analyticStr = 'x^2*(exp(x)-exp(1))';
+subplot(231)
+PlotError2Reality(analyticStr,seqRunge_kutta5) 
+title('Rungekutta5')
+subplot(234)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode5) 
+title('PMECMEMode5')
+subplot(232)
+PlotError2Reality(analyticStr,seqRunge_kutta10) 
+title('Rungekutta10')
+subplot(235)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode10) 
+title('PMECMEMode10')
+subplot(233)
+PlotError2Reality(analyticStr,seqRunge_kutta20)
+title('Rungekutta20')
+subplot(236)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode20) 
+title('PMECMEMode20')
+
+
+fucstr = '1/x*(y^2+y)';
+init = [1,-2];
+qujian = [1,3];
+stepnum = 100;
+[seqRunge_kutta5,seqPredictCorrection_PMECME_Mode5] = TestEx6(fucstr,init,qujian,5,stepnum);
+[seqRunge_kutta10,seqPredictCorrection_PMECME_Mode10] = TestEx6(fucstr,init,qujian,10,stepnum);
+[seqRunge_kutta20,seqPredictCorrection_PMECME_Mode20] = TestEx6(fucstr,init,qujian,20,stepnum);
+figure
+analyticStr = '2*x/(1-2*x)';
+subplot(231)
+PlotError2Reality(analyticStr,seqRunge_kutta5) 
+title('Rungekutta5')
+subplot(234)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode5) 
+title('PMECMEMode5')
+subplot(232)
+PlotError2Reality(analyticStr,seqRunge_kutta10) 
+title('Rungekutta10')
+subplot(235)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode10) 
+title('PMECMEMode10')
+subplot(233)
+PlotError2Reality(analyticStr,seqRunge_kutta20)
+title('Rungekutta20')
+subplot(236)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode20) 
+title('PMECMEMode20')
+
+
+
+fucstr = '-20*(y-x^2)+2*x';
+init = [0,1/3];
+qujian = [0,1];
+stepnum = 100;
+[seqRunge_kutta5,seqPredictCorrection_PMECME_Mode5] = TestEx6(fucstr,init,qujian,5,stepnum);
+[seqRunge_kutta10,seqPredictCorrection_PMECME_Mode10] = TestEx6(fucstr,init,qujian,10,stepnum);
+[seqRunge_kutta20,seqPredictCorrection_PMECME_Mode20] = TestEx6(fucstr,init,qujian,20,stepnum);
+figure
+analyticStr = 'x^2+1/3*exp(-20*x)';
+subplot(231)
+PlotError2Reality(analyticStr,seqRunge_kutta5) 
+title('Rungekutta5')
+subplot(234)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode5) 
+title('PMECMEMode5')
+subplot(232)
+PlotError2Reality(analyticStr,seqRunge_kutta10) 
+title('Rungekutta10')
+subplot(235)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode10) 
+title('PMECMEMode10')
+subplot(233)
+PlotError2Reality(analyticStr,seqRunge_kutta20)
+title('Rungekutta20')
+subplot(236)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode20) 
+title('PMECMEMode20')
+
+
+fucstr = '-20*y+20*sin(x)+cos(x)';
+init = [0,1];
+qujian = [0,1];
+stepnum = 100;
+[seqRunge_kutta5,seqPredictCorrection_PMECME_Mode5] = TestEx6(fucstr,init,qujian,5,stepnum);
+[seqRunge_kutta10,seqPredictCorrection_PMECME_Mode10] = TestEx6(fucstr,init,qujian,10,stepnum);
+[seqRunge_kutta20,seqPredictCorrection_PMECME_Mode20] = TestEx6(fucstr,init,qujian,20,stepnum);
+figure
+analyticStr = 'exp(-20*x+sin(x))';
+subplot(231)
+PlotError2Reality(analyticStr,seqRunge_kutta5) 
+title('Rungekutta5')
+subplot(234)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode5) 
+title('PMECMEMode5')
+subplot(232)
+PlotError2Reality(analyticStr,seqRunge_kutta10) 
+title('Rungekutta10')
+subplot(235)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode10) 
+title('PMECMEMode10')
+subplot(233)
+PlotError2Reality(analyticStr,seqRunge_kutta20)
+title('Rungekutta20')
+subplot(236)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode20) 
+title('PMECMEMode20')
+
+
+fucstr = '-20*(y-exp(x)*sin(x))+exp(x)*(sin(x)+cos(x))';
+init = [0,0];
+qujian = [0,1];
+stepnum = 100;
+[seqRunge_kutta5,seqPredictCorrection_PMECME_Mode5] = TestEx6(fucstr,init,qujian,5,stepnum);
+[seqRunge_kutta10,seqPredictCorrection_PMECME_Mode10] = TestEx6(fucstr,init,qujian,10,stepnum);
+[seqRunge_kutta20,seqPredictCorrection_PMECME_Mode20] = TestEx6(fucstr,init,qujian,20,stepnum);
+figure
+analyticStr = 'exp(x)*sin(x)';
+subplot(231)
+PlotError2Reality(analyticStr,seqRunge_kutta5) 
+title('Rungekutta5')
+subplot(234)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode5) 
+title('PMECMEMode5')
+subplot(232)
+PlotError2Reality(analyticStr,seqRunge_kutta10) 
+title('Rungekutta10')
+subplot(235)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode10) 
+title('PMECMEMode10')
+subplot(233)
+PlotError2Reality(analyticStr,seqRunge_kutta20)
+title('Rungekutta20')
+subplot(236)
+PlotError2Reality(analyticStr,seqPredictCorrection_PMECME_Mode20) 
+title('PMECMEMode20') 
+%这应该封装个函数的 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function PlotError2Reality(analyticStr,seq) 
+%输入解析式(f(x))，和通过求常微分方程数值解的序列 绘制误差图
+
+%     plot(seq(:,1),seq(:,2),'o');
+%     hold on
+%     x = seq(:,1);
+    y = [];
+    for i = 1:size(seq,1)
+        x = seq(i,1);
+        y(i,1) = eval(analyticStr);
+    end
+    errory = y-seq(:,2);
+    plot(seq(:,1),abs(errory),'-');
+end
+
+function [seqRunge_kutta,seqPredictCorrection_PMECME_Mode] = TestEx6(fucstr,init,qujian,N,stepnum)
+    h = (max(qujian)-min(qujian))/N;
+    seqRunge_kutta = Runge_kutta(fucstr,init,h,qujian,stepnum);
+    seqPredictCorrection_PMECME_Mode = PredictCorrection_PMECME_Mode(fucstr,init,h,qujian,stepnum);
+end
+
 function PlotMultiSubFuc(result,stepplot,linetype)
 %     stepplot = 0.001;
     for i = 1:size(result,2)
