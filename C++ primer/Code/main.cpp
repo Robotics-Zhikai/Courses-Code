@@ -161,9 +161,15 @@ void main()
 		//这也是符合逻辑的，因为我本意是想把5对应的对象赋给hasptr1_1，已经执行了一遍构造了，就不必要再执行一遍
 		HasPtr hasptr1_2 = hasptr1_1;//这就用的是自定义的拷贝构造函数，会+"2"
 		HasPtr hasptr1_3(6, 3); //并不会影响拷贝构造函数作为正常构造函数进行最优参数匹配发挥其功能
-		HasPtr hasptr2;
-		hasptr2 = hasptr0;//这个是拷贝赋值运算符，完全与hasptr相等,但是地址不同
-		cout << &hasptr0 << " " << &hasptr2 << endl;
+		HasPtr hasptr2("ptr2");
+		(hasptr2 = hasptr0).pulicfuc();//这个是拷贝赋值运算符
+		//若是默认合成的拷贝赋值运算符则完全与hasptr0相等,但是对象本身地址不同，因而就叫“拷贝”
+		//若是自定义的，就是自定义的那些操作，但有个风险是，需要自己控制所有成员变量的拷贝赋值，如有遗漏，则该遗漏的成员变量保持不变
+		cout << &hasptr0 << " " << &hasptr2 << "大小是" << sizeof(&hasptr2)<< endl;
+		int intvalue = 0;
+		int *intvalueadd = &intvalue;
+		cout << intvalueadd << "大小是"<<sizeof(intvalueadd)<<endl; 
+		//通过对比输出的地址格式，以及地址的大小，发现指向不同对象的指针所占内存空间是一样的
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 		
