@@ -84,6 +84,36 @@ https://blog.csdn.net/qq_40728599/article/details/109142354
 ## 常微分方程初值问题的数值解法
 四阶龙格库塔法和预测矫正法
 
+接下来进行了一组实验，分别对比了龙格库塔法和预测矫正法在相应的求解区间内分成不同份数的结果。每组实验都跟对应的解析解进行了对比，纵轴表示与解析解对应的误差的绝对值。
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/16.png)
+
+解析解：y=-x-1。这个发现两个方法的误差是一样的。
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/17.png)
+
+解析解：1/(x+1)。这个预测矫正法比龙格库塔法误差大。
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/18.png)
+
+解析解：x^2*(exp(x)-exp(1))。N越大，则步长越小，精度也越高。
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/19.png)
+
+解析解：2*x/(1-2*x)。N越大，则步长越小，精度也越高。
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/20.png)
+
+解析解：x^2+1/3*exp(-20*x)。若步长较大的话，误差会越来越大，失去了稳定性。
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/21.png)
+
+解析解：exp(-20*x+sin(x))。若步长较大的话，误差会越来越大，失去了稳定性。
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/blob/master/Numerical%20Analysis/images/22.png)
+
+解析解：exp(x)*sin(x)。若步长较大的话，误差会越来越大，失去了稳定性。
+
 # 期末复习总结
 第一次上传这些图片时由于手机拍照时姿势不对，图片有自动旋转，造成上传GitHub之后图片方向不对，重新按照相同的姿势拍照使得图片都朝一个方向再重新上传就解决了方向不对这个问题。
 ## 数学基础
