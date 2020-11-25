@@ -5,6 +5,7 @@
 #include "CP5_ex7_41.h"
 #include "CP5_ex7_53.h"
 #include "CP5_ex13_5.h"
+#include "CP5_ex7_57.h"
 using namespace std;
 
 class Y;
@@ -148,6 +149,37 @@ void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//练习7.57
+		Account Account1;
+		Account Account2 = Account1;
+
+
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//练习7.58
+		const vector<double> vectordouble1;
+		//vectordouble1.push_back(2.1); // 会报错 因为不能往一个const类型的容器中加东西
+
+		HasPtr hs0;
+		const vector<double> &vectordouble3 = hs0.teststatic6;
+		const vector<double> &vectordouble2 = HasPtr::teststatic6;
+		cout << HasPtr::teststatic << endl;
+		cout << teststatic << endl;
+
+		cout << HasPtr::teststatic7 << endl;
+
+		HasPtr::teststatic8 = 2;
+
+		//cout << HasPtr::teststatic5 << endl; //如果定义了static，但是没有初始化，会报错无法解析的外部命令
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//练习13.5
 		HasPtr hasptr0("hasptr0");

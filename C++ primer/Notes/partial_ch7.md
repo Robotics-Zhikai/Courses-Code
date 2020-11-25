@@ -34,4 +34,31 @@ Sales_data item2("9-999-99999-9");
 
 不应该，如果被生成constexpr，则只能由return语句存在，且就被搞成一个隐式const了，不能修改成员数据。
 
+## 7.6 类的静态成员
+### 练习
+* 7.58
+下面的静态数据成员的声明和定义有错误吗？请解释原因。
+
+```cpp
+//example.h
+class Example {
+public:
+	static double rate = 6.5;//加上constexpr就可以了
+	static const int vecSize = 20;//只有整形才能用static const来修饰并初始化，否则要想类内初始化必须static constexpr
+	static vector<double> vec(vecSize);//本意是想做类内初始化，这是不行的，有两点原因，第一要想类内初始化，必须声明constexpr，第二，这在编译器看来是一个函数而不是初始化vector，即不能在类内用圆括号指定类内初始化
+};
+
+//example.c
+#include "example.h"
+double Example::rate;
+vector<double> Example::vec;
+```
+
+https://blog.csdn.net/qq_34801642/article/details/104948850
+
+
+
+
+
+
 

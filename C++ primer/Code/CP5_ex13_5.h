@@ -1,6 +1,6 @@
 #ifndef CP5_ex13_5_h
 #define CP5_ex13_5_h
-#include <string>
+#include "main.h"
 #include <iostream>
 
 class HasPtr
@@ -22,15 +22,31 @@ public:
 		return *this; 
 	}
 	//void testmoren(std::string pss = *ps);//这会报错，因为非静态数据成员不能作为默认参数 而静态数据成员可以作为默认参数
-	constexpr static double teststatic = 1.2; //只有constexpr static能在类内定义初始值
+	constexpr static double teststatic = 1.2; //
+	static constexpr double teststatic2 = 2.1;//修饰词的先后顺序不会影响
+	constexpr static double teststatic3 = 2.1;//
+	static const int teststatic4 = 1;//只有整形才能用static const来修饰并初始化，否则要想类内初始化必须static constexpr
+	static const double teststatic5;
+	static const std::vector<double> teststatic6;
+	static const double teststatic7;
+	static double teststatic8;
 private:
 	std::string *ps;
 	int i;
+	
 };
+const std::vector<double> HasPtr::teststatic6(10);
+//const double HasPtr::teststatic5 = 1.2;
+const static double teststatic = 4 ;
 
+//constexpr static double HasPtr::teststatic = 1.2;//报错此处不能指定存储类 static只出现在类内部的声明语句
+constexpr double HasPtr::teststatic;//即便类内静态数据成员被初始化了，也应该在外部定义一下该成员
+//constexpr double HasPtr::teststatic = 1.5;//这样类内部已经初始化过了，会报错重定义，多次初始化。
+//const double HasPtr::teststatic;// 由于内部是由constexpr声明的 因此不能用const声明
 
+const double HasPtr::teststatic7 = 3.5;
+//constexpr double HasPtr::teststatic7 = 3; //内部是由const声明的，外部这样定义的话报错重定义，不同的存储类
 
-
-
+double HasPtr::teststatic8;
 
 #endif
