@@ -6,6 +6,7 @@
 #include "CP5_ex7_53.h"
 #include "CP5_ex13_5.h"
 #include "CP5_ex7_57.h"
+#include "CP5_ex13_18.h"
 using namespace std;
 
 class Y;
@@ -168,6 +169,18 @@ void main()
 	try
 	{
 		////////////////////////////////////////////////////////////////////////////////////////////
+		//练习13.18
+		Employee Employee1("wzk1");
+		//Employee Employee2 = Employee1;//会报错拷贝构造函数是被删除的函数。
+		Employee Employee3("wzk3");
+		//Employee3 = Employee1;//本身合成的拷贝赋值函数就是删除的
+
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
 		//练习13.11 13.13
 		HasPtr hasptr1311 = HasPtr("2");//又略去了拷贝构造函数
 
@@ -202,6 +215,15 @@ void main()
 		Account4 = Account1;
 		long n = Account::read_NumID();
 		Account Account5("Account5");
+		Account &Account6 = Account5;
+		Account &Account7 = Account4;
+		Account6 = Account7;
+
+		int intnum00 = 2;
+		int intnum000 = 3;
+		int &intnum01 = intnum00;
+		int &intnum02 = intnum000;
+		intnum01 = intnum02;
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 

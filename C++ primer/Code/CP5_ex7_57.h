@@ -24,6 +24,8 @@ public:
 		Balence = acc.Balence + 100;
 		return *this;
 	}
+	//由于有const成员的存在，因此合成的拷贝赋值运算符是删除的，只能显示写一个拷贝赋值运算符；如果把上边的operator=注释
+	//掉的话，在进行拷贝赋值时会报错：无法引用函数operator=（已隐式声明）--他是已经删除的函数
 	const std::string ID_credit;
 	const std::string HumanID; //人的身份证号
 
