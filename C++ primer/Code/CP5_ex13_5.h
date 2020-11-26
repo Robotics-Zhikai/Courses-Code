@@ -3,10 +3,19 @@
 #include "main.h"
 #include <iostream>
 
+std::string * psstore;
 class HasPtr
 {
 public:
-	HasPtr(int num) :ps(new std::string()), i(num) {}
+	~HasPtr()
+	{
+		psstore = ps;
+		//delete ps;
+	}
+	HasPtr(int num) :ps(new std::string()), i(num) 
+	{
+		//std::cout << ps;
+	}
 	HasPtr(const std::string &s = std::string()) :ps(new std::string(s)), i(0) {}
 	HasPtr(const HasPtr& has,int s=1) :ps(new std::string(*has.ps+"2")),i(has.i) {}
 	//随机分配一个新的string地址给ps，该地址指向被拷贝的has的string+"2"
@@ -48,5 +57,6 @@ const double HasPtr::teststatic7 = 3.5;
 //constexpr double HasPtr::teststatic7 = 3; //内部是由const声明的，外部这样定义的话报错重定义，不同的存储类
 
 double HasPtr::teststatic8;
+
 
 #endif

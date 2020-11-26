@@ -144,19 +144,64 @@ private:
 	Nodefault data;
 };
 
+namespace n13_13
+{
+	struct X {
+		X() { std::cout << "X()" << std::endl; }
+		X(const X&) { std::cout << "X(const X&)" << std::endl; }
+		X& operator=(const X&) { std::cout << "X& operator=(const X&)" << std::endl; return *this; }
+		~X() { std::cout << "~X()" << std::endl; }
+	};
+
+	void f(const X &rx, X x)
+	{
+		std::vector<X> vec;
+		vec.reserve(2);
+		vec.push_back(rx);
+		vec.push_back(x);
+	}
+}
+
 
 void main()
 {
 	try
 	{
 		////////////////////////////////////////////////////////////////////////////////////////////
+		//练习13.11 13.13
+		HasPtr hasptr1311 = HasPtr("2");//又略去了拷贝构造函数
+
+		HasPtr("3");
+		cout << *psstore << endl; 
+		//上一步中创建的临时变量被销毁时，会调用析构函数，析构函数中应该加一个delete动态分配的对象
+		//因为当指向一个对象的引用或指针离开作用域时，析构函数不会执行
+		//且因为隐式销毁一个内置指针类型的成员不会delete它所指向的对象
+		//当显示的加入delete ps时，上述cout会出错。
+
+		n13_13::X *px = new n13_13::X;
+		n13_13::f(*px, *px);
+		delete px;
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+		////////////////////////////////////////////////////////////////////////////////////////////
 		//练习7.57
-		Account Account1;
-		Account Account2 = Account1;
+		Account("wzk0");
+		Account("wzk1");
+		Account("wzk2");
+		Account Account1("wzk3");
+		Account Account2 = "232"; 
+		//给构造函数加上explicit后，本语句就非法了
+		//这个跳过了拷贝构造函数，本来应该是先通过字符串输入的构造函数构造一临时变量，
+		//然后在通过拷贝构造函数创建对象的，这样的话NumID++2，但实际上是++1,因此就是跳过了拷贝构造函数
+		//但跳过拷贝构造函数不是所有编译器都必须实现的事项，因此，为了避免numID++2，把字符串输入的构造声明为explicit
+		//以避免隐式转换造成numID分配浪费
+		Account Account3 = Account2;
 
-
-
-
+		Account Account4("Account4");
+		Account4 = Account1;
+		long n = Account::read_NumID();
+		Account Account5("Account5");
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 
