@@ -163,11 +163,136 @@ namespace n13_13
 	}
 }
 
+namespace ex2_33
+{
+	int i = 0, &r = i;
+	auto a = r;
+	const int ci = i, &cr = ci;
+	auto b = ci;
+	auto c = cr;//忽略顶层const
+	auto d = &i;
+	auto e = &ci;//保留底层const
+	const auto f = ci;//忽略顶层const 需要显示的加上const
+	auto &g = ci;
+	//auto &h = 42;//右边这是一个顶层const auto会忽略掉顶层const 这个会报错
+
+	const int i35 = 42;
+	auto j = i35; const auto &k = i35; auto *p = &i35;
+	const auto j2 = i35, &k2 = i35;
+
+	decltype (i35) s = 0;//如果使用的表达式是一个变量，则decltype返回该变量的类型（包括顶层const和引用在内）
+	//引用从来都是作为其所指对象的同义词出现，只有decltype例外
+	const int &iii = 2;
+	decltype (iii) sad = i35;
+}
+
+namespace ex2_36
+{
+	int a = 3, b = 4;
+	decltype(a) c = a;
+	decltype((b)) d = a;
+
+	int a1 = 5;
+	int a2 = a1;//初始化变量在编译期就能够确定值了。
+
+	auto a3 = a1;
+	decltype(a1) a4 = a1; //这两个类型一样
+
+	const int a5 = 6;
+	auto a6 = a5;
+	decltype(a5) a7 = a5; //这两个类型就不一样了
+}
+
+namespace ex6_54
+{
+	int fucplus(int a, int b) { return a + b; }
+	int fucminus(int a, int b) { return a - b; }
+	int fucmultiple(int a, int b) { return a*b; }
+	int fucdivid(int a, int b) { return a / b; }
+
+	vector<int(*)(int, int)> vec_pfuc = {fucplus,fucminus,fucmultiple,fucdivid};
+	void testvec_pfuc(int a,int b)
+	{
+		for (int i = 0; i < vec_pfuc.size(); i++)
+		{
+			std::cout << vec_pfuc[i](a, b) << std::endl; 
+			//比如用在足式机器人步态序列的生成上，核心就是一行步态生成代码，但是有其他的循环调用语句
+			//如果想要弄不同的步态，如果不是像现在这样调用的话需要写好几个重复度很高的函数
+			//但是有了这个方法，就可以极大地简化代码量。
+		}
+	}
+	decltype(testvec_pfuc(1,2)) s();//decltype返回假定调用这个函数后返回的类型
+	decltype(testvec_pfuc) s1;//decltype返回函数名对应的函数类型，其实本质上是返回一个变量的类型
+	//s1 为void(int,int)类型的函数类型
+	using Fp = int(*)(int, int);
+	using F = int(int, int);
+
+	Fp returnP2fuc(F fucname)//自动转化为函数指针
+	{
+		return fucname; //返回一个函数指针 不能返回函数类型
+	}
+	int(*sss(F fucname))(int, int) //这样是可以的
+	{
+		return fucname;
+	}
+	//int(*)(int, int) ssss(F fucname) //这样会报错
+	//{
+
+	//}
+	int useFp(F fucname,int a,int b)
+	{
+		return returnP2fuc(fucname)(a, b);
+	}
+}
 
 void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//练习6.54
+		ex6_54::testvec_pfuc(50, 2);
+		ex6_54::useFp(ex6_54::fucminus, 48, 3);
+		ex6_54::useFp(ex6_54::fucmultiple, 48, 3);
+		cout << ex6_54::returnP2fuc(ex6_54::fucmultiple) << endl;
+		int i = 1;
+		cout << &i << endl; //函数的指针和变量的指针占用的内存是一样的
+		ex6_54::Fp s0 = ex6_54::fucminus;
+		//ex6_54::F s1 = ex6_54::fucminus;//会报错，因为不能直接给函数类型赋值 没有定义这样的类型的值是什么，不想函数指针那样
+		//当我们把函数名作为一个值使用时，该函数自动的转化成指针
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//练习2.36
+		++ex2_36::c;
+		++ex2_36::a;
+		++ex2_36::d;
+		++ex2_36::a1;
+		++ex2_36::a2;
+		int e236 = 3;
+		int e237 = e236;
+		++e236;
+		++e237;
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//练习2.33
+		ex2_33::a = 42;
+		ex2_33::b = 42;
+		ex2_33::c = 42;
+		//ex2_33::d = 42; //推断是int*类型的，会报错无法将int类型的值分配到int *类型
+		//ex2_33::e = 42;	//推断是const int*类型的，会报错无法将int类型的值分配到const int *类型
+		//ex2_33::f = 42;	//报错表达式必须是可修改的左值。
+		
+		int * s = nullptr;
+		bool(*p)(const char a, const char b);
+		////////////////////////////////////////////////////////////////////////////////////////////
+
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//练习13.18
 		Employee Employee1("wzk1");
