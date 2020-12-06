@@ -23,6 +23,16 @@
 ## 笔记
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image1.png)
 
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image2.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image3.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image4.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image5.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image6.jpeg)
+
 MATLAB eval函数的使用，以及批量变量的生成方法，迭代函数确定后可以进行单点迭代和任意多点迭代，数值求解f(x)=0 F(X)=0 的解
 
 批量变量的生成方法：
