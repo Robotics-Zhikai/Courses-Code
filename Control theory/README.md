@@ -21,7 +21,7 @@
 
 # 经典控制
 ## 笔记
-![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image1.jpeg)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image1.png)
 
 MATLAB eval函数的使用，以及批量变量的生成方法，迭代函数确定后可以进行单点迭代和任意多点迭代，数值求解f(x)=0 F(X)=0 的解
 
