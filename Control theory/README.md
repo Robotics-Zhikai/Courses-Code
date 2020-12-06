@@ -16,7 +16,7 @@
 
 # 经典控制
 ## 笔记
-![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image1.jpeg)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image1.jpeg/rotate/auto)
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image2.jpeg)
 
