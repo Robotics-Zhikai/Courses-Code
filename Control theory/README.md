@@ -21,7 +21,7 @@
 
 # 经典控制
 ## 笔记
-涉及到二分法、牛顿法（单点迭代）、割线法（多点迭代），拟牛顿法（秩为1的Broydon方法），牛顿下山法
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image1.jpeg)
 
 MATLAB eval函数的使用，以及批量变量的生成方法，迭代函数确定后可以进行单点迭代和任意多点迭代，数值求解f(x)=0 F(X)=0 的解
 
