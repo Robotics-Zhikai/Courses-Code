@@ -10,20 +10,13 @@
   * 1.5 [龙贝格积分法](#龙贝格积分法)
   * 1.6 [常微分方程初值问题的数值解法](#常微分方程初值问题的数值解法)
 
-* 2. [期末复习总结](#期末复习总结)
-  * 2.0 [数学基础](#数学基础) 
-  * 2.1 [非线性方程(组)的数值解法](#非线性方程(组)的数值解法) 
-  * 2.2 [线性方程(组)的数值解法](#线性方程(组)的数值解法)
-  * 2.3 [插值法与数值逼近](#插值法与数值逼近)
-  * 2.4 [数值积分](#数值积分)
-  * 2.5 [矩阵特征值与特征向量的计算](#矩阵特征值与特征向量的计算)
-  * 2.6 [常微分方程数值解法](#常微分方程数值解法)
+* 2. [现代控制](#现代控制)
+  * 2.1 [笔记](#笔记) 
+  * 2.2 [练习](#练习) 
 
 # 经典控制
 ## 笔记
-![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/1.jpg)
-
-![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image1.png)
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image1.jpeg)
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image2.jpeg)
 
