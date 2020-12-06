@@ -33,5 +33,35 @@
 
 ![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image6.jpeg)
 
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image7.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image8.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image9.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image10.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image11.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image12.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image13.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image14.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image15.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image16.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image17.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image18.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image19.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image20.jpeg)
+
+![image](https://github.com/Robotics-Zhikai/Courses-Code/tree/master/Control%20theory/images/image21.jpeg)
+
 
 
