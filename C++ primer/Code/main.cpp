@@ -261,6 +261,17 @@ void main()
 		ex12_2::ss[1] = 2;
 		cout << ex12_2::ss[1] << endl;
 
+		StrBlob StrBlob1;
+		StrBlob1.push_back("ssss");
+		StrBlob1.front() = "ssss1";
+		
+		const StrBlob StrBlob2({"uyffhgf","sfafag"});
+		//StrBlob2.front() = "uyffhgfmodify";//因为是const，所以不能修改元素 但若将重载的front返回类型的const去掉，就能修改了，虽然不会报错但与用户初衷相悖
+		cout << StrBlob2[1] << endl;
+		//StrBlob2[1] = 1; //这会报错，因为已经在成员函数中重载了只读类型
+
+		StrBlob StrBlob3 = StrBlob2; //这会调用编译器默认合成的拷贝构造函数
+		StrBlob3.push_back("FASFASF");//StrBlob2是const类型的，意味着不能通过StrBlob2改变共享区域的数据，而能通过其他Blob改变共享区域的数据
 
 
 		////////////////////////////////////////////////////////////////////////////////////////////
