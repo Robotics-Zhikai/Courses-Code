@@ -251,10 +251,77 @@ namespace ex12_2
 	vector<int>ss(10);
 	//ss[1] = 3; //这样是会报错的 不能在namespace中赋值
 }
+
+namespace ex12_6
+{
+	vector<int> *returnvecint()
+	{
+		return new vector<int>;
+	}
+	shared_ptr<vector<int>> returnvecintIntelligence()
+	{
+		//return new vector<int>;//不能用new初始化，因为不存在对应的构造函数
+		return make_shared<vector<int>>();
+	}
+
+	vector <int> *readinput(vector<int> * input)
+	{
+		cout << "输入10个int数据" << endl;
+		for (int i = 0; i < 10; i++)
+		{
+			int tmp;
+			cin >> tmp;
+			input->push_back(tmp);
+		}
+		return input;
+	}
+	void readinputIntelligence(const shared_ptr<vector<int>> & input)
+	{
+		cout << "输入10个int数据" << endl;
+		for (int i = 0; i < 10; i++)
+		{
+			int tmp;
+			cin >> tmp;
+			input->push_back(tmp);
+		}
+	}
+
+	void printvecint(vector<int> * &input)//这样可以作为指针的引用直接修改指针的值
+	{
+		for (int i = 0; i < input->size(); i++)
+		{
+			cout << (*input)[i] << " ";
+		}
+		delete input;
+		input = nullptr; 
+	}
+	void printvecintIntelligence(shared_ptr<vector<int>> & input)
+	{
+		for (int i = 0; i < input->size(); i++)
+		{
+			cout << (*input)[i] << " ";
+		}
+		input = make_shared<vector<int>>(); //指向了一个临时对象 这样的话就把分配的内存释放自由了
+	}
+}
 void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//练习12.6
+		vector <int> * ex12_6p = ex12_6::returnvecint();
+		ex12_6p = ex12_6::readinput(ex12_6p);
+		ex12_6::printvecint(ex12_6p);
+
+		shared_ptr<vector<int>> ex12_6pIntelligence = ex12_6::returnvecintIntelligence();
+		ex12_6::readinputIntelligence(ex12_6pIntelligence);
+		ex12_6::printvecintIntelligence(ex12_6pIntelligence);
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//练习12.2
 		cout << ex12_2::ss[0] << endl;
