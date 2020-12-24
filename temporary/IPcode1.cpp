@@ -10,6 +10,8 @@ bool IPcode1::ReadBmp(char * name)
 	//BITMAPFILEHEADER filehead; // 14×Ö½ÚµÄÎÄ¼şÍ·
 	fread(&filehead, sizeof(BITMAPFILEHEADER), 1, fp);
 
+	if (filehead.bfType != 0x4D42)
+		throw exception("Ä¿Ç°Ö»ÄÜ¶ÁÈ¡tmp¸ñÊ½µÄÍ¼Æ¬£¬ÆäËûµÄÎŞ·¨¶ÁÈ¡");
 	fseek(fp, sizeof(BITMAPFILEHEADER), 0); //Ìø¹ıBITMAPFILEHEADER 14×Ö½ÚµÄÎÄ¼şÍ·
 
 	//BITMAPINFOHEADER infohead; //40×Ö½ÚµÄĞÅÏ¢Í·
@@ -156,6 +158,7 @@ void IPcode1::CropBmp(int locx, int locy, int width, int height)//½ØÈ¡BMPµÄÄ³¿éÇ
 	LONG indexbmpbuf = 0;
 	for (LONG y = min(leftdown_y, leftup_y); y <= max(leftdown_y, leftup_y); y++)
 	{
+		LONG ByteCount = 0;
 		for (LONG x = min(leftdown_x, rightdown_x); x <= max(leftdown_x, rightdown_x); x++)
 		{
 			int bitlocation;
@@ -166,6 +169,7 @@ void IPcode1::CropBmp(int locx, int locy, int width, int height)//½ØÈ¡BMPµÄÄ³¿éÇ
 				{
 					newpbmpBuf[indexbmpbuf] = *data[0];
 					indexbmpbuf++;
+					ByteCount++;
 				}
 				else
 				{
@@ -179,6 +183,7 @@ void IPcode1::CropBmp(int locx, int locy, int width, int height)//½ØÈ¡BMPµÄÄ³¿éÇ
 				{
 					newpbmpBuf[indexbmpbuf] = *data[i];
 					indexbmpbuf++;
+					ByteCount++;
 				}
 			}
 			else if (data.size()==0)
@@ -187,7 +192,54 @@ void IPcode1::CropBmp(int locx, int locy, int width, int height)//½ØÈ¡BMPµÄÄ³¿éÇ
 				throw exception("³ÌĞòÂß¼­³ö´í,ÖÁ´Ë²»Ó¦¸Ã³öÏÖdataÎª¿ÕµÄÇé¿ö");
 			}
 		}
+		if (ByteCount % 4 != 0)
+		{
+			for (int i = 0; i < 4 - ByteCount % 4; i++)
+			{
+				newpbmpBuf[indexbmpbuf] = 0x00; //²»×ã4×Ö½ÚµÄ±¶Êı¾Í²¹È«0x00
+				indexbmpbuf++;
+			}
+		}
 	}
 	delete[]pbmpBuf;
 	pbmpBuf = newpbmpBuf;
+	infohead.biHeight = abs(height);
+	infohead.biWidth = abs(width);
+	int lineByte = (infohead.biWidth * infohead.biBitCount / 8 + 3) / 4 * 4;
+	infohead.biSizeImage = infohead.biHeight*lineByte;
+
+	if (infohead.biSizeImage != indexbmpbuf)
+	{
+		cout << __FILE__ << "/" << __LINE__;
+		throw exception("³ÌĞòÂß¼­³ö´í£¡");
+	}
 }
+
+IPcode1::IPcode1(const IPcode1 & input)
+	:pbmpBuf(NULL), pcolortable(NULL),infohead(input.infohead), filehead(input.filehead)
+{
+	pbmpBuf = new unsigned char [input.infohead.biSizeImage];
+	for (int i = 0; i < input.infohead.biSizeImage; i++)
+	{
+		pbmpBuf[i] = input.pbmpBuf[i];
+	}
+	pcolortable = new RGBQUAD[(input.filehead.bfOffBits - 54) / sizeof(RGBQUAD)];
+	for (int i = 0; i < (input.filehead.bfOffBits - 54) / sizeof(RGBQUAD); i++)
+	{
+		pcolortable[i] = input.pcolortable[i];
+	}
+}
+
+//IPcode1 & IPcode1::operator=(const IPcode1 & input)
+//{
+//	pbmpBuf = new unsigned char[input.infohead.biSizeImage];
+//	for (int i = 0; i < input.infohead.biSizeImage; i++)
+//	{
+//		pbmpBuf[i] = input.pbmpBuf[i];
+//	}
+//	pcolortable = new RGBQUAD[(input.filehead.bfOffBits - 54) / sizeof(RGBQUAD)];
+//	for (int i = 0; i < (input.filehead.bfOffBits - 54) / sizeof(RGBQUAD); i++)
+//	{
+//		pcolortable[i] = input.pcolortable[i];
+//	}
+//}

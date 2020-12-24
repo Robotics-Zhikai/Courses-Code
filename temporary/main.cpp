@@ -255,6 +255,9 @@ void main()
 		
 		char path[] = "D:\\Study\\硕士\\我的工作\\硕士学位课程\\数字图像处理\\Code\\lena512color.bmp";
 		IPcode1 ip1(path);
+		IPcode1 ip2(path);
+		
+		
 		readBmp(path);
 		//doIt();
 		unsigned char * bps1 = pBmpBuf;

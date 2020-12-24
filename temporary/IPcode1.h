@@ -9,10 +9,13 @@ public:
 		delete[] pcolortable;
 	}
 	explicit IPcode1(char* input):pbmpBuf(NULL),pcolortable(NULL){ ReadBmp(input); }
+	IPcode1(const IPcode1 & input);//拷贝构造函数，应该拷贝pbmpBuf和pcolortable所指向的内容
 	IPcode1() = delete;
+	IPcode1 & operator=(const IPcode1 &) = delete;//不允许赋值，否则很可能造成内存泄漏
 	//explicit IPcode1(unsigned char * ptmp) :pbmpBuf(ptmp) {} //不能外界给一个数据地址，只能从path中读
 	
 	void CropBmp(int locx,int locy,int width, int height);//截取BMP的某块区域
+	void SaveBmp(char * path); //另存为当前的内容到某一路径
 
 private:
 	unsigned char * pbmpBuf ;
