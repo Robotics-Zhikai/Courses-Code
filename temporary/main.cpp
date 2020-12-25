@@ -247,18 +247,29 @@ void doIt()
 	if (biBitCount == 8)
 		delete[]pColorTable;
 }
-
+void test(const int &)
+{
+	
+}
 void main()
 {
 	try
 	{
-		
 		char path[] = "D:\\Study\\硕士\\我的工作\\硕士学位课程\\数字图像处理\\Code\\lena512color.bmp";
 		IPcode1 ip1(path);
-		IPcode1 ip2(path);
 		
+		ip1.Transfer(IPcode1::RGB2HSI);
+		ip1.SaveBmp("HSI.bmp");
+		ip1.SaveChannel("HSI_H.bmp", 0);
+		ip1.SaveChannel("HSI_S.bmp", 1);
+		ip1.SaveChannel("HSI_I.bmp", 2);
+		ip1.CropBmp(0, 0, 1500, 250);
+		ip1.SaveBmp("zk.bmp");
+		ip1.CropBmp(0, 0, 1500, 125);
+		ip1.SaveBmp("zk1.bmp");
+		//再开始写的时候需要看灰度图读取对不对
 		
-		readBmp(path);
+		//readBmp(path);
 		//doIt();
 		unsigned char * bps1 = pBmpBuf;
 		int s ;
