@@ -46,6 +46,7 @@ bool IPcode1::CheckInImage(int x, int y)
 }
 
 vector<unsigned char *> IPcode1::GetPixel(int x, int y, int & bitlocation)
+//只要返回，肯定返回值不空
 {
 	vector<unsigned char *> result;
 	bitlocation = -1;
@@ -266,7 +267,7 @@ void IPcode1::SaveBmp(char * bmpname)
 		if (colorTablesize != 1024)
 		{
 			cout << __FILE__ << __LINE__ << endl;
-			throw exception("灰度图像的颜色表不为1024字节");
+			throw exception("灰度图像的颜色表不为1024字节");//可能真的有灰度图像的颜色表不为1024字节
 		}
 		else
 			cout << "灰度图像的颜色表确实为1024字节" << endl;
@@ -336,6 +337,32 @@ void IPcode1::RGB2YIQ(unsigned char *a, unsigned char* b, unsigned char* c)
 	unsigned char d = 0.299 * (*a) + 0.587* (*b) + 0.114* (*c);
 	unsigned char e = 0.596 * (*a) - 0.274* (*b) - 0.322* (*c);
 	unsigned char f = 0.211 * (*a) - 0.523* (*b) + 0.312* (*c);
+	if (!(CheckRange0_255(d) && CheckRange0_255(e) && CheckRange0_255(f)))
+		throw exception("转化算法有问题，得到的值超限了 0-255");
+	*a = d;
+	*b = e;
+	*c = f;
+}
+
+void IPcode1::RGB2YCrCb(unsigned char *a, unsigned char* b, unsigned char* c)
+{
+	unsigned char d = 0.299 * (*a) + 0.587* (*b) + 0.114* (*c);
+	unsigned char e = 0.500 * (*a) - 0.4187* (*b) - 0.0813* (*c);
+	unsigned char f = -0.1687 * (*a) - 0.3313* (*b) + 0.500* (*c);
+	if (!(CheckRange0_255(d) && CheckRange0_255(e) && CheckRange0_255(f)))
+		throw exception("转化算法有问题，得到的值超限了 0-255");
+	*a = d;
+	*b = e;
+	*c = f;
+}
+
+void IPcode1::RGB2XYZ(unsigned char *a, unsigned char* b, unsigned char* c)
+{
+	unsigned char d = 0.490 * (*a) + 0.310* (*b) + 0.200* (*c);
+	unsigned char e = 0.177 * (*a) + 0.813* (*b) + 0.011* (*c);
+	unsigned char f = 0.000 * (*a) + 0.010* (*b) + 0.990* (*c);
+	if (!(CheckRange0_255(d) && CheckRange0_255(e) && CheckRange0_255(f)))
+		throw exception("转化算法有问题，得到的值超限了 0-255");
 	*a = d;
 	*b = e;
 	*c = f;
@@ -346,6 +373,8 @@ void IPcode1::YIQ2RGB(unsigned char *a, unsigned char* b, unsigned char* c)
 	unsigned char d = 1.0 * (*a) + 0.956* (*b) + 0.621* (*c);
 	unsigned char e = 1.0 * (*a) - 0.272* (*b) - 0.647* (*c);
 	unsigned char f = 1.0 * (*a) - 1.106* (*b) - 1.703* (*c);
+	if (!(CheckRange0_255(d) && CheckRange0_255(e) && CheckRange0_255(f)))
+		throw exception("转化算法有问题，得到的值超限了 0-255");
 	*a = d;
 	*b = e;
 	*c = f;
@@ -366,46 +395,31 @@ void IPcode1::RGB2HSI(unsigned char *a, unsigned char* b, unsigned char* c)
 	H = H*255.0;
 	S = S*255.0;
 	I = I*255.0;
-	if ((H < 0 || H >= 256) || (S < 0 || S >= 256) || (I < 0 || I >= 256))
+	if (!(CheckRange0_255(H)&& CheckRange0_255(S)&& CheckRange0_255(I)))
 		throw exception("转化算法有问题，得到的HSI值超限了");
 	*a = H;
 	*b = S;
 	*c = I;
 }
 
+bool IPcode1::CheckRange0_255(double a)
+{
+	if (a < 0 || a >= 256)
+		return FALSE;
+	else
+		return TRUE;
+}
+
 unsigned char * IPcode1::extractDataChannel(int channel, DWORD &sizeimage)
 {
 	if (infohead.biBitCount == 8)
-		return pbmpBuf;
+	{
+		if (channel != 0)
+			throw exception("灰度图只能由channel 0索引");
+	}
 	else if (infohead.biBitCount == 24)
 	{
-		if (channel == 0 || channel == 1 || channel == 2)
-		{
-			int linebytes = (infohead.biWidth * 8 / 8 + 3) / 4 * 4;
-			sizeimage = linebytes*infohead.biHeight;
-			unsigned char * result = new unsigned char[sizeimage];
-			DWORD ByteCount = 0;
-			for (auto y = 0; y < infohead.biHeight; y++)
-			{
-				for (auto x = 0; x < infohead.biWidth; x++)
-				{
-					int bitlocation;
-					auto pixel = GetPixel(x, y, bitlocation);
-					result[ByteCount] = *pixel[channel ];
-					ByteCount++;
-				}
-				if (infohead.biWidth % 4 != 0)
-				{
-					for (int i = 0; i < 4 - (infohead.biWidth % 4); i++)
-					{
-						result[ByteCount] = 0x00;
-						ByteCount++;
-					}
-				}
-			}
-			return result;
-		}
-		else
+		if (channel != 0 && channel != 1 && channel != 2)
 			throw exception("三通道，不能超出三通道 0 1 2 ");
 	}
 	else
@@ -413,6 +427,35 @@ unsigned char * IPcode1::extractDataChannel(int channel, DWORD &sizeimage)
 		cout << __FILE__ << __LINE__;
 		throw exception("暂时无法处理这时的情况");
 	}
+
+	if (channel == 0 || channel == 1 || channel == 2)
+	{
+		int linebytes = (infohead.biWidth * 8 / 8 + 3) / 4 * 4;
+		sizeimage = linebytes*infohead.biHeight;
+		unsigned char * result = new unsigned char[sizeimage];
+		DWORD ByteCount = 0;
+		for (auto y = 0; y < infohead.biHeight; y++)
+		{
+			for (auto x = 0; x < infohead.biWidth; x++)
+			{
+				int bitlocation;
+				auto pixel = GetPixel(x, y, bitlocation);
+				result[ByteCount] = *pixel[channel];
+				ByteCount++;
+			}
+			if (infohead.biWidth % 4 != 0)
+			{
+				for (int i = 0; i < 4 - (infohead.biWidth % 4); i++)
+				{
+					result[ByteCount] = 0x00;
+					ByteCount++;
+				}
+			}
+		}
+		return result;
+	}
+	else
+		throw exception("程序逻辑写的有问题");
 }
 
 void IPcode1::SaveChannel(char * path, int channel)
@@ -488,4 +531,13 @@ void IPcode1::SaveBmpTool(char * path, unsigned char *imgBuf, int width, int hei
 
 	//关闭文件
 	fclose(fp);
+}
+
+vector<unsigned char> IPcode1::ReadPixel(int x, int y, int & bitlocation)
+{
+	vector<unsigned char *> vecptr = GetPixel(x, y, bitlocation);
+	vector<unsigned char> result;
+	for (int i = 0; i < vecptr.size(); i++)
+		result.push_back(*vecptr[i]);
+	return result;
 }

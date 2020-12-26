@@ -247,33 +247,90 @@ void doIt()
 	if (biBitCount == 8)
 		delete[]pColorTable;
 }
-void test(const int &)
-{
-	
-}
+
 void main()
 {
 	try
 	{
-		char path[] = "D:\\Study\\硕士\\我的工作\\硕士学位课程\\数字图像处理\\Code\\lena512color.bmp";
-		IPcode1 ip1(path);
 		
-		ip1.Transfer(IPcode1::RGB2HSI);
-		ip1.SaveBmp("HSI.bmp");
-		ip1.SaveChannel("HSI_H.bmp", 0);
-		ip1.SaveChannel("HSI_S.bmp", 1);
-		ip1.SaveChannel("HSI_I.bmp", 2);
-		ip1.CropBmp(0, 0, 1500, 250);
-		ip1.SaveBmp("zk.bmp");
-		ip1.CropBmp(0, 0, 1500, 125);
-		ip1.SaveBmp("zk1.bmp");
-		//再开始写的时候需要看灰度图读取对不对
-		
+		///////////////////////////////////////////////////////////////////////////////////////////////
+		//实验二
+
+		///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+		///////////////////////////////////////////////////////////////////////////////////////////////
+		//测试代码
+		IPcode1 ipgray("HSI_H.bmp");
+		ipgray.SaveChannel("HSI_H0.bmp", 0);
+		IPcode1 ipgray2 = ipgray;
+		ipgray2.SaveBmp("ipgray2.bmp");
+
+		IPcode1 ipgray1("HSI_Htmp.bmp");
+		ipgray1.CropBmp(0, 0, 1500, 250);
+		ipgray1.SaveBmp("HSI_Htmp1.bmp");
+
+
+
 		//readBmp(path);
 		//doIt();
 		unsigned char * bps1 = pBmpBuf;
-		int s ;
+		int s;
 		s = 1;
+		///////////////////////////////////////////////////////////////////////////////////////////////
+
+
+		///////////////////////////////////////////////////////////////////////////////////////////////
+		//实验一
+		char path[] = "D:\\Study\\硕士\\我的工作\\硕士学位课程\\数字图像处理\\Code\\lena512color.bmp";
+
+		IPcode1 ip0(path);
+		IPcode1 ip1(path);
+		IPcode1 ip3(path);
+		IPcode1 ip4(path);
+		IPcode1 ip5(path);
+
+		int bitloc;
+		vector<unsigned char> vecpixel = ip0.ReadPixel(231, 231, bitloc);
+		for (int i = 0; i < 3; i++)
+		{
+			cout << int(vecpixel[i]) << " ";
+		}
+		cout << endl;
+
+		ip0.SaveBmp("origin.bmp");
+		ip1.Transfer(IPcode1::RGB2YIQ);
+		IPcode1 ip2 = ip1;
+		ip2.Transfer(IPcode1::YIQ2RGB);
+		ip3.Transfer(IPcode1::RGB2HSI);
+		ip4.Transfer(IPcode1::RGB2YCrCb);
+		ip5.Transfer(IPcode1::RGB2XYZ);
+
+		ip1.SaveBmp("YIQ.bmp");
+		ip1.SaveChannel("YIQ_Y.bmp", 0);
+		ip1.SaveChannel("YIQ_I.bmp", 1);
+		ip1.SaveChannel("YIQ_Q.bmp", 2);
+
+		ip2.SaveBmp("RGB.bmp");
+		ip2.SaveChannel("RGB_R.bmp", 0);
+		ip2.SaveChannel("RGB_G.bmp", 1);
+		ip2.SaveChannel("RGB_B.bmp", 2);
+
+		ip3.SaveBmp("HSI.bmp");
+		ip3.SaveChannel("HSI_H.bmp", 0);
+		ip3.SaveChannel("HSI_S.bmp", 1);
+		ip3.SaveChannel("HSI_I.bmp", 2);
+
+		ip4.SaveBmp("YCrCb.bmp");
+		ip4.SaveChannel("YCrCb_Y.bmp", 0);
+		ip4.SaveChannel("YCrCb_Cr.bmp", 1);
+		ip4.SaveChannel("YCrCb_Cb.bmp", 2);
+
+		ip5.SaveBmp("XYZ.bmp");
+		ip5.SaveChannel("XYZ_X.bmp", 0);
+		ip5.SaveChannel("XYZ_Y.bmp", 1);
+		ip5.SaveChannel("XYZ_Z.bmp", 2);
+		///////////////////////////////////////////////////////////////////////////////////////////////
 		
 	}
 	catch (exception d)

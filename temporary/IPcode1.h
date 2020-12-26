@@ -17,14 +17,16 @@ public:
 	void CropBmp(int locx,int locy,int width, int height);//截取BMP的某块区域
 	void SaveBmp(char * path); //另存为当前的内容到某一路径下的某一bmp
 	void SaveChannel(char * path,int channel); //真彩是3通道的，输出某一通道的灰度图
+	vector<unsigned char> ReadPixel(int x, int y, int & bitlocation);//读取pixel的值，不进行修改
 
 	void Transfer(void(*pf)(unsigned char*, unsigned char*, unsigned char*));//将数据由XXX图转化到XX图 具体由函数指针决定
 	static void RGB2YIQ(unsigned char *, unsigned char *, unsigned char *);//设置成静态变量调用函数指针,具体涉及到成员的指针参考C++primer P741
 	static void YIQ2RGB(unsigned char *, unsigned char *, unsigned char *);//这几个函数不应对象的创建而改变，因此适合声明为static
 	static void RGB2HSI(unsigned char *, unsigned char *, unsigned char *);
+	static void RGB2YCrCb(unsigned char *, unsigned char*, unsigned char*);
+	static void RGB2XYZ(unsigned char *, unsigned char*, unsigned char*);
 	//static constexpr int sdas = 4;
 private:
-	
 	unsigned char * pbmpBuf ;
 	RGBQUAD *pcolortable;//颜色表指针 
 	BITMAPINFOHEADER infohead; //40字节的信息头
@@ -35,6 +37,7 @@ private:
 
 	bool ReadBmp(char * name); //只能在构造时调用一次
 	bool CheckInImage(int x, int y);//检查是否在BMP图像范围内
+	static bool CheckRange0_255(double a);
 	vector<unsigned char *> GetPixel(int x, int y,int & bitlocation);
 	// 得到某一位置下的像素值的储存地址，可能是3个字节，可能是1字节，可能是半个字节，也可能是1位
 	//bitlocation 表示当出现半个字节时是前半段还是后半段；当是二值化图时表示在哪一位0-7
