@@ -252,10 +252,24 @@ void main()
 {
 	try
 	{
-		
+		char path[] = "D:\\Study\\硕士\\我的工作\\硕士学位课程\\数字图像处理\\Code\\lena512color.bmp";
 		///////////////////////////////////////////////////////////////////////////////////////////////
 		//实验二
+		IPcode1 ex2_0(path);
+		IPcode1 ex2_1(path);
+		ex2_0.CropBmp(0, 0, 510, 501);
+		ex2_0.Transfer(IPcode1::RGB2YCrCb);
+		ex2_0.SaveBmp("YCrCb.bmp");
+		ex2_0.SaveChannel("YCrCb_Y.bmp", 0);
+		ex2_0.DFT_image(0, 8, 8, 0);
+		ex2_0.SaveBmp("YCrCb_DFT_Y.bmp");
+		ex2_0.SaveChannel("YCrCb_DFT_Y_Amp.bmp",0);
 
+		ex2_1.Transfer(IPcode1::RGB2YCrCb);
+		ex2_1.DFT_image(0, 8, 8, 1);
+		ex2_1.SaveChannel("YCrCb_DFT_Y_Phase.bmp",0);
+
+		
 		///////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -270,7 +284,7 @@ void main()
 		ipgray1.CropBmp(0, 0, 1500, 250);
 		ipgray1.SaveBmp("HSI_Htmp1.bmp");
 
-
+		
 
 		//readBmp(path);
 		//doIt();
@@ -282,8 +296,6 @@ void main()
 
 		///////////////////////////////////////////////////////////////////////////////////////////////
 		//实验一
-		char path[] = "D:\\Study\\硕士\\我的工作\\硕士学位课程\\数字图像处理\\Code\\lena512color.bmp";
-
 		IPcode1 ip0(path);
 		IPcode1 ip1(path);
 		IPcode1 ip3(path);
@@ -335,7 +347,7 @@ void main()
 	}
 	catch (exception d)
 	{
-		cout << d.what();
+		cout << "throw an exception：" << d.what();
 	}
 	
 	system("pause");

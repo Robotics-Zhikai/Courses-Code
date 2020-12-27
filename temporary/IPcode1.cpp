@@ -45,10 +45,10 @@ bool IPcode1::CheckInImage(int x, int y)
 		return FALSE;
 }
 
-vector<unsigned char *> IPcode1::GetPixel(int x, int y, int & bitlocation)
+vector<unsigned long> IPcode1::GetPixel_Index(int x, int y, int & bitlocation)
 //只要返回，肯定返回值不空
 {
-	vector<unsigned char *> result;
+	vector<unsigned long> result;
 	bitlocation = -1;
 	if (CheckInImage(x, y) == FALSE)
 	{
@@ -56,7 +56,7 @@ vector<unsigned char *> IPcode1::GetPixel(int x, int y, int & bitlocation)
 		throw exception("不能读取在图像范围之外的像素点数据");
 		//return result;
 	}
-		
+
 	auto bmpWidth = infohead.biWidth;
 	auto biBitCount = infohead.biBitCount;
 	int lineBytes = (bmpWidth*biBitCount / 8 + 3) / 4 * 4;
@@ -85,15 +85,26 @@ vector<unsigned char *> IPcode1::GetPixel(int x, int y, int & bitlocation)
 	}
 
 	if (single == 0 || single == 1)
-		result.push_back(pbmpBuf + index);
+		result.push_back(index);
 	else if (single == 3)
 	{
-		result.push_back(pbmpBuf + index);
-		result.push_back(pbmpBuf + index + 1);
-		result.push_back(pbmpBuf + index + 2);
+		result.push_back(index);
+		result.push_back(index + 1);
+		result.push_back(index + 2);
 	}
 	else
 		throw("未定义处理此bitBitCount的程序");
+	return result;
+}
+
+vector<unsigned char *> IPcode1::GetPixel(int x, int y, int & bitlocation)
+//只要返回，肯定返回值不空
+{
+	vector<unsigned char *> result;
+	bitlocation = -1;
+	vector<unsigned long> resultIndex = GetPixel_Index(x, y, bitlocation);
+	for (int i = 0; i < resultIndex.size(); i++)
+		result.push_back(pbmpBuf + resultIndex[i]);
 	return result;
 }
 
@@ -273,14 +284,16 @@ void IPcode1::SaveBmp(char * bmpname)
 			cout << "灰度图像的颜色表确实为1024字节" << endl;
 	}
 		
-	int lineBytes = (infohead.biWidth * infohead.biBitCount / 8 + 3) / 4 * 4;
+	int lineBytes = (infohead.biWidth * infohead.biBitCount / 8 + 3) / 4 * 4; //这个应该是用不到 
 
 	FILE *fp = fopen(bmpname, "wb");
 	if (fp == NULL)
 		return;
+	//if (infohead.biHeight*lineBytes != infohead.biSizeImage)
+		//throw exception("其他地方肯定出现问题了");
 
 	filehead.bfType = 0x4d42;//bmp类型 如果换成其他的如0x4b42 那么就显示不支持此类型
-	filehead.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + colorTablesize + lineBytes*infohead.biHeight;
+	filehead.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + colorTablesize + infohead.biSizeImage;
 	filehead.bfReserved1 = 0;
 	filehead.bfReserved2 = 0;
 	filehead.bfOffBits = 54 + colorTablesize;
@@ -303,7 +316,7 @@ void IPcode1::SaveBmp(char * bmpname)
 	if (colorTablesize!=0)
 		fwrite(pcolortable, 1, colorTablesize, fp);
 
-	fwrite(pbmpBuf, lineBytes*infohead.biHeight, 1, fp);
+	fwrite(pbmpBuf, infohead.biSizeImage, 1, fp);
 
 	fclose(fp);
 }
@@ -541,3 +554,182 @@ vector<unsigned char> IPcode1::ReadPixel(int x, int y, int & bitlocation)
 		result.push_back(*vecptr[i]);
 	return result;
 }
+
+void IPcode1::makeBmpTimesof(unsigned int widthtimes, unsigned int heighttimes)
+{
+	if (widthtimes <= 0 || heighttimes <= 0 || widthtimes > infohead.biWidth || heighttimes > infohead.biHeight)
+		throw exception("widthtimes、heighttimes设置不对");
+	if (infohead.biBitCount == 8 || infohead.biBitCount == 24)
+	{
+		if (infohead.biWidth % widthtimes == 0 && infohead.biHeight % heighttimes == 0) //如果本来就是widthtimes*heighttimes整数倍的，那么什么都不需要做
+			return;
+		else
+		{
+			WORD linebytes = (infohead.biWidth * infohead.biBitCount / 8 + 3) / 4 * 4;
+			if (infohead.biSizeImage != linebytes*infohead.biHeight)
+				throw exception("需要先保证图片数据的每行字节数是4的倍数");
+			LONG newbiWidth = (infohead.biWidth + widthtimes-1) / widthtimes * widthtimes;
+			WORD newLinebytes = (newbiWidth * infohead.biBitCount / 8 + 3) / 4 * 4; //保证字节数是4的倍数
+			LONG newbiHeight = (infohead.biHeight + heighttimes-1) / heighttimes * heighttimes;
+			if (newLinebytes < linebytes)
+				throw exception("需要重新思考下边的逻辑，按理说不应该出现这种情况");
+
+			unsigned char * result = new unsigned char[newbiHeight*newLinebytes];
+			DWORD offsetOrigin = 0;
+			DWORD offsetNew = 0;
+			for (auto i = 0; i < infohead.biHeight; i++)
+			{
+				offsetOrigin = i*linebytes;
+				offsetNew = i * newLinebytes;
+				int j;
+				for (j = 0; j < linebytes; j++)
+				{
+					result[offsetNew + j] = pbmpBuf[offsetOrigin + j];
+				}
+				for (auto k = 0; k < newLinebytes - linebytes; k++)
+				{
+					result[offsetNew + j + k] = 0x00;
+				}
+			}
+
+			for (auto i = infohead.biHeight; i < newbiHeight; i++)
+			{
+				offsetNew = i*newLinebytes;
+				for (auto j = 0; j < newLinebytes; j++)
+					result[offsetNew + j] = 0x00;
+			}
+			delete[]pbmpBuf;//先把原来的释放了
+			pbmpBuf = result;
+			infohead.biHeight = newbiHeight;
+			infohead.biSizeImage = newbiHeight*newLinebytes;
+			infohead.biWidth = newbiWidth;
+		}
+	}
+	else
+	{
+		cout << __FILE__ << __LINE__;
+		throw exception("暂时无法处理这时的情况");
+	}
+}
+
+void IPcode1::DFT_image(int channel,unsigned int width,unsigned int height,int mode) //mode表明是保留幅值还是保留相位 0表示保留幅值1表示保留相位
+{
+	if (infohead.biBitCount == 8)
+	{
+		if (channel != 0)
+			throw exception("灰度图只能由channel 0索引");
+	}
+	else if (infohead.biBitCount == 24)
+	{
+		if (channel != 0 && channel != 1 && channel != 2)
+			throw exception("三通道，不能超出三通道 0 1 2 ");
+	}
+	else
+	{
+		cout << __FILE__ << __LINE__;
+		throw exception("暂时无法处理这时的情况");
+	}
+
+	if (channel == 0 || channel == 1 || channel == 2)
+	{
+		makeBmpTimesof(width, height); //先保证图片的长和宽都是所输入参数的倍数
+		unsigned int * amplitudeStore = NULL;
+		double * phaseStore = NULL;
+		if (mode == 0)
+		{
+			amplitudeStore = new unsigned int[infohead.biWidth*infohead.biHeight];
+		}
+		else if (mode == 1)
+		{
+			phaseStore = new double[infohead.biWidth*infohead.biHeight];
+		}
+		else
+			throw exception("未定义mode");
+		
+		for (LONG j = 0; j < infohead.biHeight / height; j++)
+		{
+			for (LONG i = 0; i < infohead.biWidth / width; i++)
+			{
+				auto xoffset = i*width;
+				auto yoffset = j*height;
+				vector<complex<double>> DFTpart(0); // 大小应该是width*height
+				for (unsigned int y = 0; y < height; y++)
+				{
+					for (unsigned int x = 0; x < width; x++)
+					{
+						int bitlocation;
+						auto pixel = GetPixel(xoffset + x, yoffset + y, bitlocation);
+						DFTpart.push_back(*pixel[channel]);
+					}
+				}
+				if (DFTpart.size() != width*height )
+					throw exception("程序逻辑出错");
+				DFTpart = Operate::FFT_2D(DFTpart, width, height);
+
+				int DFTCount = 0;
+				for (unsigned int y = 0; y < height; y++)
+				{
+					for (unsigned int x = 0; x < width; x++)
+					{
+						auto locx = xoffset + x;
+						auto locy = yoffset + y;
+						ComplexEXP tmp(DFTpart[DFTCount++]);
+
+						if (mode == 0)
+						{
+							amplitudeStore[locx + locy*infohead.biWidth] = tmp.read_amplitude();
+						}
+						else if (mode == 1)
+						{
+							phaseStore[locx + locy*infohead.biWidth] = tmp.read_phase();
+						}
+					}
+				}
+			}
+		}
+
+		if (mode == 0)
+		{
+			unsigned int * begin = amplitudeStore;
+			unsigned int * end = amplitudeStore + (infohead.biWidth*infohead.biHeight - 1);
+			vector<double> normal_list = normalization_zk<unsigned int>(begin, end);
+			Denormalization_zk<unsigned int>(begin, end, 0, 255, normal_list);
+		}
+		else if (mode == 1)
+		{
+			double * begin = phaseStore;
+			double * end = phaseStore + (infohead.biWidth*infohead.biHeight - 1);
+			vector<double> normal_list = normalization_zk<double>(begin, end);
+			Denormalization_zk<double>(begin, end, 0, 255, normal_list);
+		}
+
+		int count = 0;
+		for (LONG y = 0; y < infohead.biHeight; y++)
+		{
+			for (LONG x = 0; x < infohead.biWidth; x++)
+			{
+				unsigned char value;
+				if (mode == 0)
+				{
+					value = amplitudeStore[count++];
+				}
+				else if (mode == 1)
+				{
+					value = phaseStore[count++];
+				}
+				int bitlocation;
+				auto ptr = GetPixel(x, y, bitlocation);
+				*ptr[channel] = value;
+			}
+		}
+		if (amplitudeStore != NULL)
+			delete[]amplitudeStore;
+		if (phaseStore != NULL)
+			delete[]phaseStore;
+	}
+}
+
+
+
+
+

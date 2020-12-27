@@ -10,6 +10,7 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
+#include <complex>
 constexpr double pi = 3.1415926;
 constexpr double dt = 0.000000001;
 using namespace std;
