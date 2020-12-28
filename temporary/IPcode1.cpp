@@ -240,8 +240,15 @@ void IPcode1::CropBmp(int locx, int locy, int width, int height)//½ØÈ¡BMPµÄÄ³¿éÇ
 IPcode1::IPcode1(const IPcode1 & input)
 	:pbmpBuf(NULL), pcolortable(NULL),infohead(input.infohead), filehead(input.filehead)
 {
-	pbmpBuf = new unsigned char [input.infohead.biSizeImage];
-	for (auto i = 0; i < input.infohead.biSizeImage; i++)
+	int linebytes = (input.infohead.biWidth * input.infohead.biBitCount / 8 + 3) / 4 * 4;
+	auto sizebytes = input.infohead.biHeight*linebytes;
+	pbmpBuf = new unsigned char [sizebytes];
+	
+	//if (input.infohead.biHeight*linebytes != input.infohead.biSizeImage)
+	//	cout << "warning£ºinput.infohead.biHeight*linebytes != input.infohead.biSizeImage" << input.infohead.biHeight*linebytes << " " << input.infohead.biSizeImage;
+	////ÕâÑùÓÐÊ±ÊÇºÏ·¨µÄ£¬±ÈÈçinputµÄpbmpbuf´óÓÚbiSizeImage
+	
+	for (auto i = 0; i < sizebytes; i++)
 	{
 		pbmpBuf[i] = input.pbmpBuf[i];
 	}
@@ -266,59 +273,60 @@ IPcode1::IPcode1(const IPcode1 & input)
 //	}
 //}
 
-void IPcode1::SaveBmp(char * bmpname)
+void IPcode1::SaveBmp(char * bmpname) 
 {
-	if (pbmpBuf == NULL)
-		return;
-	//ÑÕÉ«±í´óÐ¡£¬ÒÔ×Ö½ÚÎªµ¥Î»£¬»Ò¶ÈÍ¼ÏñÑÕÉ«±íÎª1024×Ö½Ú£¬²ÊÉ«Í¼ÏñÑÕÉ«±í´óÐ¡Îª0
-	int colorTablesize = filehead.bfOffBits-54;
+	SaveBmpTool(bmpname, pbmpBuf, infohead.biWidth, infohead.biHeight, infohead.biBitCount);
+	//if (pbmpBuf == NULL)
+	//	return;
+	////ÑÕÉ«±í´óÐ¡£¬ÒÔ×Ö½ÚÎªµ¥Î»£¬»Ò¶ÈÍ¼ÏñÑÕÉ«±íÎª1024×Ö½Ú£¬²ÊÉ«Í¼ÏñÑÕÉ«±í´óÐ¡Îª0
+	//int colorTablesize = filehead.bfOffBits-54;
 
-	if (infohead.biBitCount == 8)
-	{
-		if (colorTablesize != 1024)
-		{
-			cout << __FILE__ << __LINE__ << endl;
-			throw exception("»Ò¶ÈÍ¼ÏñµÄÑÕÉ«±í²»Îª1024×Ö½Ú");//¿ÉÄÜÕæµÄÓÐ»Ò¶ÈÍ¼ÏñµÄÑÕÉ«±í²»Îª1024×Ö½Ú
-		}
-		else
-			cout << "»Ò¶ÈÍ¼ÏñµÄÑÕÉ«±íÈ·ÊµÎª1024×Ö½Ú" << endl;
-	}
-		
-	int lineBytes = (infohead.biWidth * infohead.biBitCount / 8 + 3) / 4 * 4; //Õâ¸öÓ¦¸ÃÊÇÓÃ²»µ½ 
+	//if (infohead.biBitCount == 8)
+	//{
+	//	if (colorTablesize != 1024)
+	//	{
+	//		cout << __FILE__ << __LINE__ << endl;
+	//		throw exception("»Ò¶ÈÍ¼ÏñµÄÑÕÉ«±í²»Îª1024×Ö½Ú");//¿ÉÄÜÕæµÄÓÐ»Ò¶ÈÍ¼ÏñµÄÑÕÉ«±í²»Îª1024×Ö½Ú
+	//	}
+	//	else
+	//		cout << "»Ò¶ÈÍ¼ÏñµÄÑÕÉ«±íÈ·ÊµÎª1024×Ö½Ú" << endl;
+	//}
+	//	
+	//int lineBytes = (infohead.biWidth * infohead.biBitCount / 8 + 3) / 4 * 4; //Õâ¸öÓ¦¸ÃÊÇÓÃ²»µ½ 
 
-	FILE *fp = fopen(bmpname, "wb");
-	if (fp == NULL)
-		return;
-	//if (infohead.biHeight*lineBytes != infohead.biSizeImage)
-		//throw exception("ÆäËûµØ·½¿Ï¶¨³öÏÖÎÊÌâÁË");
+	//FILE *fp = fopen(bmpname, "wb");
+	//if (fp == NULL)
+	//	return;
+	////if (infohead.biHeight*lineBytes != infohead.biSizeImage)
+	//	//throw exception("ÆäËûµØ·½¿Ï¶¨³öÏÖÎÊÌâÁË");
 
-	filehead.bfType = 0x4d42;//bmpÀàÐÍ Èç¹û»»³ÉÆäËûµÄÈç0x4b42 ÄÇÃ´¾ÍÏÔÊ¾²»Ö§³Ö´ËÀàÐÍ
-	filehead.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + colorTablesize + infohead.biSizeImage;
-	filehead.bfReserved1 = 0;
-	filehead.bfReserved2 = 0;
-	filehead.bfOffBits = 54 + colorTablesize;
-	fwrite(&filehead, sizeof(BITMAPFILEHEADER), 1, fp);
+	//filehead.bfType = 0x4d42;//bmpÀàÐÍ Èç¹û»»³ÉÆäËûµÄÈç0x4b42 ÄÇÃ´¾ÍÏÔÊ¾²»Ö§³Ö´ËÀàÐÍ
+	//filehead.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + colorTablesize + infohead.biSizeImage;
+	//filehead.bfReserved1 = 0;
+	//filehead.bfReserved2 = 0;
+	//filehead.bfOffBits = 54 + colorTablesize;
+	//fwrite(&filehead, sizeof(BITMAPFILEHEADER), 1, fp);
 
-	//infoheadÔÚÐÞ¸ÄÍ¼ÏñÊý¾ÝÄÚÈÝÊ±¾ÍÓ¦¸Ã±»ÐÞ¸Ä¹ýÒ»±éÁË,Í¬Ê±²»±»ÐÞ¸ÄµÄÓ¦¸Ã±£³ÖÔ­ÊôÐÔ²»±ä
-	//infohead.biBitCount = biBitCount;
-	//infohead.biClrImportant = 0;
-	//infohead.biClrUsed = 0;
-	//infohead.biCompression = 0;
-	//infohead.biHeight = height;
-	//infohead.biPlanes = 1;
-	//infohead.biSize = 40;
-	//infohead.biSizeImage = lineByte*height; 
-	//infohead.biWidth = width;
-	//infoheadhead.biXPelsPerMeter = 0;
-	//infoheadhead.biYPelsPerMeter = 0;
-	fwrite(&infohead, sizeof(BITMAPINFOHEADER), 1, fp);
+	////infoheadÔÚÐÞ¸ÄÍ¼ÏñÊý¾ÝÄÚÈÝÊ±¾ÍÓ¦¸Ã±»ÐÞ¸Ä¹ýÒ»±éÁË,Í¬Ê±²»±»ÐÞ¸ÄµÄÓ¦¸Ã±£³ÖÔ­ÊôÐÔ²»±ä
+	////infohead.biBitCount = biBitCount;
+	////infohead.biClrImportant = 0;
+	////infohead.biClrUsed = 0;
+	////infohead.biCompression = 0;
+	////infohead.biHeight = height;
+	////infohead.biPlanes = 1;
+	////infohead.biSize = 40;
+	////infohead.biSizeImage = lineByte*height; 
+	////infohead.biWidth = width;
+	////infoheadhead.biXPelsPerMeter = 0;
+	////infoheadhead.biYPelsPerMeter = 0;
+	//fwrite(&infohead, sizeof(BITMAPINFOHEADER), 1, fp);
 
-	if (colorTablesize!=0)
-		fwrite(pcolortable, 1, colorTablesize, fp);
+	//if (colorTablesize!=0)
+	//	fwrite(pcolortable, 1, colorTablesize, fp);
 
-	fwrite(pbmpBuf, infohead.biSizeImage, 1, fp);
+	//fwrite(pbmpBuf, infohead.biSizeImage, 1, fp);
 
-	fclose(fp);
+	//fclose(fp);
 }
 
 void IPcode1::Transfer(void (*pf)(unsigned char*, unsigned char*, unsigned char*))
@@ -374,6 +382,18 @@ void IPcode1::RGB2XYZ(unsigned char *a, unsigned char* b, unsigned char* c)
 	unsigned char d = 0.490 * (*a) + 0.310* (*b) + 0.200* (*c);
 	unsigned char e = 0.177 * (*a) + 0.813* (*b) + 0.011* (*c);
 	unsigned char f = 0.000 * (*a) + 0.010* (*b) + 0.990* (*c);
+	if (!(CheckRange0_255(d) && CheckRange0_255(e) && CheckRange0_255(f)))
+		throw exception("×ª»¯Ëã·¨ÓÐÎÊÌâ£¬µÃµ½µÄÖµ³¬ÏÞÁË 0-255");
+	*a = d;
+	*b = e;
+	*c = f;
+}
+
+void IPcode1::RGB2GrayValue(unsigned char *a, unsigned char* b, unsigned char* c)
+{
+	unsigned char d = 0.3 * (*a) + 0.59* (*b) + 0.11* (*c);
+	unsigned char e = 0.3 * (*a) + 0.59* (*b) + 0.11* (*c);
+	unsigned char f = 0.3 * (*a) + 0.59* (*b) + 0.11* (*c);
 	if (!(CheckRange0_255(d) && CheckRange0_255(e) && CheckRange0_255(f)))
 		throw exception("×ª»¯Ëã·¨ÓÐÎÊÌâ£¬µÃµ½µÄÖµ³¬ÏÞÁË 0-255");
 	*a = d;
@@ -479,9 +499,11 @@ void IPcode1::SaveChannel(char * path, int channel)
 	delete[]Channeldata;
 }
 
-void IPcode1::SaveBmpTool(char * path, unsigned char *imgBuf, int width, int height, int biBitCount)
+void IPcode1::SaveBmpTool(char * path, unsigned char *imgBuf, int width, int height, int biBitCount)const
 //±ØÐë±£Ö¤imgBufµÄÖµµÈÓÚlineByte*height
 {
+	if (imgBuf == NULL)
+		return;
 	//ÑÕÉ«±í´óÐ¡£¬ÒÔ×Ö½ÚÎªµ¥Î»£¬»Ò¶ÈÍ¼ÏñÑÕÉ«±íÎª1024×Ö½Ú£¬²ÊÉ«Í¼ÏñÑÕÉ«±í´óÐ¡Îª0
 	int colorTablesize;
 	if (biBitCount == 24)
@@ -567,7 +589,8 @@ void IPcode1::makeBmpTimesof(unsigned int widthtimes, unsigned int heighttimes)
 		{
 			WORD linebytes = (infohead.biWidth * infohead.biBitCount / 8 + 3) / 4 * 4;
 			if (infohead.biSizeImage != linebytes*infohead.biHeight)
-				throw exception("ÐèÒªÏÈ±£Ö¤Í¼Æ¬Êý¾ÝµÄÃ¿ÐÐ×Ö½ÚÊýÊÇ4µÄ±¶Êý");
+				cout << "warning:Í¼Æ¬Êý¾ÝµÄÃ¿ÐÐ×Ö½ÚÊý²»ÊÇ4µÄ±¶Êý" << infohead.biSizeImage << " " << linebytes*infohead.biHeight << endl;
+				/*throw exception("ÐèÒªÏÈ±£Ö¤Í¼Æ¬Êý¾ÝµÄÃ¿ÐÐ×Ö½ÚÊýÊÇ4µÄ±¶Êý");*/
 			LONG newbiWidth = (infohead.biWidth + widthtimes-1) / widthtimes * widthtimes;
 			WORD newLinebytes = (newbiWidth * infohead.biBitCount / 8 + 3) / 4 * 4; //±£Ö¤×Ö½ÚÊýÊÇ4µÄ±¶Êý
 			LONG newbiHeight = (infohead.biHeight + heighttimes-1) / heighttimes * heighttimes;
@@ -612,7 +635,7 @@ void IPcode1::makeBmpTimesof(unsigned int widthtimes, unsigned int heighttimes)
 	}
 }
 
-void IPcode1::DFT_image(int channel,unsigned int width,unsigned int height,int mode) //mode±íÃ÷ÊÇ±£Áô·ùÖµ»¹ÊÇ±£ÁôÏàÎ» 0±íÊ¾±£Áô·ùÖµ1±íÊ¾±£ÁôÏàÎ»
+void IPcode1::Kernel_image(int channel,unsigned int width,unsigned int height, string Operation, string inmode,string outmode,double Numin ) //mode±íÃ÷ÊÇ±£Áô·ùÖµ»¹ÊÇ±£ÁôÏàÎ» 0±íÊ¾±£Áô·ùÖµ1±íÊ¾±£ÁôÏàÎ»
 {
 	if (infohead.biBitCount == 8)
 	{
@@ -635,38 +658,110 @@ void IPcode1::DFT_image(int channel,unsigned int width,unsigned int height,int m
 		makeBmpTimesof(width, height); //ÏÈ±£Ö¤Í¼Æ¬µÄ³¤ºÍ¿í¶¼ÊÇËùÊäÈë²ÎÊýµÄ±¶Êý
 		unsigned int * amplitudeStore = NULL;
 		double * phaseStore = NULL;
-		if (mode == 0)
+		if (outmode == "ampl")
 		{
 			amplitudeStore = new unsigned int[infohead.biWidth*infohead.biHeight];
 		}
-		else if (mode == 1)
+		else if (outmode == "phase")
 		{
 			phaseStore = new double[infohead.biWidth*infohead.biHeight];
 		}
 		else
-			throw exception("Î´¶¨Òåmode");
+			throw exception("Î´¶¨Òåoutmode");
 		
+		vector<complex<double>> DFTpart(width*height); // ´óÐ¡Ó¦¸ÃÊÇwidth*height
 		for (LONG j = 0; j < infohead.biHeight / height; j++)
 		{
 			for (LONG i = 0; i < infohead.biWidth / width; i++)
 			{
 				auto xoffset = i*width;
 				auto yoffset = j*height;
-				vector<complex<double>> DFTpart(0); // ´óÐ¡Ó¦¸ÃÊÇwidth*height
+				int DFTCount = 0;
+				
 				for (unsigned int y = 0; y < height; y++)
 				{
 					for (unsigned int x = 0; x < width; x++)
 					{
 						int bitlocation;
 						auto pixel = GetPixel(xoffset + x, yoffset + y, bitlocation);
-						DFTpart.push_back(*pixel[channel]);
+						DFTpart[DFTCount++] = *pixel[channel];
 					}
 				}
 				if (DFTpart.size() != width*height )
 					throw exception("³ÌÐòÂß¼­³ö´í");
-				DFTpart = Operate::FFT_2D(DFTpart, width, height);
+				if (Operation == "DFT")
+					DFTpart = Operate::FFT_2D(DFTpart, width, height);
+				else if (Operation == "IDFT")
+				{	
+					if (inmode == "phase")//Ö»ÓÐIDFT¹Ø×¢inmode 
+					{
+						vector<double> phasevec(DFTpart.size());
+						for (int thisi = 0; thisi < phasevec.size(); thisi++)
+							phasevec[thisi] = DFTpart[thisi].real();
+						double maxelement = *max_element(phasevec.begin(), phasevec.end());
+						double minelement = *min_element(phasevec.begin(), phasevec.end());
+						for (int thisi = 0; thisi < phasevec.size(); thisi++)
+							phasevec[thisi] = abs(double(phasevec[thisi] - minelement)) / abs(double(maxelement - minelement));
 
-				int DFTCount = 0;
+						double lower = -pi;
+						double upper = pi;
+						size_t count = 0;
+						for (auto iterator = DFTpart.begin(); iterator != DFTpart.end(); iterator++)
+						{
+							*iterator = ComplexEXP(1, lower + double(upper - lower)*phasevec[count++]).readcomp();
+						}
+					}
+					else if (inmode == "ampl") {}
+					else
+						throw exception("ÊäÈëÁËÎ´¶¨ÒåµÄinmode");
+					DFTpart = Operate::IFFT_2D(DFTpart, width, height);
+				}
+				else if (Operation == "Black")
+				{
+					for (int i = 0; i < DFTpart.size(); i++)
+						DFTpart[i] = 0;
+					DFTpart[0] = 255;
+					//DFTpart[DFTpart.size() - 1] = 255;
+				}
+				else if (Operation == "normal")
+				{
+					DFTpart = Operate::FFT_2D(DFTpart, width, height);
+					DFTpart = Operate::IFFT_2D(DFTpart, width, height);//²âÊÔFFTÓÐÃ»ÓÐÐ´¶Ô ¾­¹ýÒ»ÕýÒ»ÄæÈç¹ûÃ»ÓÐÈÎºÎ¸Ä±äµÄ»°ËµÃ÷¾Í¶ÔµÄ
+					//cout << "²âÊÔFFTÓÐÃ»ÓÐÐ´¶Ô ¾­¹ýÒ»ÕýÒ»ÄæÈç¹ûÃ»ÓÐÈÎºÎ¸Ä±äµÄ»°ËµÃ÷¾Í¶ÔµÄ";
+				}
+				else if (Operation == "DCT")
+				{
+					if (width != height)
+						throw exception("ÎÞ·¨´¦Àíwidth != heightµÄÇé¿ö");
+					if (Numin > width*width)
+						throw exception("±£ÁôµÄDCTÏµÊý¸öÊý²»¶Ô");
+					vector<double> tmpDCT;
+					Operate::TransvecComplex2Double(DFTpart, tmpDCT);
+					Operate::DCT_2D(tmpDCT, width);
+					Operate::zigzagRetainDCT(tmpDCT, width, Numin);
+					Operate::TransvecDouble2Complex(tmpDCT, DFTpart);
+				}
+				else if (Operation == "IDCT")
+				{
+					if (width != height)
+						throw exception("ÎÞ·¨´¦Àíwidth != heightµÄÇé¿ö");
+					vector<double> tmpDCT;
+					Operate::TransvecComplex2Double(DFTpart, tmpDCT);
+					Operate::IDCT_2D(tmpDCT, width);
+					Operate::TransvecDouble2Complex(tmpDCT, DFTpart);
+				}
+				else if (Operation == "normalDCT")
+				{
+					vector<double> tmpDCT;
+					Operate::TransvecComplex2Double(DFTpart, tmpDCT);
+					Operate::DCT_2D(tmpDCT, width);
+					Operate::IDCT_2D(tmpDCT, width);
+					Operate::TransvecDouble2Complex(tmpDCT, DFTpart); //¾­¹ý²âÊÔËÆºõÊÇÃ»ÓÐÎÊÌâµÄ  ¾ÍÊÇÔÚÁÁ¶ÈÉÏÓÐµãÇø±ð
+				}
+				else
+					throw exception("ÊäÈëµÄOperation²»¶Ô£¬Ö»ÄÜÔÚÌØ¶¨·¶Î§ÀïÑ¡");
+
+				DFTCount = 0;
 				for (unsigned int y = 0; y < height; y++)
 				{
 					for (unsigned int x = 0; x < width; x++)
@@ -675,11 +770,11 @@ void IPcode1::DFT_image(int channel,unsigned int width,unsigned int height,int m
 						auto locy = yoffset + y;
 						ComplexEXP tmp(DFTpart[DFTCount++]);
 
-						if (mode == 0)
+						if (outmode == "ampl")
 						{
 							amplitudeStore[locx + locy*infohead.biWidth] = tmp.read_amplitude();
 						}
-						else if (mode == 1)
+						else if (outmode == "phase")
 						{
 							phaseStore[locx + locy*infohead.biWidth] = tmp.read_phase();
 						}
@@ -688,14 +783,14 @@ void IPcode1::DFT_image(int channel,unsigned int width,unsigned int height,int m
 			}
 		}
 
-		if (mode == 0)
+		if (outmode == "ampl")
 		{
 			unsigned int * begin = amplitudeStore;
 			unsigned int * end = amplitudeStore + (infohead.biWidth*infohead.biHeight - 1);
 			vector<double> normal_list = normalization_zk<unsigned int>(begin, end);
 			Denormalization_zk<unsigned int>(begin, end, 0, 255, normal_list);
 		}
-		else if (mode == 1)
+		else if (outmode == "phase")
 		{
 			double * begin = phaseStore;
 			double * end = phaseStore + (infohead.biWidth*infohead.biHeight - 1);
@@ -709,11 +804,11 @@ void IPcode1::DFT_image(int channel,unsigned int width,unsigned int height,int m
 			for (LONG x = 0; x < infohead.biWidth; x++)
 			{
 				unsigned char value;
-				if (mode == 0)
+				if (outmode == "ampl")
 				{
 					value = amplitudeStore[count++];
 				}
-				else if (mode == 1)
+				else if (outmode == "phase")
 				{
 					value = phaseStore[count++];
 				}
@@ -729,7 +824,82 @@ void IPcode1::DFT_image(int channel,unsigned int width,unsigned int height,int m
 	}
 }
 
+void IPcode1::MakeRGB24_TO_Gray8()
+{
+	Transfer(RGB2GrayValue);
+	DWORD sizeimage;
+	unsigned char * singelchannel = extractDataChannel(0, sizeimage);
+	delete[]pbmpBuf;
+	pbmpBuf = singelchannel;
+	infohead.biBitCount = 8;
+	int linebytes = (infohead.biWidth * infohead.biBitCount / 8 + 3) / 4 * 4;
+	infohead.biSizeImage = infohead.biHeight*linebytes;
+	if (sizeimage != infohead.biSizeImage)
+		throw exception("Âß¼­ÓÐ´í");
+}
 
+void IPcode1::ChangeSingleChannelInputNEWptrData(unsigned char * newbmpdataptr, LONG width, LONG height, vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru, unsigned char value)
+//ÒÔÊäÈëµÄµ¥Í¨µÀÊý¾Ýnewbmpdataptr£¨ÐÂÉêÇëµÄµØÖ·£¬Óë³ÉÔ±Êý¾ÝÎÞ¹Ø£©ÎªÆðµã£¬ld lu rd ruÎª´ýÐÞ¸ÄµÄÏñËØ·½¿ò,valueÎªÐèÒªÐÞ¸ÄµÄÖµ 
+//width heightÎªnewbmpdataptr´ú±íµÄÍ¼ÏñµÄ³¤ºÍ¿í
+{
+	if (ld[0] != lu[0] || rd[0] != ru[0] || lu[1] != ru[1] || ld[1] != rd[1])
+		throw exception("²»ÊÇ·½¿ò");
+	if (ld[0] > rd[0] || ld[1] > lu[1])
+		throw exception("ÉèÖÃµÄ·½¿òÖµ²»¶Ô");
+	if (ld[0] < 0 || rd[0] >= width || ld[1] < 0 || lu[1] >= height)
+		throw exception("ÉèÖÃµÄ·½¿òÖµ³¬³ö×ÜµÄÍ¼Æ¬µÄ´óÐ¡ÁË");
 
+	WORD linebytes = (width * 8 / 8 + 3) / 4 * 4; //Ö»ÄÜÎªµ¥Í¨µÀÊý¾Ý
+	for (LONG y = ld[1]; y <= lu[1]; y++)
+	{
+		for (LONG x = ld[0]; x <= rd[0]; x++)
+		{
+			newbmpdataptr[x + y*linebytes] = value;
+		}
+	}
+}
+void IPcode1::plot_DCTkernel_Image(int N) //Ò²¿ÉÒÔ´Ëº¯ÊýÎªÄ£°å£¬»æÖÆËùÓÐµÄ±ä»»ºË»ùÍ¼Ïñ Ê±¼äÎÊÌâ£¬²»ÊÇ¼¼ÊõÎÊÌâ Ê±¼äÓÐÏÞ
+{
+	makeBmpTimesof(N, N);
+	DWORD sizeimage;
+	unsigned char * singelchannel = extractDataChannel(0, sizeimage);
+	double* Value = new double[N*N]; //´Ó×óµ½ÓÒ ´ÓÏÂµ½ÉÏ´¢´æÃ¿¸ö·Ö¿éÍ¼¿éµÄÖµ
 
-
+	for (int v = 0; v < N; v++)
+	{
+		for (int u = 0; u < N; u++)
+		{
+			for (int y = 0; y < N; y++)
+			{
+				for (int x = 0; x < N; x++)
+				{
+					if (u != 0 || v != 0)
+						Value[x + y*N] = 1.0 / (2 * pow(N, 3))*cos((2 * x + 1)*u*pi)*cos((2 * y + 1)*v*pi);
+					else
+						Value[x + y*N] = 1.0 / N;
+				}
+			}
+			double * begin = Value;
+			double * end = Value + N*N - 1;
+			Denormalization_zk<double>(begin, end, 0, 255, normalization_zk<double>(begin, end)); //¹éÒ»»¯²¢»¯µ½0-255
+			
+			for (int valuey = 0; valuey < N; valuey++)
+			{
+				for (int valuex = 0; valuex < N; valuex++)
+				{
+					auto pixelwidthblock = infohead.biWidth / N;
+					auto pixelLengthblock = infohead.biHeight / N;
+					vector<LONG> ld = { valuex *pixelwidthblock,valuey*pixelLengthblock };
+					vector<LONG> lu = { valuex *pixelwidthblock,(valuey+1)*pixelLengthblock -1 };
+					vector<LONG> rd = { (valuex+1) *pixelwidthblock -1,valuey*pixelLengthblock };
+					vector<LONG> ru = { (valuex + 1) *pixelwidthblock - 1,(valuey + 1)*pixelLengthblock - 1 };
+					ChangeSingleChannelInputNEWptrData(singelchannel, infohead.biWidth, infohead.biHeight, ld, lu, rd, ru, Value[valuex+ valuey*N]);
+				}
+			}
+			string filename = string("DCTkernel_Image_") + to_string(u)+string("_")+to_string(v)+string(".bmp");
+			SaveBmpTool((char*)filename.data(), singelchannel, infohead.biWidth, infohead.biHeight, 8);//±£´æÎª»Ò¶ÈÍ¼,²»ÐÞ¸Ä±¾À´µÄÍ¼Æ¬
+		}
+	}
+	delete[]singelchannel;
+	delete[]Value;
+}

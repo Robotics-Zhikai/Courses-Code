@@ -252,24 +252,195 @@ void main()
 {
 	try
 	{
+		Operate stast;
+		vector<double> DCTtest = { 1 ,2,3,4 };
+		vector<double> ssdafa = stast.DCT_2D(DCTtest, 2);
+		Operate ttt;
+		ttt.zigzagRetainDCT(vector<double>(64), 8, 1);
+		cout << sin(5.7) << endl;
+		vector<complex<double>> testtp = { complex<double>(3,2),complex<double>(-3,3),complex<double>(-3,-4),complex<double>(3,-5) };
+		
+		vector<complex<double>> result = stast.IFFT_2D(testtp, 2, 2);
+
+
 		char path[] = "D:\\Study\\硕士\\我的工作\\硕士学位课程\\数字图像处理\\Code\\lena512color.bmp";
 		///////////////////////////////////////////////////////////////////////////////////////////////
 		//实验二
+		IPcode1 ex2_origin(path);
+		
+
+		IPcode1 ex2_origin_gray8 = ex2_origin;
+		ex2_origin_gray8.MakeRGB24_TO_Gray8();
+		ex2_origin_gray8.SaveBmp("ex2_origin_gray8.bmp");
+
+		IPcode1 ex2_origin_gray8_DCT_IDCT = ex2_origin_gray8;
+		ex2_origin_gray8_DCT_IDCT.Kernel_image(0, 8, 8, "normalDCT", "", "ampl");
+		ex2_origin_gray8_DCT_IDCT.SaveBmp("ex2_origin_gray8_DCT_IDCT.bmp");
+
+		IPcode1 ex2_origin_gray8_DCT1 = ex2_origin_gray8;
+		ex2_origin_gray8_DCT1.Kernel_image(0, 8, 8, "DCT", "", "ampl", 1);
+		IPcode1 ex2_origin_gray8_DCT2 = ex2_origin_gray8;
+		ex2_origin_gray8_DCT2.Kernel_image(0, 8, 8, "DCT", "", "ampl", 2);
+		IPcode1 ex2_origin_gray8_DCT4 = ex2_origin_gray8;
+		ex2_origin_gray8_DCT4.Kernel_image(0, 8, 8, "DCT", "", "ampl", 4);
+		IPcode1 ex2_origin_gray8_DCT6 = ex2_origin_gray8;
+		ex2_origin_gray8_DCT6.Kernel_image(0, 8, 8, "DCT", "", "ampl", 6);
+		IPcode1 ex2_origin_gray8_DCT8 = ex2_origin_gray8;
+		ex2_origin_gray8_DCT8.Kernel_image(0, 8, 8, "DCT", "", "ampl", 8);
+		IPcode1 ex2_origin_gray8_DCT10 = ex2_origin_gray8;
+		ex2_origin_gray8_DCT10.Kernel_image(0, 8, 8, "DCT", "", "ampl", 10);
+		IPcode1 ex2_origin_gray8_DCT40 = ex2_origin_gray8;
+		ex2_origin_gray8_DCT40.Kernel_image(0, 8, 8, "DCT", "", "ampl", 40);
+		IPcode1 ex2_origin_gray8_DCT50 = ex2_origin_gray8;
+		ex2_origin_gray8_DCT50.Kernel_image(0, 8, 8, "DCT", "", "ampl", 50);
+		IPcode1 ex2_origin_gray8_DCT64 = ex2_origin_gray8;
+		ex2_origin_gray8_DCT64.Kernel_image(0, 8, 8, "DCT", "", "ampl", 64);
+
+		ex2_origin_gray8_DCT1.SaveBmp("ex2_origin_gray8_DCT1.bmp");
+		ex2_origin_gray8_DCT2.SaveBmp("ex2_origin_gray8_DCT2.bmp");
+		ex2_origin_gray8_DCT4.SaveBmp("ex2_origin_gray8_DCT4.bmp");
+		ex2_origin_gray8_DCT6.SaveBmp("ex2_origin_gray8_DCT6.bmp");
+		ex2_origin_gray8_DCT8.SaveBmp("ex2_origin_gray8_DCT8.bmp");
+		ex2_origin_gray8_DCT10.SaveBmp("ex2_origin_gray8_DCT10.bmp");
+		ex2_origin_gray8_DCT40.SaveBmp("ex2_origin_gray8_DCT40.bmp");
+		ex2_origin_gray8_DCT50.SaveBmp("ex2_origin_gray8_DCT50.bmp");
+		ex2_origin_gray8_DCT64.SaveBmp("ex2_origin_gray8_DCT64.bmp");
+
+		IPcode1 ex2_origin_gray8_DCT1_IDCT = ex2_origin_gray8_DCT1;
+		ex2_origin_gray8_DCT1_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
+		IPcode1 ex2_origin_gray8_DCT2_IDCT = ex2_origin_gray8_DCT2;
+		ex2_origin_gray8_DCT2_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
+		IPcode1 ex2_origin_gray8_DCT4_IDCT = ex2_origin_gray8_DCT4;
+		ex2_origin_gray8_DCT4_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
+		IPcode1 ex2_origin_gray8_DCT6_IDCT = ex2_origin_gray8_DCT6;
+		ex2_origin_gray8_DCT6_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
+		IPcode1 ex2_origin_gray8_DCT8_IDCT = ex2_origin_gray8_DCT8;
+		ex2_origin_gray8_DCT8_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
+		IPcode1 ex2_origin_gray8_DCT10_IDCT = ex2_origin_gray8_DCT10;
+		ex2_origin_gray8_DCT10_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
+		IPcode1 ex2_origin_gray8_DCT40_IDCT = ex2_origin_gray8_DCT40;
+		ex2_origin_gray8_DCT40_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
+		IPcode1 ex2_origin_gray8_DCT50_IDCT = ex2_origin_gray8_DCT50;
+		ex2_origin_gray8_DCT50_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
+		IPcode1 ex2_origin_gray8_DCT64_IDCT = ex2_origin_gray8_DCT64;
+		ex2_origin_gray8_DCT64_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
+
+		ex2_origin_gray8_DCT1_IDCT.SaveBmp("ex2_origin_gray8_DCT1_IDCT.bmp");
+		ex2_origin_gray8_DCT2_IDCT.SaveBmp("ex2_origin_gray8_DCT2_IDCT.bmp");
+		ex2_origin_gray8_DCT4_IDCT.SaveBmp("ex2_origin_gray8_DCT4_IDCT.bmp");
+		ex2_origin_gray8_DCT6_IDCT.SaveBmp("ex2_origin_gray8_DCT6_IDCT.bmp");
+		ex2_origin_gray8_DCT8_IDCT.SaveBmp("ex2_origin_gray8_DCT8_IDCT.bmp");
+		ex2_origin_gray8_DCT10_IDCT.SaveBmp("ex2_origin_gray8_DCT10_IDCT.bmp");
+		ex2_origin_gray8_DCT40_IDCT.SaveBmp("ex2_origin_gray8_DCT40_IDCT.bmp");
+		ex2_origin_gray8_DCT50_IDCT.SaveBmp("ex2_origin_gray8_DCT50_IDCT.bmp");
+		ex2_origin_gray8_DCT64_IDCT.SaveBmp("ex2_origin_gray8_DCT64_IDCT.bmp");
+
+		//IPcode1 ex2_origin_black = ex2_origin;
+		//ex2_origin_black.Kernel_image(0, 8, 8, "Black", "whatever", "ampl");
+		//ex2_origin_black.SaveBmp("black.bmp");
+		//ex2_origin_black.SaveChannel("black_channelY.bmp",0);
+
+		ex2_origin.plot_DCTkernel_Image(8);
+		ex2_origin.SaveBmp("经过plot_DCTkernel_Image后的图片.bmp");
+		
+		IPcode1 ex2_origin_gray = ex2_origin;
+		ex2_origin_gray.Transfer(IPcode1::RGB2GrayValue);
+
+		IPcode1 ex2_origin_crop = ex2_origin;
+		ex2_origin_crop.CropBmp(0, 0, 510, 501);
+
+		IPcode1 ex2_origin_crop_YCrCb = ex2_origin_crop;
+		ex2_origin_crop_YCrCb.Transfer(IPcode1::RGB2YCrCb);
+
+
+		/*测试DFT2d IDFT2d是否正确 测试结果是正确的*/
+		ex2_origin_crop_YCrCb.SaveChannel("ex2_origin_crop_YCrCb_ChannelY.bmp", 0);
+		IPcode1 ex2_origin_crop_YCrCb_normal_ampl = ex2_origin_crop_YCrCb;
+		ex2_origin_crop_YCrCb_normal_ampl.Kernel_image(0, 8, 8, "normal", "s", "ampl");
+		ex2_origin_crop_YCrCb_normal_ampl.SaveChannel("ex2_origin_crop_YCrCb_normal_ampl_channelY.bmp", 0);
+
+		IPcode1 ex2_origin_crop_YCrCb_normal_phase = ex2_origin_crop_YCrCb;
+		ex2_origin_crop_YCrCb_normal_phase.Kernel_image(0, 8, 8, "normal", "s", "phase");
+		ex2_origin_crop_YCrCb_normal_phase.SaveChannel("ex2_origin_crop_YCrCb_normal_phase_channelY.bmp", 0);
+
+
+
+
+		IPcode1 ex2_origin_crop_YCrCb_DFT_Y_ampl = ex2_origin_crop_YCrCb;
+		ex2_origin_crop_YCrCb_DFT_Y_ampl.Kernel_image(0, 8, 8, "DFT", "whatever", "ampl");
+
+		IPcode1 ex2_origin_crop_YCrCb_DFT_Y_phase = ex2_origin_crop_YCrCb;
+		ex2_origin_crop_YCrCb_DFT_Y_phase.Kernel_image(0, 8, 8, "DFT", "whatever", "phase");
+
+		IPcode1 ex2_origin_crop_YCrCb_IDFT_ampl_ampl = ex2_origin_crop_YCrCb_DFT_Y_ampl;
+		ex2_origin_crop_YCrCb_IDFT_ampl_ampl.Kernel_image(0, 8, 8, "IDFT", "ampl", "ampl");
+
+		IPcode1 ex2_origin_crop_YCrCb_IDFT_ampl_phase = ex2_origin_crop_YCrCb_DFT_Y_ampl;
+		ex2_origin_crop_YCrCb_IDFT_ampl_phase.Kernel_image(0, 8, 8, "IDFT", "ampl", "phase");
+
+		IPcode1 ex2_origin_crop_YCrCb_IDFT_phase_ampl = ex2_origin_crop_YCrCb_DFT_Y_phase;
+		ex2_origin_crop_YCrCb_IDFT_phase_ampl.Kernel_image(0, 8, 8, "IDFT", "phase", "ampl");
+
+		IPcode1 ex2_origin_crop_YCrCb_IDFT_phase_phase = ex2_origin_crop_YCrCb_DFT_Y_phase;
+		ex2_origin_crop_YCrCb_IDFT_phase_phase.Kernel_image(0, 8, 8, "IDFT", "phase", "phase");
+
+		ex2_origin.SaveBmp("origin.bmp");
+		ex2_origin_crop.SaveBmp("ex2_origin_crop.bmp");
+
+		ex2_origin_crop_YCrCb.SaveBmp("ex2_origin_crop_YCrCb.bmp");
+		ex2_origin_crop_YCrCb.SaveChannel("ex2_origin_crop_YCrCb_channelY.bmp", 0);
+
+		ex2_origin_crop_YCrCb_DFT_Y_ampl.SaveBmp("ex2_origin_crop_YCrCb_DFT_Y_ampl.bmp");
+		ex2_origin_crop_YCrCb_DFT_Y_ampl.SaveChannel("ex2_origin_crop_YCrCb_DFT_Y_ampl_channelY.bmp", 0);
+
+		ex2_origin_crop_YCrCb_DFT_Y_phase.SaveBmp("ex2_origin_crop_YCrCb_DFT_Y_phase.bmp");
+		ex2_origin_crop_YCrCb_DFT_Y_phase.SaveChannel("ex2_origin_crop_YCrCb_DFT_Y_phase_channelY.bmp", 0);
+
+		ex2_origin_crop_YCrCb_IDFT_ampl_ampl.SaveBmp("ex2_origin_crop_YCrCb_IDFT_ampl_ampl.bmp");
+		ex2_origin_crop_YCrCb_IDFT_ampl_ampl.SaveChannel("ex2_origin_crop_YCrCb_IDFT_ampl_ampl_channelY.bmp", 0);
+
+		ex2_origin_crop_YCrCb_IDFT_ampl_phase.SaveBmp("ex2_origin_crop_YCrCb_IDFT_ampl_phase.bmp");
+		ex2_origin_crop_YCrCb_IDFT_ampl_phase.SaveChannel("ex2_origin_crop_YCrCb_IDFT_ampl_phase_channelY.bmp", 0);
+
+		ex2_origin_crop_YCrCb_IDFT_phase_ampl.SaveBmp("ex2_origin_crop_YCrCb_IDFT_phase_ampl.bmp");
+		ex2_origin_crop_YCrCb_IDFT_phase_ampl.SaveChannel("ex2_origin_crop_YCrCb_IDFT_phase_ampl_channelY.bmp", 0);
+
+		ex2_origin_crop_YCrCb_IDFT_phase_phase.SaveBmp("ex2_origin_crop_YCrCb_IDFT_phase_phase.bmp");
+		ex2_origin_crop_YCrCb_IDFT_phase_phase.SaveChannel("ex2_origin_crop_YCrCb_IDFT_phase_phase_channelY.bmp", 0);
+
 		IPcode1 ex2_0(path);
 		IPcode1 ex2_1(path);
+		IPcode1 ex2_3(path);
+		IPcode1 ex2_4(path);
+		
+		ex2_4.MakeRGB24_TO_Gray8();
+		ex2_4.SaveBmp("Gray8.bmp");
+
+		ex2_3.Transfer(IPcode1::RGB2GrayValue);
+		ex2_3.SaveBmp("Gray24.bmp"); //8和24一模一样，肉眼看不出区别
+
 		ex2_0.CropBmp(0, 0, 510, 501);
 		ex2_0.Transfer(IPcode1::RGB2YCrCb);
 		ex2_0.SaveBmp("YCrCb.bmp");
 		ex2_0.SaveChannel("YCrCb_Y.bmp", 0);
-		ex2_0.DFT_image(0, 8, 8, 0);
-		ex2_0.SaveBmp("YCrCb_DFT_Y.bmp");
-		ex2_0.SaveChannel("YCrCb_DFT_Y_Amp.bmp",0);
+		ex2_0.Kernel_image(0, 8, 8, "DFT","whatever","ampl");
+		ex2_0.SaveBmp("DFT_whatever_ampl.bmp");
+		ex2_0.SaveChannel("channelY_DFT_whatever_ampl.bmp",0);
+		ex2_0.Kernel_image(0,8,8,"IDFT","ampl","ampl");//在0通道IDFT，并保留phase的灰度图
+		ex2_0.SaveBmp("IDFT_ampl_ampl.bmp");
+		ex2_0.SaveChannel("channelY_IDFT_ampl_ampl.bmp", 0);
 
 		ex2_1.Transfer(IPcode1::RGB2YCrCb);
-		ex2_1.DFT_image(0, 8, 8, 1);
-		ex2_1.SaveChannel("YCrCb_DFT_Y_Phase.bmp",0);
-
+		ex2_1.Kernel_image(0, 8, 8, "DFT", "whatever", "phase");
+		IPcode1 ex2_5 = ex2_1;
+		ex2_1.SaveChannel("DFT_whatever_phase.bmp",0);
+		ex2_1.Kernel_image(0, 8, 8, "IDFT","phase", "phase");
+		ex2_1.SaveBmp("IDFT_phase_phase.bmp");
+		ex2_1.SaveChannel("channelY_IDFT_phase_phase.bmp", 0);
 		
+		ex2_5.Kernel_image(0, 8, 8, "IDFT", "phase", "ampl");
+		ex2_5.SaveBmp("IDFT_phase_ampl.bmp");
+		ex2_5.SaveChannel("channelY_IDFT_phase_ampl.bmp", 0);
 		///////////////////////////////////////////////////////////////////////////////////////////////
 
 
