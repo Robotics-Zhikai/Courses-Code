@@ -136,33 +136,37 @@ public:
 		if (input.size() != N*N)
 			throw exception("input必须是方阵"); //也有可能不是方阵，但时间有限，就弄成方阵吧
 
+		double Cu, Cv;
+		vector<double> store(2);
+		store[0] = 1 / std::sqrt(N);
+		store[1] = std::sqrt(2) / std::sqrt(N);
+
 		vector<double> result(N*N);
 		for (int y = 0; y < N; y++)
 		{
 			for (int x = 0; x < N; x++)
 			{
-				double Eu, Ev;
 				result[x + y*N] = 0;
 				for (size_t v = 0; v < N; v++)
 				{
 					for (size_t u = 0; u < N; u++)
 					{
-						if (u == v&&u == 0)
-						{
-							Eu = std::sqrt(2) / 2;
-							Ev = Eu;
-						}
+						if (u == 0)
+							Cu = store[0];
 						else
-						{
-							Eu = 1;
-							Ev = 1;
-						}
-						result[x + y*N] += Eu*Ev*input[u + v*N] * cos((2 * x + 1)*u*pi / (2 * N))*cos((2 * y + 1)*v*pi / (2 * N));
+							Cu = store[1];
+						if (v == 0)
+							Cv = store[0];
+						else
+							Cv = store[1];
+
+						result[x + y*N] += Cu*Cv*input[u + v*N] * cos((x + 0.5)*pi*u / N)*cos((y + 0.5)*pi*v / N);
 					}
 				}
-				result[x + y*N] *= (2.0 / N);
+				result[x + y*N] *= 1;
 			}
 		}
+		//output = result;
 		return result;
 	}
 	/*void IDCT_2D(vector<complex<double>> & input, int N)
@@ -193,33 +197,38 @@ public:
 			throw ("N不能等于0");
 		if (input.size() != N*N)
 			throw exception("input必须是方阵"); //也有可能不是方阵，但时间有限，就弄成方阵吧
+
+		vector<double> store(2);
+		store[0] = 1 / std::sqrt(N);
+		store[1] = std::sqrt(2) / std::sqrt(N);
+		double Cu, Cv;
+
 		vector<double> result(N*N);
 		for (int v = 0; v < N; v++)
 		{
 			for (int u = 0; u < N; u++)
 			{
-				double Eu, Ev;
-				if (u == v&&u == 0)
-				{
-					Eu = std::sqrt(2) / 2;
-					Ev = Eu;
-				}
+				if (u == 0)
+					Cu = store[0];
+				else 
+					Cu = store[1];
+				if (v == 0)
+					Cv = store[0];
 				else
-				{
-					Eu = 1;
-					Ev = 1;
-				}
+					Cv = store[1];
+
 				result[u + v*N] = 0;
 				for (size_t y = 0; y < N; y++)
 				{
 					for (size_t x = 0; x < N; x++)
 					{
-						result[u + v*N] += input[x + y*N] * cos((2.0 * x + 1)*u*pi / (2.0 * N))*cos((2.0 * y + 1)*v*pi / (2.0 * N));
+						result[u + v*N] += input[x + y*N] * cos((x + 0.5)*pi*u / N)*cos((y + 0.5)*pi*v / N);
 					}
 				}
-				result[u + v*N] *= (2 * Eu*Ev / N);
+				result[u + v*N] *= (Cu*Cv);
 			}
 		}
+		
 		return result;
 	}
 	vector<complex<double>> FFT_2D(const vector<complex<double>> & input, int M, int N) //二维的FFT M为width N为Height 从左到右 从下到上

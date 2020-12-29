@@ -254,7 +254,7 @@ void main()
 	{
 		Operate stast;
 		vector<double> DCTtest = { 1 ,2,3,4 };
-		vector<double> ssdafa = stast.DCT_2D(DCTtest, 2);
+		vector<double> ssdafa = stast.IDCT_2D(DCTtest, 2);
 		Operate ttt;
 		ttt.zigzagRetainDCT(vector<double>(64), 8, 1);
 		cout << sin(5.7) << endl;
@@ -273,10 +273,42 @@ void main()
 		ex2_origin_gray8.MakeRGB24_TO_Gray8();
 		ex2_origin_gray8.SaveBmp("ex2_origin_gray8.bmp");
 
+		IPcode1 ex2_origin_gray8_DCT1_IDCT = ex2_origin_gray8;
+		ex2_origin_gray8_DCT1_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 1);
+		ex2_origin_gray8_DCT1_IDCT.SaveBmp("ex2_origin_gray8_DCT1_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_DCT2_IDCT = ex2_origin_gray8;
+		ex2_origin_gray8_DCT2_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 2);
+		ex2_origin_gray8_DCT2_IDCT.SaveBmp("ex2_origin_gray8_DCT2_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_DCT4_IDCT = ex2_origin_gray8;
+		ex2_origin_gray8_DCT4_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 4);
+		ex2_origin_gray8_DCT4_IDCT.SaveBmp("ex2_origin_gray8_DCT4_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_DCT6_IDCT = ex2_origin_gray8;
+		ex2_origin_gray8_DCT6_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 6);
+		ex2_origin_gray8_DCT6_IDCT.SaveBmp("ex2_origin_gray8_DCT6_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_DCT8_IDCT = ex2_origin_gray8;
+		ex2_origin_gray8_DCT8_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 8);
+		ex2_origin_gray8_DCT8_IDCT.SaveBmp("ex2_origin_gray8_DCT8_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_DCT10_IDCT = ex2_origin_gray8;
+		ex2_origin_gray8_DCT10_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 10);
+		ex2_origin_gray8_DCT10_IDCT.SaveBmp("ex2_origin_gray8_DCT10_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_DCT3_IDCT = ex2_origin_gray8;
+		ex2_origin_gray8_DCT3_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 3);
+		ex2_origin_gray8_DCT3_IDCT.SaveBmp("ex2_origin_gray8_DCT3_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_DCT30_IDCT = ex2_origin_gray8;
+		ex2_origin_gray8_DCT30_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 30);
+		ex2_origin_gray8_DCT30_IDCT.SaveBmp("ex2_origin_gray8_DCT30_IDCT.bmp");
+
+		IPcode1 ex2_origin_gray8_DCT30 = ex2_origin_gray8;
+		ex2_origin_gray8_DCT30.Kernel_image(0, 8, 8, "DCT", "", "ampl", 30);
+		ex2_origin_gray8_DCT30.SaveBmp("ex2_origin_gray8_DCT30.bmp");
+
+		
+
 		IPcode1 ex2_origin_gray8_DCT_IDCT = ex2_origin_gray8;
 		ex2_origin_gray8_DCT_IDCT.Kernel_image(0, 8, 8, "normalDCT", "", "ampl");
 		ex2_origin_gray8_DCT_IDCT.SaveBmp("ex2_origin_gray8_DCT_IDCT.bmp");
 
+		
 		IPcode1 ex2_origin_gray8_DCT1 = ex2_origin_gray8;
 		ex2_origin_gray8_DCT1.Kernel_image(0, 8, 8, "DCT", "", "ampl", 1);
 		IPcode1 ex2_origin_gray8_DCT2 = ex2_origin_gray8;
@@ -293,8 +325,7 @@ void main()
 		ex2_origin_gray8_DCT40.Kernel_image(0, 8, 8, "DCT", "", "ampl", 40);
 		IPcode1 ex2_origin_gray8_DCT50 = ex2_origin_gray8;
 		ex2_origin_gray8_DCT50.Kernel_image(0, 8, 8, "DCT", "", "ampl", 50);
-		IPcode1 ex2_origin_gray8_DCT64 = ex2_origin_gray8;
-		ex2_origin_gray8_DCT64.Kernel_image(0, 8, 8, "DCT", "", "ampl", 64);
+		
 
 		ex2_origin_gray8_DCT1.SaveBmp("ex2_origin_gray8_DCT1.bmp");
 		ex2_origin_gray8_DCT2.SaveBmp("ex2_origin_gray8_DCT2.bmp");
@@ -304,36 +335,11 @@ void main()
 		ex2_origin_gray8_DCT10.SaveBmp("ex2_origin_gray8_DCT10.bmp");
 		ex2_origin_gray8_DCT40.SaveBmp("ex2_origin_gray8_DCT40.bmp");
 		ex2_origin_gray8_DCT50.SaveBmp("ex2_origin_gray8_DCT50.bmp");
-		ex2_origin_gray8_DCT64.SaveBmp("ex2_origin_gray8_DCT64.bmp");
+		
 
-		IPcode1 ex2_origin_gray8_DCT1_IDCT = ex2_origin_gray8_DCT1;
-		ex2_origin_gray8_DCT1_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
-		IPcode1 ex2_origin_gray8_DCT2_IDCT = ex2_origin_gray8_DCT2;
-		ex2_origin_gray8_DCT2_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
-		IPcode1 ex2_origin_gray8_DCT4_IDCT = ex2_origin_gray8_DCT4;
-		ex2_origin_gray8_DCT4_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
-		IPcode1 ex2_origin_gray8_DCT6_IDCT = ex2_origin_gray8_DCT6;
-		ex2_origin_gray8_DCT6_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
-		IPcode1 ex2_origin_gray8_DCT8_IDCT = ex2_origin_gray8_DCT8;
-		ex2_origin_gray8_DCT8_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
-		IPcode1 ex2_origin_gray8_DCT10_IDCT = ex2_origin_gray8_DCT10;
-		ex2_origin_gray8_DCT10_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
-		IPcode1 ex2_origin_gray8_DCT40_IDCT = ex2_origin_gray8_DCT40;
-		ex2_origin_gray8_DCT40_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
-		IPcode1 ex2_origin_gray8_DCT50_IDCT = ex2_origin_gray8_DCT50;
-		ex2_origin_gray8_DCT50_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
-		IPcode1 ex2_origin_gray8_DCT64_IDCT = ex2_origin_gray8_DCT64;
-		ex2_origin_gray8_DCT64_IDCT.Kernel_image(0, 8, 8, "IDCT", "", "ampl");
+		
 
-		ex2_origin_gray8_DCT1_IDCT.SaveBmp("ex2_origin_gray8_DCT1_IDCT.bmp");
-		ex2_origin_gray8_DCT2_IDCT.SaveBmp("ex2_origin_gray8_DCT2_IDCT.bmp");
-		ex2_origin_gray8_DCT4_IDCT.SaveBmp("ex2_origin_gray8_DCT4_IDCT.bmp");
-		ex2_origin_gray8_DCT6_IDCT.SaveBmp("ex2_origin_gray8_DCT6_IDCT.bmp");
-		ex2_origin_gray8_DCT8_IDCT.SaveBmp("ex2_origin_gray8_DCT8_IDCT.bmp");
-		ex2_origin_gray8_DCT10_IDCT.SaveBmp("ex2_origin_gray8_DCT10_IDCT.bmp");
-		ex2_origin_gray8_DCT40_IDCT.SaveBmp("ex2_origin_gray8_DCT40_IDCT.bmp");
-		ex2_origin_gray8_DCT50_IDCT.SaveBmp("ex2_origin_gray8_DCT50_IDCT.bmp");
-		ex2_origin_gray8_DCT64_IDCT.SaveBmp("ex2_origin_gray8_DCT64_IDCT.bmp");
+		
 
 		//IPcode1 ex2_origin_black = ex2_origin;
 		//ex2_origin_black.Kernel_image(0, 8, 8, "Black", "whatever", "ampl");

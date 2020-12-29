@@ -729,7 +729,7 @@ void IPcode1::Kernel_image(int channel,unsigned int width,unsigned int height, s
 					DFTpart = Operate::IFFT_2D(DFTpart, width, height);//测试FFT有没有写对 经过一正一逆如果没有任何改变的话说明就对的
 					//cout << "测试FFT有没有写对 经过一正一逆如果没有任何改变的话说明就对的";
 				}
-				else if (Operation == "DCT")
+				else if (Operation == "DCT") 
 				{
 					if (width != height)
 						throw exception("无法处理width != height的情况");
@@ -737,26 +737,55 @@ void IPcode1::Kernel_image(int channel,unsigned int width,unsigned int height, s
 						throw exception("保留的DCT系数个数不对");
 					vector<double> tmpDCT;
 					Operate::TransvecComplex2Double(DFTpart, tmpDCT);
-					Operate::DCT_2D(tmpDCT, width);
+					tmpDCT = Operate::DCT_2D(tmpDCT, width);
+
+					for (int i = 0; i < tmpDCT.size(); i++)
+						tmpDCT[i] = abs(tmpDCT[i]);
+					//都搞到正数上去,显示的DCT越量，说明能量越高
+
 					Operate::zigzagRetainDCT(tmpDCT, width, Numin);
 					Operate::TransvecDouble2Complex(tmpDCT, DFTpart);
 				}
-				else if (Operation == "IDCT")
+				else if (Operation == "IDCT") //这其实是有问题的，因为输入是DCT经过绝对值变换后的图像，只有正数，但这并不代表IDCT这个算法不对，算法是对的
 				{
+					throw exception("IDCT的显示在当前储存图像的像素数据unsigned char下是有问题的，因为输入是DCT经过绝对值变换后的图像，只有正数");
 					if (width != height)
 						throw exception("无法处理width != height的情况");
 					vector<double> tmpDCT;
 					Operate::TransvecComplex2Double(DFTpart, tmpDCT);
-					Operate::IDCT_2D(tmpDCT, width);
+					tmpDCT = Operate::IDCT_2D(tmpDCT, width);
+
+					auto minelement = *min_element(tmpDCT.begin(), tmpDCT.end());
+					if (minelement < 0)
+					{
+						minelement = abs(minelement);
+						for (int i = 0; i < tmpDCT.size(); i++)
+							tmpDCT[i] += minelement;
+					}//都搞到正数上去
+
+					Operate::TransvecDouble2Complex(tmpDCT, DFTpart);
+				}
+				else if (Operation == "DCT_Numin_IDCT")
+				{
+					if (width != height)
+						throw exception("无法处理width != height的情况");
+					if (Numin > width*width)
+						throw exception("保留的DCT系数个数不对");
+
+					vector<double> tmpDCT;
+					Operate::TransvecComplex2Double(DFTpart, tmpDCT);
+					tmpDCT = Operate::DCT_2D(tmpDCT, width);
+					Operate::zigzagRetainDCT(tmpDCT, width, Numin);
+					tmpDCT = Operate::IDCT_2D(tmpDCT, width);
 					Operate::TransvecDouble2Complex(tmpDCT, DFTpart);
 				}
 				else if (Operation == "normalDCT")
 				{
 					vector<double> tmpDCT;
 					Operate::TransvecComplex2Double(DFTpart, tmpDCT);
-					Operate::DCT_2D(tmpDCT, width);
-					Operate::IDCT_2D(tmpDCT, width);
-					Operate::TransvecDouble2Complex(tmpDCT, DFTpart); //经过测试似乎是没有问题的  就是在亮度上有点区别
+					tmpDCT = Operate::DCT_2D(tmpDCT, width);
+					tmpDCT = Operate::IDCT_2D(tmpDCT, width);
+					Operate::TransvecDouble2Complex(tmpDCT, DFTpart);  //现在才是没有问题的
 				}
 				else
 					throw exception("输入的Operation不对，只能在特定范围里选");
