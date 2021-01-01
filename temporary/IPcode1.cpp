@@ -887,7 +887,7 @@ void IPcode1::ChangeSingleChannelInputNEWptrData(unsigned char * newbmpdataptr, 
 		}
 	}
 }
-void IPcode1::plot_DCTkernel_Image(int N) //也可以此函数为模板，绘制所有的变换核基图像 时间问题，不是技术问题 时间有限
+void IPcode1::plot_DCTkernel_Image(int N) //也可以此函数为模板，绘制所有种类的变换核基图像 时间问题，不是技术问题 时间有限
 {
 	makeBmpTimesof(N, N);
 	DWORD sizeimage;
@@ -931,4 +931,115 @@ void IPcode1::plot_DCTkernel_Image(int N) //也可以此函数为模板，绘制所有的变换核
 	}
 	delete[]singelchannel;
 	delete[]Value;
+}
+
+IPcode1 IPcode1::operator-(const IPcode1& input)const
+{
+	if (input.infohead.biBitCount != infohead.biBitCount)
+		throw exception("参与相减的两张图片位数不一致");
+	if (input.infohead.biWidth != infohead.biWidth || input.infohead.biHeight != infohead.biHeight)
+		throw exception("参与相减的两张图片尺寸不一样");
+
+	IPcode1 result(input);
+	WORD linebytes = (infohead.biWidth * infohead.biBitCount / 8 + 3) / 4 * 4;
+	for (LONG i = 0; i < infohead.biHeight*linebytes; i++)
+	{
+		result.pbmpBuf[i] = abs(int(input.pbmpBuf[i]) - int(pbmpBuf[i]));
+	}
+	return result;
+}
+
+double IPcode1::PSNR(const IPcode1& input)const
+{
+	if (input.infohead.biBitCount != infohead.biBitCount)
+		throw exception("PSNR的两张图片位数不一致");
+	if (input.infohead.biWidth != infohead.biWidth || input.infohead.biHeight != infohead.biHeight)
+		throw exception("PSNR的两张图片尺寸不一样");
+
+	WORD linebytes = (infohead.biWidth * infohead.biBitCount / 8 + 3) / 4 * 4;
+
+	if (infohead.biBitCount == 8)
+	{
+		double MSE = 0;
+		for (LONG i = 0; i < infohead.biHeight*linebytes; i++)
+		{
+			MSE += std::pow(double(pbmpBuf[i]) - double(input.pbmpBuf[i]), 2);
+		}
+		MSE /= infohead.biWidth*infohead.biHeight;
+		double PSNR;
+		PSNR = 20 * log10(255.0 / sqrt(MSE));
+		return PSNR;
+	}
+	else
+		throw exception("暂时还无法处理其他位数的PSNR");
+	
+}
+
+vector<double> IPcode1::Histogram(int Channel, vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru)
+{
+	if (infohead.biBitCount == 8)
+	{
+		if (Channel != 0)
+			throw exception("灰度图只能由channel 0索引");
+	}
+	else if (infohead.biBitCount == 24)
+	{
+		if (Channel != 0 && Channel != 1 && Channel != 2)
+			throw exception("三通道，不能超出三通道 0 1 2 ");
+	}
+	else
+	{
+		cout << __FILE__ << __LINE__;
+		throw exception("暂时无法处理这时的情况");
+	}
+
+	if (ld[0] != lu[0] || rd[0] != ru[0] || lu[1] != ru[1] || ld[1] != rd[1])
+		throw exception("不是方框");
+	if (ld[0] > rd[0] || ld[1] > lu[1])
+		throw exception("设置的方框值不对");
+	if (ld[0] < 0 || rd[0] >= infohead.biWidth || ld[1] < 0 || lu[1] >= infohead.biHeight)
+		throw exception("设置的方框值超出总的图片的大小了");
+
+	vector <double> result(256,0);
+	LONG CountAll = 0;
+	for (LONG y = ld[1]; y <= lu[1]; y++)
+	{
+		for (LONG x = ld[0]; x <= rd[0]; x++)
+		{
+			int bitlocation;
+			auto pix = GetPixel(x, y, bitlocation);
+			result[*pix[Channel]]++; //统计个数
+			CountAll++;
+		}
+	}
+	for (size_t i = 0; i < result.size(); i++)
+	{
+		result[i] /= CountAll;
+	}
+	return result;
+}
+
+void IPcode1::Equalization_Image(int Channel, vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru)
+{
+	auto histo = Histogram(Channel, ld, lu, rd, ru);
+	vector<double> Equalization(256, 0);
+	for (int i = 0; i < Equalization.size(); i++)
+	{
+		double si = 0;
+		for (int j = 0; j <= i; j++)
+		{
+			si += histo[j];
+		}
+		si *= 255;
+		Equalization[i] = round(si);
+	}
+	for (LONG y = ld[1]; y <= lu[1]; y++)
+	{
+		for (LONG x = ld[0]; x <= rd[0]; x++)
+		{
+			int bitlocation;
+			auto pix = GetPixel(x, y, bitlocation);
+			*pix[Channel] = Equalization[*pix[Channel]];
+		}
+	}
 }

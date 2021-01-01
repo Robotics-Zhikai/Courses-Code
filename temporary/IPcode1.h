@@ -16,6 +16,9 @@ public:
 	IPcode1() = delete;
 	IPcode1 & operator=(const IPcode1 &) = delete;//不允许赋值，否则很可能造成内存泄漏
 	//explicit IPcode1(unsigned char * ptmp) :pbmpBuf(ptmp) {} //不能外界给一个数据地址，只能从path中读
+
+	IPcode1 operator-(const IPcode1& input)const;//得到两图像之间的差异，相减并取绝对值
+	double PSNR(const IPcode1& Origin)const;//计算峰值信噪比，输入参数应为this的原始图像 这个值越高，说明与原图越相近
 	
 	void CropBmp(int locx,int locy,int width, int height);//截取BMP的某块区域
 	void SaveBmp(char * path); //另存为当前的内容到某一路径下的某一bmp
@@ -26,6 +29,12 @@ public:
 	//对第channel号通道进行分块的DFT,直接修改类本身的数据 mode表明是保留幅值还是保留相位 0表示保留幅值1表示保留相位
 	void MakeRGB24_TO_Gray8();
 	void plot_DCTkernel_Image(int N); //绘制DCT正向变换核的图像 以当前图片的大小为基础，绘制正向变换核基图像
+	vector<double> Histogram(int Channel, vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru); 
+	//得到某一通道分布在给定范围内的本类图像数据的频率分布直方图
+	void Equalization_Image(int Channel, vector<LONG> ld , vector<LONG> lu , vector<LONG> rd, vector<LONG> ru);
+	//均衡化某一channel的直方图，并将效果显示在图片上
+	LONG ReadWidth()const { return infohead.biWidth; }
+	LONG ReadHeight()const { return infohead.biHeight; }
 
 	void Transfer(void(*pf)(unsigned char*, unsigned char*, unsigned char*));//将数据由XXX图转化到XX图 具体由函数指针决定
 	static void RGB2YIQ(unsigned char *, unsigned char *, unsigned char *);//设置成静态变量调用函数指针,具体涉及到成员的指针参考C++primer P741

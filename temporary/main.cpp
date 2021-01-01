@@ -273,30 +273,73 @@ void main()
 		ex2_origin_gray8.MakeRGB24_TO_Gray8();
 		ex2_origin_gray8.SaveBmp("ex2_origin_gray8.bmp");
 
+		IPcode1 ex2_origin_gray8_Equalization_Image = ex2_origin_gray8;
+		auto width = ex2_origin_gray8_Equalization_Image.ReadWidth();
+		auto height = ex2_origin_gray8_Equalization_Image.ReadHeight();
+		ex2_origin_gray8_Equalization_Image.Equalization_Image(0, { 0,0 }, { 0,height - 1 }, { width - 1,0 }, { width - 1,height - 1 });
+		ex2_origin_gray8_Equalization_Image.SaveBmp("ex2_origin_gray8_Equalization_Image.bmp");
+
+		IPcode1 ex2_origin_gray8_Minus_origin_gray8 = ex2_origin_gray8 - ex2_origin_gray8;
+		ex2_origin_gray8_Minus_origin_gray8.SaveBmp("ex2_origin_gray8_Minus_origin_gray8.bmp");
+
 		IPcode1 ex2_origin_gray8_DCT1_IDCT = ex2_origin_gray8;
 		ex2_origin_gray8_DCT1_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 1);
 		ex2_origin_gray8_DCT1_IDCT.SaveBmp("ex2_origin_gray8_DCT1_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_Minus_origin_gray8_DCT1_IDCT = ex2_origin_gray8 - ex2_origin_gray8_DCT1_IDCT;
+		ex2_origin_gray8_Minus_origin_gray8_DCT1_IDCT.SaveBmp("ex2_origin_gray8_Minus_origin_gray8_DCT1_IDCT.bmp");
+		cout<<"PSNR_DCT1_IDCT:"<<ex2_origin_gray8_DCT1_IDCT.PSNR(ex2_origin_gray8)<<endl;
+
 		IPcode1 ex2_origin_gray8_DCT2_IDCT = ex2_origin_gray8;
 		ex2_origin_gray8_DCT2_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 2);
 		ex2_origin_gray8_DCT2_IDCT.SaveBmp("ex2_origin_gray8_DCT2_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_Minus_origin_gray8_DCT2_IDCT = ex2_origin_gray8 - ex2_origin_gray8_DCT2_IDCT;
+		ex2_origin_gray8_Minus_origin_gray8_DCT2_IDCT.SaveBmp("ex2_origin_gray8_Minus_origin_gray8_DCT2_IDCT.bmp");
+		cout << "PSNR_DCT2_IDCT:" << ex2_origin_gray8_DCT2_IDCT.PSNR(ex2_origin_gray8) << endl;
+
 		IPcode1 ex2_origin_gray8_DCT4_IDCT = ex2_origin_gray8;
 		ex2_origin_gray8_DCT4_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 4);
 		ex2_origin_gray8_DCT4_IDCT.SaveBmp("ex2_origin_gray8_DCT4_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_Minus_origin_gray8_DCT4_IDCT = ex2_origin_gray8 - ex2_origin_gray8_DCT4_IDCT;
+		ex2_origin_gray8_Minus_origin_gray8_DCT4_IDCT.SaveBmp("ex2_origin_gray8_Minus_origin_gray8_DCT4_IDCT.bmp");
+		cout << "PSNR_DCT4_IDCT:" << ex2_origin_gray8_DCT4_IDCT.PSNR(ex2_origin_gray8) << endl;
+
 		IPcode1 ex2_origin_gray8_DCT6_IDCT = ex2_origin_gray8;
 		ex2_origin_gray8_DCT6_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 6);
 		ex2_origin_gray8_DCT6_IDCT.SaveBmp("ex2_origin_gray8_DCT6_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_Minus_origin_gray8_DCT6_IDCT = ex2_origin_gray8 - ex2_origin_gray8_DCT6_IDCT;
+		ex2_origin_gray8_Minus_origin_gray8_DCT6_IDCT.SaveBmp("ex2_origin_gray8_Minus_origin_gray8_DCT6_IDCT.bmp");
+		cout << "PSNR_DCT6_IDCT:" << ex2_origin_gray8_DCT6_IDCT.PSNR(ex2_origin_gray8) << endl;
+
 		IPcode1 ex2_origin_gray8_DCT8_IDCT = ex2_origin_gray8;
 		ex2_origin_gray8_DCT8_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 8);
 		ex2_origin_gray8_DCT8_IDCT.SaveBmp("ex2_origin_gray8_DCT8_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_Minus_origin_gray8_DCT8_IDCT = ex2_origin_gray8 - ex2_origin_gray8_DCT8_IDCT;
+		ex2_origin_gray8_Minus_origin_gray8_DCT8_IDCT.SaveBmp("ex2_origin_gray8_Minus_origin_gray8_DCT8_IDCT.bmp");
+		cout << "PSNR_DCT8_IDCT:" << ex2_origin_gray8_DCT8_IDCT.PSNR(ex2_origin_gray8) << endl;
+
 		IPcode1 ex2_origin_gray8_DCT10_IDCT = ex2_origin_gray8;
 		ex2_origin_gray8_DCT10_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 10);
 		ex2_origin_gray8_DCT10_IDCT.SaveBmp("ex2_origin_gray8_DCT10_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_Minus_origin_gray8_DCT10_IDCT = ex2_origin_gray8 - ex2_origin_gray8_DCT10_IDCT;
+		ex2_origin_gray8_Minus_origin_gray8_DCT10_IDCT.SaveBmp("ex2_origin_gray8_Minus_origin_gray8_DCT10_IDCT.bmp");
+		cout << "PSNR_DCT10_IDCT:" << ex2_origin_gray8_DCT10_IDCT.PSNR(ex2_origin_gray8) << endl;
+
 		IPcode1 ex2_origin_gray8_DCT3_IDCT = ex2_origin_gray8;
 		ex2_origin_gray8_DCT3_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 3);
 		ex2_origin_gray8_DCT3_IDCT.SaveBmp("ex2_origin_gray8_DCT3_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_Minus_origin_gray8_DCT3_IDCT = ex2_origin_gray8 - ex2_origin_gray8_DCT3_IDCT;
+		ex2_origin_gray8_Minus_origin_gray8_DCT3_IDCT.SaveBmp("ex2_origin_gray8_Minus_origin_gray8_DCT3_IDCT.bmp");
+		cout << "PSNR_DCT3_IDCT:" << ex2_origin_gray8_DCT3_IDCT.PSNR(ex2_origin_gray8) << endl;
+
 		IPcode1 ex2_origin_gray8_DCT30_IDCT = ex2_origin_gray8;
 		ex2_origin_gray8_DCT30_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "", "ampl", 30);
 		ex2_origin_gray8_DCT30_IDCT.SaveBmp("ex2_origin_gray8_DCT30_IDCT.bmp");
+		IPcode1 ex2_origin_gray8_Minus_origin_gray8_DCT30_IDCT = ex2_origin_gray8 - ex2_origin_gray8_DCT30_IDCT;
+		ex2_origin_gray8_Minus_origin_gray8_DCT30_IDCT.SaveBmp("ex2_origin_gray8_Minus_origin_gray8_DCT30_IDCT.bmp");
+		cout << "PSNR_DCT30_IDCT:" << ex2_origin_gray8_DCT30_IDCT.PSNR(ex2_origin_gray8) << endl;
+
+		
+
 
 		IPcode1 ex2_origin_gray8_DCT30 = ex2_origin_gray8;
 		ex2_origin_gray8_DCT30.Kernel_image(0, 8, 8, "DCT", "", "ampl", 30);
