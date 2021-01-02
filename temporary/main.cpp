@@ -248,6 +248,66 @@ void doIt()
 		delete[]pColorTable;
 }
 
+char path[] = "D:\\Study\\硕士\\我的工作\\硕士学位课程\\数字图像处理\\Code\\lena512color.bmp";
+
+void Experiment1()
+{
+	///////////////////////////////////////////////////////////////////////////////////////////////
+	//实验一
+	IPcode1 ip0(path);
+	IPcode1 ip1(path);
+	IPcode1 ip3(path);
+	IPcode1 ip4(path);
+	IPcode1 ip5(path);
+
+	int bitloc;
+	vector<unsigned char> vecpixel = ip0.ReadPixel(231, 231, bitloc);
+	for (int i = 0; i < 3; i++)
+	{
+		cout << int(vecpixel[i]) << " ";
+	}
+	cout << endl;
+
+	ip0.SaveBmp("origin.bmp");
+	ip1.Transfer(IPcode1::RGB2YIQ);
+	IPcode1 ip2 = ip1;
+	ip2.Transfer(IPcode1::YIQ2RGB);
+	ip3.Transfer(IPcode1::RGB2HSI);
+	ip4.Transfer(IPcode1::RGB2YCrCb);
+	ip5.Transfer(IPcode1::RGB2XYZ);
+
+	ip1.SaveBmp("YIQ.bmp");
+	ip1.SaveChannel("YIQ_Y.bmp", 0);
+	ip1.SaveChannel("YIQ_I.bmp", 1);
+	ip1.SaveChannel("YIQ_Q.bmp", 2);
+
+	ip2.SaveBmp("RGB.bmp");
+	ip2.SaveChannel("RGB_R.bmp", 0);
+	ip2.SaveChannel("RGB_G.bmp", 1);
+	ip2.SaveChannel("RGB_B.bmp", 2);
+
+	ip3.SaveBmp("HSI.bmp");
+	ip3.SaveChannel("HSI_H.bmp", 0);
+	ip3.SaveChannel("HSI_S.bmp", 1);
+	ip3.SaveChannel("HSI_I.bmp", 2);
+
+	ip4.SaveBmp("YCrCb.bmp");
+	ip4.SaveChannel("YCrCb_Y.bmp", 0);
+	ip4.SaveChannel("YCrCb_Cr.bmp", 1);
+	ip4.SaveChannel("YCrCb_Cb.bmp", 2);
+
+	ip5.SaveBmp("XYZ.bmp");
+	ip5.SaveChannel("XYZ_X.bmp", 0);
+	ip5.SaveChannel("XYZ_Y.bmp", 1);
+	ip5.SaveChannel("XYZ_Z.bmp", 2);
+	///////////////////////////////////////////////////////////////////////////////////////////////
+}
+
+void Experiment2()
+{
+
+}
+
 void main()
 {
 	try
@@ -267,7 +327,7 @@ void main()
 		vector<complex<double>> result = stast.IFFT_2D(testtp, 2, 2);
 
 
-		char path[] = "D:\\Study\\硕士\\我的工作\\硕士学位课程\\数字图像处理\\Code\\lena512color.bmp";
+
 		///////////////////////////////////////////////////////////////////////////////////////////////
 		//实验二
 		IPcode1 ex2_origin(path);
@@ -282,10 +342,21 @@ void main()
 		auto height = ex2_origin_gray8_addNoise_guass.ReadHeight();
 		ex2_origin_gray8_addNoise_guass.AddNoise(0, { 0,0 }, { 0,height - 1 }, { width - 1,0 }, { width - 1,height - 1 }, "Gaussian", 15, 5);
 		ex2_origin_gray8_addNoise_guass.SaveBmp("ex2_origin_gray8_addNoise_guass.bmp");
+		IPcode1 ex2_origin_gray8_addNoise_guass_medianFilter = ex2_origin_gray8_addNoise_guass;
+		ex2_origin_gray8_addNoise_guass_medianFilter.Kernel_image(0, 3, 3, 0, "median", 1, 1);
+		ex2_origin_gray8_addNoise_guass_medianFilter.SaveBmp("ex2_origin_gray8_addNoise_guass_medianFilter.bmp");
+		ex2_origin_gray8_addNoise_guass.Kernel_image(0, 3, 3, 0, ex2_origin_gray8_addNoise_guass.AVGKernelTemplate(3, 3), 1, 1);
+		ex2_origin_gray8_addNoise_guass.SaveBmp("ex2_origin_gray8_addNoise_guass_AVGKernelTemplate3_3.bmp");
+		
 
 		IPcode1 ex2_origin_gray8_addNoise_Impulse = ex2_origin_gray8;
 		ex2_origin_gray8_addNoise_Impulse.AddNoise(0, { 0,0 }, { 0,height - 1 }, { width - 1,0 }, { width - 1,height - 1 }, "Impulse", 1000,-1000,0.01,0.01);
 		ex2_origin_gray8_addNoise_Impulse.SaveBmp("ex2_origin_gray8_addNoise_Impulse.bmp");
+		IPcode1 ex2_origin_gray8_addNoise_Impulse_medianFilter = ex2_origin_gray8_addNoise_Impulse;
+		ex2_origin_gray8_addNoise_Impulse_medianFilter.Kernel_image(0, 3, 3, 0, "median", 1, 1);
+		ex2_origin_gray8_addNoise_Impulse_medianFilter.SaveBmp("ex2_origin_gray8_addNoise_Impulse_medianFilter.bmp");
+		ex2_origin_gray8_addNoise_Impulse.Kernel_image(0, 3, 3, 0, ex2_origin_gray8_addNoise_guass.AVGKernelTemplate(3, 3), 1, 1);
+		ex2_origin_gray8_addNoise_Impulse.SaveBmp("ex2_origin_gray8_addNoise_Impulse_AVGKernelTemplate3_3.bmp");
 
 		IPcode1 ex2_origin_gray8_Equalization_Image = ex2_origin_gray8;
 		width = ex2_origin_gray8_Equalization_Image.ReadWidth();
@@ -528,55 +599,7 @@ void main()
 		///////////////////////////////////////////////////////////////////////////////////////////////
 
 
-		///////////////////////////////////////////////////////////////////////////////////////////////
-		//实验一
-		IPcode1 ip0(path);
-		IPcode1 ip1(path);
-		IPcode1 ip3(path);
-		IPcode1 ip4(path);
-		IPcode1 ip5(path);
 
-		int bitloc;
-		vector<unsigned char> vecpixel = ip0.ReadPixel(231, 231, bitloc);
-		for (int i = 0; i < 3; i++)
-		{
-			cout << int(vecpixel[i]) << " ";
-		}
-		cout << endl;
-
-		ip0.SaveBmp("origin.bmp");
-		ip1.Transfer(IPcode1::RGB2YIQ);
-		IPcode1 ip2 = ip1;
-		ip2.Transfer(IPcode1::YIQ2RGB);
-		ip3.Transfer(IPcode1::RGB2HSI);
-		ip4.Transfer(IPcode1::RGB2YCrCb);
-		ip5.Transfer(IPcode1::RGB2XYZ);
-
-		ip1.SaveBmp("YIQ.bmp");
-		ip1.SaveChannel("YIQ_Y.bmp", 0);
-		ip1.SaveChannel("YIQ_I.bmp", 1);
-		ip1.SaveChannel("YIQ_Q.bmp", 2);
-
-		ip2.SaveBmp("RGB.bmp");
-		ip2.SaveChannel("RGB_R.bmp", 0);
-		ip2.SaveChannel("RGB_G.bmp", 1);
-		ip2.SaveChannel("RGB_B.bmp", 2);
-
-		ip3.SaveBmp("HSI.bmp");
-		ip3.SaveChannel("HSI_H.bmp", 0);
-		ip3.SaveChannel("HSI_S.bmp", 1);
-		ip3.SaveChannel("HSI_I.bmp", 2);
-
-		ip4.SaveBmp("YCrCb.bmp");
-		ip4.SaveChannel("YCrCb_Y.bmp", 0);
-		ip4.SaveChannel("YCrCb_Cr.bmp", 1);
-		ip4.SaveChannel("YCrCb_Cb.bmp", 2);
-
-		ip5.SaveBmp("XYZ.bmp");
-		ip5.SaveChannel("XYZ_X.bmp", 0);
-		ip5.SaveChannel("XYZ_Y.bmp", 1);
-		ip5.SaveChannel("XYZ_Z.bmp", 2);
-		///////////////////////////////////////////////////////////////////////////////////////////////
 		
 	}
 	catch (exception d)

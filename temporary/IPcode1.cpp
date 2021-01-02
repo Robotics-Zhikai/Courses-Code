@@ -37,7 +37,7 @@ bool IPcode1::ReadBmp(char * name)
 	return TRUE;
 }
 
-bool IPcode1::CheckInImage(int x, int y)
+bool IPcode1::CheckInImage(int x, int y)const
 {
 	if ((x >= 0 && x < infohead.biWidth) && (y >= 0 && y < infohead.biHeight))
 		return TRUE;
@@ -45,7 +45,7 @@ bool IPcode1::CheckInImage(int x, int y)
 		return FALSE;
 }
 
-vector<unsigned long> IPcode1::GetPixel_Index(int x, int y, int & bitlocation)
+vector<unsigned long> IPcode1::GetPixel_Index(int x, int y, int & bitlocation)const
 //只要返回，肯定返回值不空
 {
 	vector<unsigned long> result;
@@ -97,7 +97,7 @@ vector<unsigned long> IPcode1::GetPixel_Index(int x, int y, int & bitlocation)
 	return result;
 }
 
-vector<unsigned char *> IPcode1::GetPixel(int x, int y, int & bitlocation)
+vector<unsigned char *> IPcode1::GetPixel(int x, int y, int & bitlocation)const
 //只要返回，肯定返回值不空
 {
 	vector<unsigned char *> result;
@@ -635,7 +635,256 @@ void IPcode1::makeBmpTimesof(unsigned int widthtimes, unsigned int heighttimes)
 	}
 }
 
-void IPcode1::Kernel_image(int channel,unsigned int width,unsigned int height, string Operation, string inmode,string outmode,double Numin ) //mode表明是保留幅值还是保留相位 0表示保留幅值1表示保留相位
+double IPcode1::KernalTemplate_Multiple_subimage_x(int channel, LONG Globalx, unsigned int Kernelwidth, unsigned int Kernelheight, const vector<double>& KernalTemplate, LONG CenterX, LONG CenterY)const
+//这个函数就不进行异常检测了，需要上层调用的函数保证入口参数是对的！
+{
+	double result = 0;
+	int halfwidth = (Kernelwidth - 1) / 2;
+	int halfheight = (Kernelheight - 1) / 2;
+	
+	for (int y = CenterY - halfheight; y <= CenterY + halfheight; y++)
+	{
+		unsigned int pixelnum;
+		if (Globalx < 0 || Globalx >= infohead.biWidth || y < 0 || y >= infohead.biHeight)
+		{
+			pixelnum = 0;//补全值为0
+		}
+		else
+		{
+			int bitloc;
+			auto vecpix = GetPixel(Globalx, y, bitloc);
+			pixelnum = *vecpix[channel];
+		}
+		result += pixelnum * KernalTemplate[(y - CenterY + halfheight)*Kernelwidth + Globalx - CenterX + halfwidth];
+	}
+	return result;
+}
+
+double IPcode1::KernalTemplate_Multiple_subimage_y(int channel,LONG Globaly, unsigned int Kernelwidth, unsigned int Kernelheight, const vector<double>& KernalTemplate, LONG CenterX, LONG CenterY)const
+//这个函数就不进行异常检测了，需要上层调用的函数保证入口参数是对的！
+{
+	double result = 0;
+	int halfwidth = (Kernelwidth - 1) / 2;
+	int halfheight = (Kernelheight - 1) / 2;
+	int count = 0;
+	for (int x = CenterX - halfwidth; x <= CenterX + halfwidth; x++)
+	{
+		unsigned int pixelnum;
+		if (x < 0 || x >= infohead.biWidth || Globaly < 0 || Globaly >= infohead.biHeight)
+		{
+			pixelnum = 0;//补全值为0
+		}
+		else
+		{
+			int bitloc;
+			auto vecpix = GetPixel(x, Globaly, bitloc);
+			pixelnum = *vecpix[channel];
+		}
+		result += pixelnum * KernalTemplate[(Globaly - CenterY + halfheight)*Kernelwidth + (count++)];
+	}
+	return result;
+}
+
+double IPcode1::KernalTemplate_Multiple_subimage(int channel, unsigned int Kernelwidth, unsigned int Kernelheight, const vector<double>& KernalTemplate, LONG CenterX, LONG CenterY)const
+//不推荐连续重复调用 不高效 
+{
+	if (infohead.biBitCount == 8)
+	{
+		if (channel != 0)
+			throw exception("灰度图只能由channel 0索引");
+	}
+	else if (infohead.biBitCount == 24)
+	{
+		if (channel != 0 && channel != 1 && channel != 2)
+			throw exception("三通道，不能超出三通道 0 1 2 ");
+	}
+	else
+	{
+		cout << __FILE__ << __LINE__;
+		throw exception("暂时无法处理这时的情况");
+	}
+	if (KernalTemplate.size() != Kernelwidth*Kernelheight)
+		throw exception("模板核的大小不对");
+
+	if (Kernelwidth % 2 == 0 || Kernelheight % 2 == 0)
+		throw exception("暂时无法处理是偶数的情况");
+
+
+	
+	int halfheight = (Kernelheight - 1) / 2;
+	
+	double result = 0;
+	for (int y = CenterY - halfheight; y <= CenterY + halfheight; y++)
+	{
+		result += KernalTemplate_Multiple_subimage_y(channel, y, Kernelwidth, Kernelheight, KernalTemplate, CenterX, CenterY);
+	}
+	return result;
+}
+
+vector<double> IPcode1::AVGKernelTemplate(unsigned int M, unsigned int N)
+{
+	if (M*N == 0)
+		throw exception("输入参数不对");
+	vector<double> result(M*N);
+	for (int i = 0; i < M*N; i++)
+	{
+		result[i] = 1.0 / (M*N);
+	}
+
+	return result;
+}
+
+void IPcode1::Kernel_image(int channel, unsigned int Kernelwidth, unsigned int Kernelheight, bool ChangeDimension, string StatisticalMode, int stepx, int stepy)
+{
+	if (infohead.biBitCount == 8)
+	{
+		if (channel != 0)
+			throw exception("灰度图只能由channel 0索引");
+	}
+	else if (infohead.biBitCount == 24)
+	{
+		if (channel != 0 && channel != 1 && channel != 2)
+			throw exception("三通道，不能超出三通道 0 1 2 ");
+	}
+	else
+	{
+		cout << __FILE__ << __LINE__;
+		throw exception("暂时无法处理这时的情况");
+	}
+
+	if (Kernelwidth % 2 == 0 || Kernelheight % 2 == 0)
+		throw exception("暂时无法处理是偶数的情况");
+
+	if (stepy > Kernelheight || stepx > Kernelwidth)
+		throw exception("不能处理stepy>Kernelheight||stepx>Kernelwidth");
+
+	double * midresult = new double[infohead.biWidth*infohead.biHeight];
+
+	vector<double> Storesubimage(Kernelwidth*Kernelheight);
+	int halfheight = (Kernelheight - 1) / 2;
+	int halfwidth = (Kernelwidth - 1) / 2;
+	for (LONG ycenter = 0; ycenter < infohead.biHeight;  ycenter = ycenter + stepy)
+	{
+		for (LONG xcenter = 0; xcenter < infohead.biWidth; xcenter = xcenter + stepx)
+		{
+			size_t count = 0;
+			for (LONG y = ycenter - halfheight; y <= ycenter + halfheight; y++)
+			{
+				for (LONG x = xcenter - halfwidth; x <= xcenter + halfwidth; x++)
+				{
+					if (x < 0 || x >= infohead.biWidth || y < 0 || y >= infohead.biHeight)
+					{
+						Storesubimage[count++] = 0;
+					}
+					else
+					{
+						int bitloc;
+						auto vecpix = GetPixel(x, y, bitloc);
+						Storesubimage[count++] = *vecpix[channel];
+					}
+				}
+			}
+
+			if (StatisticalMode == "median")
+			{
+				sort(Storesubimage.begin(), Storesubimage.end());
+				midresult[xcenter + ycenter*infohead.biWidth] = Storesubimage[(Kernelwidth*Kernelheight) / 2];
+			}
+			else
+				throw exception("未定义的StatisticalMode");
+		}
+	}
+
+	//需要用户自己判断到底有没有改变量纲 一般统计排序都是没有改变量纲的
+	if (ChangeDimension)
+	{
+		auto vecnorm = normalization_zk(midresult, midresult + infohead.biWidth*infohead.biHeight - 1);
+		Denormalization_zk<double>(midresult, midresult + infohead.biWidth*infohead.biHeight - 1, 0, 255, vecnorm);
+	}
+
+	for (size_t i = 0; i < infohead.biWidth*infohead.biHeight; i++)
+	{
+		if (midresult[i] >= 256 || midresult < 0)
+			throw exception("按理说到这个时候midresult只能是在0-255,检查一下上边的逻辑是否出错");
+	}
+
+	for (LONG y = 0; y < infohead.biHeight; y = y + stepy)
+	{
+		for (LONG x = 0; x < infohead.biWidth; x = x + stepx)
+		{
+			int bitloc;
+			auto vecpix = GetPixel(x, y, bitloc);
+			*vecpix[channel] = midresult[x + y*infohead.biWidth];
+		}
+	}
+	delete[]midresult;
+}
+
+void IPcode1::Kernel_image(int channel, unsigned int Kernelwidth, unsigned int Kernelheight,bool ChangeDimension, const vector<double>& KernalTemplate, int stepx, int stepy)
+{
+	if (stepy > Kernelheight || stepx > Kernelwidth)
+		throw exception("不能处理stepy>Kernelheight||stepx>Kernelwidth");
+
+	double * midresult = new double[infohead.biWidth*infohead.biHeight];
+	for (size_t i = 0; i < infohead.biWidth*infohead.biHeight; i++)
+		midresult[i] = 0;
+
+	int halfheight = (Kernelheight - 1) / 2;
+	int halfwidth = (Kernelwidth - 1) / 2;
+
+	double Minus = 0;
+	double Plus = 0;
+	midresult[0] = KernalTemplate_Multiple_subimage(channel, Kernelwidth, Kernelheight, KernalTemplate, 0, 0);
+	for (LONG x = 0; x < infohead.biWidth; )
+	{
+		for (LONG y = stepy; y < infohead.biHeight; y=y+stepy)
+		{
+			//当stepy比较小时这样做是高效的，但是比较大时，重叠度不高时就不高效了。
+			Minus = 0;
+			for (int i = 0; i < stepy; i++)
+				Minus += KernalTemplate_Multiple_subimage_y(channel, y - stepy - halfheight + i, Kernelwidth, Kernelheight, KernalTemplate, x, y - stepy);
+			Plus = 0;
+			for (int i = 0; i < stepy; i++)
+				Plus += KernalTemplate_Multiple_subimage_y(channel, y + halfheight - i, Kernelwidth, Kernelheight, KernalTemplate, x, y);
+			midresult[x + y*infohead.biWidth] = midresult[x + (y - stepy)*infohead.biWidth] + Plus - Minus;
+		}
+		x = x + stepx;
+
+		Minus = 0;
+		for (int i = 0; i < stepx; i++)
+			Minus += KernalTemplate_Multiple_subimage_x(channel, x - stepx - halfwidth + i, Kernelwidth, Kernelheight, KernalTemplate, x - stepx, 0);
+		Plus = 0;
+		for (int i = 0; i < stepx; i++)
+			Plus += KernalTemplate_Multiple_subimage_x(channel, x + halfwidth - i, Kernelwidth, Kernelheight, KernalTemplate, x, 0);
+		midresult[x + 0 * infohead.biWidth] = midresult[x - stepx] + Plus - Minus;
+	}
+
+	//这个归一化对于量纲不变的变换并不需要  比如均值滤波和中值滤波量纲就没有改变
+	if (ChangeDimension)
+	{
+		auto vecnorm = normalization_zk(midresult, midresult + infohead.biWidth*infohead.biHeight - 1);
+		Denormalization_zk<double>(midresult, midresult + infohead.biWidth*infohead.biHeight - 1, 0, 255, vecnorm);
+	}
+
+	for (size_t i = 0; i < infohead.biWidth*infohead.biHeight; i++)
+	{
+		if (midresult[i] >= 256 || midresult < 0)
+			throw exception("按理说到这个时候midresult只能是在0-255,检查一下上边的逻辑是否出错");
+	}
+
+	for (LONG y = 0; y < infohead.biHeight; y = y + stepy)
+	{
+		for (LONG x = 0; x < infohead.biWidth; x = x + stepx)
+		{
+			int bitloc;
+			auto vecpix = GetPixel(x, y, bitloc);
+			*vecpix[channel] = midresult[x + y*infohead.biWidth];
+		}
+	}
+	delete[]midresult;
+}
+
+void IPcode1::Kernel_image(int channel,unsigned int Kernelwidth,unsigned int Kernelheight, string Operation, string inmode,string outmode,double Numin ) //mode表明是保留幅值还是保留相位 0表示保留幅值1表示保留相位
 {
 	if (infohead.biBitCount == 8)
 	{
@@ -655,7 +904,7 @@ void IPcode1::Kernel_image(int channel,unsigned int width,unsigned int height, s
 
 	if (channel == 0 || channel == 1 || channel == 2)
 	{
-		makeBmpTimesof(width, height); //先保证图片的长和宽都是所输入参数的倍数
+		makeBmpTimesof(Kernelwidth, Kernelheight); //先保证图片的长和宽都是所输入参数的倍数
 		unsigned int * amplitudeStore = NULL;
 		double * phaseStore = NULL;
 		if (outmode == "ampl")
@@ -669,28 +918,28 @@ void IPcode1::Kernel_image(int channel,unsigned int width,unsigned int height, s
 		else
 			throw exception("未定义outmode");
 		
-		vector<complex<double>> DFTpart(width*height); // 大小应该是width*height
-		for (LONG j = 0; j < infohead.biHeight / height; j++)
+		vector<complex<double>> DFTpart(Kernelwidth*Kernelheight); // 大小应该是width*height
+		for (LONG j = 0; j < infohead.biHeight / Kernelheight; j++)
 		{
-			for (LONG i = 0; i < infohead.biWidth / width; i++)
+			for (LONG i = 0; i < infohead.biWidth / Kernelwidth; i++)
 			{
-				auto xoffset = i*width;
-				auto yoffset = j*height;
+				auto xoffset = i*Kernelwidth;
+				auto yoffset = j*Kernelheight;
 				int DFTCount = 0;
 				
-				for (unsigned int y = 0; y < height; y++)
+				for (unsigned int y = 0; y < Kernelheight; y++)
 				{
-					for (unsigned int x = 0; x < width; x++)
+					for (unsigned int x = 0; x < Kernelwidth; x++)
 					{
 						int bitlocation;
 						auto pixel = GetPixel(xoffset + x, yoffset + y, bitlocation);
 						DFTpart[DFTCount++] = *pixel[channel];
 					}
 				}
-				if (DFTpart.size() != width*height )
+				if (DFTpart.size() != Kernelwidth*Kernelheight )
 					throw exception("程序逻辑出错");
 				if (Operation == "DFT")
-					DFTpart = Operate::FFT_2D(DFTpart, width, height);
+					DFTpart = Operate::FFT_2D(DFTpart, Kernelwidth, Kernelheight);
 				else if (Operation == "IDFT")
 				{	
 					if (inmode == "phase")//只有IDFT关注inmode 
@@ -714,7 +963,7 @@ void IPcode1::Kernel_image(int channel,unsigned int width,unsigned int height, s
 					else if (inmode == "ampl") {}
 					else
 						throw exception("输入了未定义的inmode");
-					DFTpart = Operate::IFFT_2D(DFTpart, width, height);
+					DFTpart = Operate::IFFT_2D(DFTpart, Kernelwidth, Kernelheight);
 				}
 				else if (Operation == "Black")
 				{
@@ -725,35 +974,35 @@ void IPcode1::Kernel_image(int channel,unsigned int width,unsigned int height, s
 				}
 				else if (Operation == "normal")
 				{
-					DFTpart = Operate::FFT_2D(DFTpart, width, height);
-					DFTpart = Operate::IFFT_2D(DFTpart, width, height);//测试FFT有没有写对 经过一正一逆如果没有任何改变的话说明就对的
+					DFTpart = Operate::FFT_2D(DFTpart, Kernelwidth, Kernelheight);
+					DFTpart = Operate::IFFT_2D(DFTpart, Kernelwidth, Kernelheight);//测试FFT有没有写对 经过一正一逆如果没有任何改变的话说明就对的
 					//cout << "测试FFT有没有写对 经过一正一逆如果没有任何改变的话说明就对的";
 				}
 				else if (Operation == "DCT") 
 				{
-					if (width != height)
+					if (Kernelwidth != Kernelheight)
 						throw exception("无法处理width != height的情况");
-					if (Numin > width*width)
+					if (Numin > Kernelwidth*Kernelwidth)
 						throw exception("保留的DCT系数个数不对");
 					vector<double> tmpDCT;
 					Operate::TransvecComplex2Double(DFTpart, tmpDCT);
-					tmpDCT = Operate::DCT_2D(tmpDCT, width);
+					tmpDCT = Operate::DCT_2D(tmpDCT, Kernelwidth);
 
 					for (int i = 0; i < tmpDCT.size(); i++)
 						tmpDCT[i] = abs(tmpDCT[i]);
 					//都搞到正数上去,显示的DCT越量，说明能量越高
 
-					Operate::zigzagRetainDCT(tmpDCT, width, Numin);
+					Operate::zigzagRetainDCT(tmpDCT, Kernelwidth, Numin);
 					Operate::TransvecDouble2Complex(tmpDCT, DFTpart);
 				}
 				else if (Operation == "IDCT") //这其实是有问题的，因为输入是DCT经过绝对值变换后的图像，只有正数，但这并不代表IDCT这个算法不对，算法是对的
 				{
 					throw exception("IDCT的显示在当前储存图像的像素数据unsigned char下是有问题的，因为输入是DCT经过绝对值变换后的图像，只有正数");
-					if (width != height)
+					if (Kernelwidth != Kernelheight)
 						throw exception("无法处理width != height的情况");
 					vector<double> tmpDCT;
 					Operate::TransvecComplex2Double(DFTpart, tmpDCT);
-					tmpDCT = Operate::IDCT_2D(tmpDCT, width);
+					tmpDCT = Operate::IDCT_2D(tmpDCT, Kernelwidth);
 
 					auto minelement = *min_element(tmpDCT.begin(), tmpDCT.end());
 					if (minelement < 0)
@@ -767,33 +1016,33 @@ void IPcode1::Kernel_image(int channel,unsigned int width,unsigned int height, s
 				}
 				else if (Operation == "DCT_Numin_IDCT")
 				{
-					if (width != height)
+					if (Kernelwidth != Kernelheight)
 						throw exception("无法处理width != height的情况");
-					if (Numin > width*width)
+					if (Numin > Kernelwidth*Kernelwidth)
 						throw exception("保留的DCT系数个数不对");
 
 					vector<double> tmpDCT;
 					Operate::TransvecComplex2Double(DFTpart, tmpDCT);
-					tmpDCT = Operate::DCT_2D(tmpDCT, width);
-					Operate::zigzagRetainDCT(tmpDCT, width, Numin);
-					tmpDCT = Operate::IDCT_2D(tmpDCT, width);
+					tmpDCT = Operate::DCT_2D(tmpDCT, Kernelwidth);
+					Operate::zigzagRetainDCT(tmpDCT, Kernelwidth, Numin);
+					tmpDCT = Operate::IDCT_2D(tmpDCT, Kernelwidth);
 					Operate::TransvecDouble2Complex(tmpDCT, DFTpart);
 				}
 				else if (Operation == "normalDCT")
 				{
 					vector<double> tmpDCT;
 					Operate::TransvecComplex2Double(DFTpart, tmpDCT);
-					tmpDCT = Operate::DCT_2D(tmpDCT, width);
-					tmpDCT = Operate::IDCT_2D(tmpDCT, width);
+					tmpDCT = Operate::DCT_2D(tmpDCT, Kernelwidth);
+					tmpDCT = Operate::IDCT_2D(tmpDCT, Kernelwidth);
 					Operate::TransvecDouble2Complex(tmpDCT, DFTpart);  //现在才是没有问题的
 				}
 				else
 					throw exception("输入的Operation不对，只能在特定范围里选");
 
 				DFTCount = 0;
-				for (unsigned int y = 0; y < height; y++)
+				for (unsigned int y = 0; y < Kernelheight; y++)
 				{
-					for (unsigned int x = 0; x < width; x++)
+					for (unsigned int x = 0; x < Kernelwidth; x++)
 					{
 						auto locx = xoffset + x;
 						auto locy = yoffset + y;
