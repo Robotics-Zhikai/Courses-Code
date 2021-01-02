@@ -1,6 +1,7 @@
 #pragma once
 #include "main.h"
 #include "IPcode1.h"
+#include <random>
 
 class ComplexEXP
 {
@@ -37,6 +38,42 @@ private:
 class Operate
 {
 public: 
+	double GaussianNoiseGenerator(double mean, double variance) //输入参数为均值和方差 可以多次重复调用
+	{
+		static double meanstatic = mean;
+		static double variancestatic = variance;
+		static default_random_engine e;
+		static normal_distribution<double> n(meanstatic, variancestatic);
+		if (meanstatic != mean || variance != variancestatic)
+		{
+			meanstatic = mean;
+			variancestatic = variance;
+			normal_distribution<double> ntmp(meanstatic, variancestatic);
+			n = ntmp;
+		}
+		return n(e);
+	}
+	double ImpulseNoiseGenerator(double a, double b, double Pa,double Pb)
+	{
+		if (Pa < 0 || Pb < 0)
+			throw exception("概率不能小于0");
+		if (Pa + Pb > 1)
+			throw exception("Pa+Pb>1");
+
+		static default_random_engine e;
+		static uniform_real_distribution<double> n(0, 1);
+		double randomnum = n(e);
+		if (randomnum < Pa)
+		{
+			return a;
+		}
+		else if (randomnum >= Pa&&randomnum < Pa + Pb)
+		{
+			return b;
+		}
+		else
+			return 0;
+	}
 	void TransvecComplex2Double(const vector<complex<double>>& input,vector<double> & output)
 	{
 		output.resize(input.size());

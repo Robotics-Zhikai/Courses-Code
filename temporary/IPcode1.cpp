@@ -871,12 +871,7 @@ void IPcode1::ChangeSingleChannelInputNEWptrData(unsigned char * newbmpdataptr, 
 //以输入的单通道数据newbmpdataptr（新申请的地址，与成员数据无关）为起点，ld lu rd ru为待修改的像素方框,value为需要修改的值 
 //width height为newbmpdataptr代表的图像的长和宽
 {
-	if (ld[0] != lu[0] || rd[0] != ru[0] || lu[1] != ru[1] || ld[1] != rd[1])
-		throw exception("不是方框");
-	if (ld[0] > rd[0] || ld[1] > lu[1])
-		throw exception("设置的方框值不对");
-	if (ld[0] < 0 || rd[0] >= width || ld[1] < 0 || lu[1] >= height)
-		throw exception("设置的方框值超出总的图片的大小了");
+	CheckRectangleInBigRect(ld, lu, rd, ru, width, height);
 
 	WORD linebytes = (width * 8 / 8 + 3) / 4 * 4; //只能为单通道数据
 	for (LONG y = ld[1]; y <= lu[1]; y++)
@@ -975,6 +970,16 @@ double IPcode1::PSNR(const IPcode1& input)const
 	
 }
 
+void IPcode1::CheckRectangleInBigRect( vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru, LONG width, LONG height)const
+{
+	if (ld[0] != lu[0] || rd[0] != ru[0] || lu[1] != ru[1] || ld[1] != rd[1])
+		throw exception("不是方框");
+	if (ld[0] > rd[0] || ld[1] > lu[1])
+		throw exception("设置的方框值不对");
+	if (ld[0] < 0 || rd[0] >= width || ld[1] < 0 || lu[1] >= height)
+		throw exception("设置的方框值超出width height了 ");
+}
+
 vector<double> IPcode1::Histogram(int Channel, vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru)
 {
 	if (infohead.biBitCount == 8)
@@ -993,12 +998,7 @@ vector<double> IPcode1::Histogram(int Channel, vector<LONG> ld, vector<LONG> lu,
 		throw exception("暂时无法处理这时的情况");
 	}
 
-	if (ld[0] != lu[0] || rd[0] != ru[0] || lu[1] != ru[1] || ld[1] != rd[1])
-		throw exception("不是方框");
-	if (ld[0] > rd[0] || ld[1] > lu[1])
-		throw exception("设置的方框值不对");
-	if (ld[0] < 0 || rd[0] >= infohead.biWidth || ld[1] < 0 || lu[1] >= infohead.biHeight)
-		throw exception("设置的方框值超出总的图片的大小了");
+	CheckRectangleInBigRect(ld, lu, rd, ru, infohead.biWidth, infohead.biHeight);
 
 	vector <double> result(256,0);
 	LONG CountAll = 0;
@@ -1040,6 +1040,55 @@ void IPcode1::Equalization_Image(int Channel, vector<LONG> ld, vector<LONG> lu, 
 			int bitlocation;
 			auto pix = GetPixel(x, y, bitlocation);
 			*pix[Channel] = Equalization[*pix[Channel]];
+		}
+	}
+}
+
+void IPcode1::AddNoise(int Channel,vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru, string NoiseMode,double par0,double par1,double par2,double par3)
+{
+
+	if (infohead.biBitCount == 8)
+	{
+		if (Channel != 0)
+			throw exception("灰度图只能由channel 0索引");
+	}
+	else if (infohead.biBitCount == 24)
+	{
+		if (Channel != 0 && Channel != 1 && Channel != 2)
+			throw exception("三通道，不能超出三通道 0 1 2 ");
+	}
+	else
+	{
+		cout << __FILE__ << __LINE__;
+		throw exception("暂时无法处理这时的情况");
+	}
+	
+	CheckRectangleInBigRect( ld, lu, rd, ru, infohead.biWidth, infohead.biHeight);
+	
+	for (LONG y = ld[1]; y <= lu[1]; y++)
+	{
+		for (LONG x = ld[0]; x <= rd[0]; x++)
+		{
+			int bitlocation;
+			auto pix = GetPixel(x, y, bitlocation);
+			double Noise = 0;
+			if (NoiseMode == "Gaussian")
+			{
+				Noise = Operate::GaussianNoiseGenerator(par0, par1);
+			}
+			else if (NoiseMode == "Impulse")
+			{
+				Noise = Operate::ImpulseNoiseGenerator(par0, par1, par2, par3);
+			}
+			else
+				throw exception("未定义此种噪声模式");
+			
+			double value = double(*pix[Channel]) + Noise;
+			if (value > 255)
+				value = 255;
+			else if (value < 0)
+				value = 0;
+			*pix[Channel] = value;
 		}
 	}
 }

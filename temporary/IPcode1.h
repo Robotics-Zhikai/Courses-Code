@@ -33,8 +33,13 @@ public:
 	//得到某一通道分布在给定范围内的本类图像数据的频率分布直方图
 	void Equalization_Image(int Channel, vector<LONG> ld , vector<LONG> lu , vector<LONG> rd, vector<LONG> ru);
 	//均衡化某一channel的直方图，并将效果显示在图片上
+	void AddNoise(int Channel, vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru, string NoiseMode, double par0=0, double par1=0, double par2=0, double par3=0);
+	//默认情况时是所有通道都加
+
 	LONG ReadWidth()const { return infohead.biWidth; }
 	LONG ReadHeight()const { return infohead.biHeight; }
+
+	
 
 	void Transfer(void(*pf)(unsigned char*, unsigned char*, unsigned char*));//将数据由XXX图转化到XX图 具体由函数指针决定
 	static void RGB2YIQ(unsigned char *, unsigned char *, unsigned char *);//设置成静态变量调用函数指针,具体涉及到成员的指针参考C++primer P741
@@ -56,6 +61,9 @@ private:
 
 	bool ReadBmp(char * name); //只能在构造时调用一次
 	bool CheckInImage(int x, int y);//检查是否在BMP图像范围内
+	void CheckRectangleInBigRect(vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru, LONG width, LONG height)const;
+	// 检测方框是否在图像中，如果不是方框或者不在图像范围内，则throw
+
 	static bool CheckRange0_255(double a);
 	vector<unsigned char *> GetPixel(int x, int y,int & bitlocation);
 	// 得到某一位置下的像素值的储存地址，可能是3个字节，可能是1字节，可能是半个字节，也可能是1位

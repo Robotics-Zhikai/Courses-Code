@@ -252,6 +252,10 @@ void main()
 {
 	try
 	{
+		unsigned char grhd=0;
+		grhd += 1232.1;
+		grhd = 255;
+		grhd++;
 		Operate stast;
 		vector<double> DCTtest = { 1 ,2,3,4 };
 		vector<double> ssdafa = stast.IDCT_2D(DCTtest, 2);
@@ -273,9 +277,19 @@ void main()
 		ex2_origin_gray8.MakeRGB24_TO_Gray8();
 		ex2_origin_gray8.SaveBmp("ex2_origin_gray8.bmp");
 
+		IPcode1 ex2_origin_gray8_addNoise_guass = ex2_origin_gray8;
+		auto width = ex2_origin_gray8_addNoise_guass.ReadWidth();
+		auto height = ex2_origin_gray8_addNoise_guass.ReadHeight();
+		ex2_origin_gray8_addNoise_guass.AddNoise(0, { 0,0 }, { 0,height - 1 }, { width - 1,0 }, { width - 1,height - 1 }, "Gaussian", 15, 5);
+		ex2_origin_gray8_addNoise_guass.SaveBmp("ex2_origin_gray8_addNoise_guass.bmp");
+
+		IPcode1 ex2_origin_gray8_addNoise_Impulse = ex2_origin_gray8;
+		ex2_origin_gray8_addNoise_Impulse.AddNoise(0, { 0,0 }, { 0,height - 1 }, { width - 1,0 }, { width - 1,height - 1 }, "Impulse", 1000,-1000,0.01,0.01);
+		ex2_origin_gray8_addNoise_Impulse.SaveBmp("ex2_origin_gray8_addNoise_Impulse.bmp");
+
 		IPcode1 ex2_origin_gray8_Equalization_Image = ex2_origin_gray8;
-		auto width = ex2_origin_gray8_Equalization_Image.ReadWidth();
-		auto height = ex2_origin_gray8_Equalization_Image.ReadHeight();
+		width = ex2_origin_gray8_Equalization_Image.ReadWidth();
+		height = ex2_origin_gray8_Equalization_Image.ReadHeight();
 		ex2_origin_gray8_Equalization_Image.Equalization_Image(0, { 0,0 }, { 0,height - 1 }, { width - 1,0 }, { width - 1,height - 1 });
 		ex2_origin_gray8_Equalization_Image.SaveBmp("ex2_origin_gray8_Equalization_Image.bmp");
 
