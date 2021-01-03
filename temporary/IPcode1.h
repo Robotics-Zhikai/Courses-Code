@@ -19,6 +19,7 @@ public:
 
 	IPcode1 operator-(const IPcode1& input)const;//得到两图像之间的差异，相减并取绝对值
 	double PSNR(const IPcode1& Origin)const;//计算峰值信噪比，输入参数应为this的原始图像 这个值越高，说明与原图越相近
+	double SSIM(const IPcode1& Origin, int Channel)const;//计算SSIM指标,也是用来衡量两张图片的相似度的
 	
 	void CropBmp(int locx,int locy,int width, int height);//截取BMP的某块区域
 	void SaveBmp(char * path); //另存为当前的内容到某一路径下的某一bmp
@@ -31,8 +32,8 @@ public:
 	void Kernel_image(int channel, unsigned int Kernelwidth, unsigned int Kernelheight, bool ChangeDimension,const vector<double>& KernalTemplate,int stepx,int stepy);
 	//用width和height的模板核对channel通道的图像进行处理 整体逻辑和上边的Kernel_image是差不多的 step表示每次在各方向上移动的步长
 	//KernalTemplate也是从左到右从下到上的数字排列的。 ChangeDimension表示变换后的量纲是否有改变 比如均值滤波和中值滤波量纲就没有改变
-	void Kernel_image(int channel, unsigned int Kernelwidth, unsigned int Kernelheight, bool ChangeDimension, string StatisticalMode, int stepx, int stepy);
-	//统计排序滤波器的KernelImage
+	void Kernel_image(int channel, unsigned int Kernelwidth, unsigned int Kernelheight, bool ChangeDimension, string Mode, int stepx, int stepy);
+	//非线性滤波器的KernelImage
 
 	double KernalTemplate_Multiple_subimage(int channel, unsigned int Kernelwidth, unsigned int Kernelheight, const vector<double>& KernalTemplate, LONG CenterX, LONG CenterY)const;
 	//用Kernelwidth*Kernelheight的KernalTemplate作用到以CenterX和CenterY为中心的小图块中,返回对应结果，以double返回
@@ -53,7 +54,9 @@ public:
 	LONG ReadWidth()const { return infohead.biWidth; }
 	LONG ReadHeight()const { return infohead.biHeight; }
 
-	
+	double Readmean(int Channel)const;//读取图像像素值的均值。
+	double Readvariance(int Channel)const;//读取图像的方差
+	double Readcovariance(int Channel, const IPcode1& image)const; //读取某一CHannel的图像和另一个图像的对应channel的协方差
 
 	void Transfer(void(*pf)(unsigned char*, unsigned char*, unsigned char*));//将数据由XXX图转化到XX图 具体由函数指针决定
 	static void RGB2YIQ(unsigned char *, unsigned char *, unsigned char *);//设置成静态变量调用函数指针,具体涉及到成员的指针参考C++primer P741

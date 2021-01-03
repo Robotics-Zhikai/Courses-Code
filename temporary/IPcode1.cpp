@@ -734,7 +734,7 @@ vector<double> IPcode1::AVGKernelTemplate(unsigned int M, unsigned int N)
 	return result;
 }
 
-void IPcode1::Kernel_image(int channel, unsigned int Kernelwidth, unsigned int Kernelheight, bool ChangeDimension, string StatisticalMode, int stepx, int stepy)
+void IPcode1::Kernel_image(int channel, unsigned int Kernelwidth, unsigned int Kernelheight, bool ChangeDimension, string Mode, int stepx, int stepy)
 {
 	if (infohead.biBitCount == 8)
 	{
@@ -767,35 +767,54 @@ void IPcode1::Kernel_image(int channel, unsigned int Kernelwidth, unsigned int K
 	{
 		for (LONG xcenter = 0; xcenter < infohead.biWidth; xcenter = xcenter + stepx)
 		{
-			size_t count = 0;
-			for (LONG y = ycenter - halfheight; y <= ycenter + halfheight; y++)
+			if (Mode == "median"||Mode == "max") //中值最大值什么的用这个
 			{
-				for (LONG x = xcenter - halfwidth; x <= xcenter + halfwidth; x++)
+				size_t count = 0;
+				for (LONG y = ycenter - halfheight; y <= ycenter + halfheight; y++)
 				{
-					if (x < 0 || x >= infohead.biWidth || y < 0 || y >= infohead.biHeight)
+					for (LONG x = xcenter - halfwidth; x <= xcenter + halfwidth; x++)
 					{
-						Storesubimage[count++] = 0;
-					}
-					else
-					{
-						int bitloc;
-						auto vecpix = GetPixel(x, y, bitloc);
-						Storesubimage[count++] = *vecpix[channel];
+						if (x < 0 || x >= infohead.biWidth || y < 0 || y >= infohead.biHeight)
+						{
+							Storesubimage[count++] = 0;
+						}
+						else
+						{
+							int bitloc;
+							auto vecpix = GetPixel(x, y, bitloc);
+							Storesubimage[count++] = *vecpix[channel];
+						}
 					}
 				}
+				if (Mode == "median")
+				{
+					sort(Storesubimage.begin(), Storesubimage.end());
+					midresult[xcenter + ycenter*infohead.biWidth] = Storesubimage[(Kernelwidth*Kernelheight) / 2];
+				}
+				else if (Mode == "max")
+				{
+					midresult[xcenter + ycenter*infohead.biWidth] = *max_element(Storesubimage.begin(), Storesubimage.end());
+				}
+				else
+					throw exception("漏定义了一个模式");
 			}
-
-			if (StatisticalMode == "median")
+			else if (Mode == "sobel") 
 			{
-				sort(Storesubimage.begin(), Storesubimage.end());
-				midresult[xcenter + ycenter*infohead.biWidth] = Storesubimage[(Kernelwidth*Kernelheight) / 2];
+				//不加static用时117.126秒
+				//加static用时114.88秒 还是有点作用的
+				double tmpsobel = 0;
+				static const vector<double> Sobel1 = { 1,2,1,0,0,0,-1,-2,-1 };
+				tmpsobel += abs(KernalTemplate_Multiple_subimage(channel, Kernelwidth, Kernelheight, Sobel1, xcenter, ycenter));
+				static const vector<double> Sobel2 = { -1,0,1,-2,0,2,-1,0,1 };
+				tmpsobel += abs(KernalTemplate_Multiple_subimage(channel, Kernelwidth, Kernelheight, Sobel2, xcenter, ycenter));
+				midresult[xcenter + ycenter*infohead.biWidth] = tmpsobel;
 			}
 			else
-				throw exception("未定义的StatisticalMode");
+				throw exception("未定义的Mode");
 		}
 	}
 
-	//需要用户自己判断到底有没有改变量纲 一般统计排序都是没有改变量纲的
+	//需要用户自己判断到底有没有改变量纲 一般统计排序都是没有改变量纲的 sobel算子应该是改变了量纲的，因为做的是一个微分
 	if (ChangeDimension)
 	{
 		auto vecnorm = normalization_zk(midresult, midresult + infohead.biWidth*infohead.biHeight - 1);
@@ -805,7 +824,7 @@ void IPcode1::Kernel_image(int channel, unsigned int Kernelwidth, unsigned int K
 	for (size_t i = 0; i < infohead.biWidth*infohead.biHeight; i++)
 	{
 		if (midresult[i] >= 256 || midresult < 0)
-			throw exception("按理说到这个时候midresult只能是在0-255,检查一下上边的逻辑是否出错");
+			throw exception("按理说到这个时候midresult只能是在0-255,可能是本来变了量纲的但是按没有变量纲处理了");
 	}
 
 	for (LONG y = 0; y < infohead.biHeight; y = y + stepy)
@@ -1219,6 +1238,42 @@ double IPcode1::PSNR(const IPcode1& input)const
 	
 }
 
+double IPcode1::SSIM(const IPcode1& Origin,int Channel)const
+{
+	if (Origin.infohead.biBitCount != infohead.biBitCount)
+		throw exception("SSIM的两张图片位数不一致");
+	if (Origin.infohead.biWidth != infohead.biWidth || Origin.infohead.biHeight != infohead.biHeight)
+		throw exception("SSIM的两张图片尺寸不一样");
+
+	if (infohead.biBitCount == 8)
+	{
+		if (Channel != 0)
+			throw exception("灰度图只能由channel 0索引");
+	}
+	else if (infohead.biBitCount == 24)
+	{
+		if (Channel != 0 && Channel != 1 && Channel != 2)
+			throw exception("三通道，不能超出三通道 0 1 2 ");
+	}
+	else
+	{
+		cout << __FILE__ << __LINE__;
+		throw exception("暂时无法处理这时的情况");
+	}
+
+	double meanx = Readmean(Channel);
+	double meany = Origin.Readmean(Channel);
+	double variancex = Readvariance(Channel);
+	double variancey = Origin.Readvariance(Channel);
+	double covariancexy = Readcovariance(Channel,Origin);
+
+	double result = 0;
+	double c1 = pow((0.01*255),2);
+	double c2 = pow((0.03*255),2); //https://en.wikipedia.org/wiki/Structural_similarity
+	result = (2 * meanx*meany + c1)*(2 * covariancexy + c2) / ((meanx*meanx + meany*meany + c1)*(variancex + variancey + c2));
+	return result;
+}
+
 void IPcode1::CheckRectangleInBigRect( vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru, LONG width, LONG height)const
 {
 	if (ld[0] != lu[0] || rd[0] != ru[0] || lu[1] != ru[1] || ld[1] != rd[1])
@@ -1340,4 +1395,109 @@ void IPcode1::AddNoise(int Channel,vector<LONG> ld, vector<LONG> lu, vector<LONG
 			*pix[Channel] = value;
 		}
 	}
+}
+
+double IPcode1::Readmean(int Channel)const
+{
+	if (infohead.biBitCount == 8)
+	{
+		if (Channel != 0)
+			throw exception("灰度图只能由channel 0索引");
+	}
+	else if (infohead.biBitCount == 24)
+	{
+		if (Channel != 0 && Channel != 1 && Channel != 2)
+			throw exception("三通道，不能超出三通道 0 1 2 ");
+	}
+	else
+	{
+		cout << __FILE__ << __LINE__;
+		throw exception("暂时无法处理这时的情况");
+	}
+
+	double result = 0;
+	for (LONG y = 0; y < infohead.biHeight; y++)
+	{
+		for (LONG x = 0; x < infohead.biWidth; x++)
+		{
+			int bitlocation;
+			auto pix = GetPixel(x, y, bitlocation);
+			result += *pix[Channel];
+		}
+	}
+	result /= infohead.biHeight*infohead.biWidth;
+}
+
+double IPcode1::Readvariance(int Channel)const
+{
+	if (infohead.biBitCount == 8)
+	{
+		if (Channel != 0)
+			throw exception("灰度图只能由channel 0索引");
+	}
+	else if (infohead.biBitCount == 24)
+	{
+		if (Channel != 0 && Channel != 1 && Channel != 2)
+			throw exception("三通道，不能超出三通道 0 1 2 ");
+	}
+	else
+	{
+		cout << __FILE__ << __LINE__;
+		throw exception("暂时无法处理这时的情况");
+	}
+
+	double Meanvalue = Readmean(Channel);
+
+	double result = 0;
+	for (LONG y = 0; y < infohead.biHeight; y++)
+	{
+		for (LONG x = 0; x < infohead.biWidth; x++)
+		{
+			int bitlocation;
+			auto pix = GetPixel(x, y, bitlocation);
+			result += pow((*pix[Channel] - Meanvalue), 2);
+		}
+	}
+	result /= infohead.biHeight*infohead.biWidth - 1;
+}
+
+double IPcode1::Readcovariance(int Channel, const IPcode1& image)const
+{
+	if (image.infohead.biBitCount != infohead.biBitCount)
+		throw exception("待处理的两图像位数不一样");
+	if (image.infohead.biWidth != infohead.biWidth || image.infohead.biHeight != infohead.biHeight)
+		throw exception("待处理的两图像尺寸不一样");
+
+	if (infohead.biBitCount == 8)
+	{
+		if (Channel != 0)
+			throw exception("灰度图只能由channel 0索引");
+	}
+	else if (infohead.biBitCount == 24)
+	{
+		if (Channel != 0 && Channel != 1 && Channel != 2)
+			throw exception("三通道，不能超出三通道 0 1 2 ");
+	}
+	else
+	{
+		cout << __FILE__ << __LINE__;
+		throw exception("暂时无法处理这时的情况");
+	}
+
+	double meanx = Readmean(Channel);
+	double meany = image.Readmean(Channel);
+	double result = 0;
+	for (LONG y = 0; y < infohead.biHeight; y++)
+	{
+		for (LONG x = 0; x < infohead.biWidth; x++)
+		{
+			int bitlocation;
+			auto pix = GetPixel(x, y, bitlocation);
+			double valuex = *pix[Channel];
+			auto piy = image.GetPixel(x, y, bitlocation);
+			double valuey = *piy[Channel];
+			result += (valuex - meanx)*(valuey - meany);
+		}
+	}
+	result /= infohead.biHeight*infohead.biWidth - 1;
 }

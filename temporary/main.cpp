@@ -330,12 +330,22 @@ void main()
 
 		///////////////////////////////////////////////////////////////////////////////////////////////
 		//实验二
+		auto tbegin = clock();
 		IPcode1 ex2_origin(path);
 		
 
 		IPcode1 ex2_origin_gray8 = ex2_origin;
 		ex2_origin_gray8.MakeRGB24_TO_Gray8();
 		ex2_origin_gray8.SaveBmp("ex2_origin_gray8.bmp");
+
+		IPcode1 ex2_origin_gray8_Sobel_gui1 = ex2_origin_gray8;
+		ex2_origin_gray8_Sobel_gui1.Kernel_image(0, 3, 3, 1, "sobel", 1, 1);
+		ex2_origin_gray8_Sobel_gui1.SaveBmp("ex2_origin_gray8_Sobel_gui1.bmp");
+		//IPcode1 ex2_origin_gray8_Sobel_notgui1 = ex2_origin_gray8;
+		//ex2_origin_gray8_Sobel_notgui1.Kernel_image(0, 3, 3, 0, "sobel", 1, 1);
+		//ex2_origin_gray8_Sobel_notgui1.SaveBmp("ex2_origin_gray8_Sobel_notgui1.bmp");
+		clock_t tend = clock();
+		cout << "花费了" << (double)(tend - tbegin) / CLOCKS_PER_SEC << "秒" << endl;
 
 		IPcode1 ex2_origin_gray8_addNoise_guass = ex2_origin_gray8;
 		auto width = ex2_origin_gray8_addNoise_guass.ReadWidth();
@@ -345,8 +355,13 @@ void main()
 		IPcode1 ex2_origin_gray8_addNoise_guass_medianFilter = ex2_origin_gray8_addNoise_guass;
 		ex2_origin_gray8_addNoise_guass_medianFilter.Kernel_image(0, 3, 3, 0, "median", 1, 1);
 		ex2_origin_gray8_addNoise_guass_medianFilter.SaveBmp("ex2_origin_gray8_addNoise_guass_medianFilter.bmp");
+		cout << "ex2_origin_gray8_addNoise_guass_medianFilter SSIM" << ex2_origin_gray8_addNoise_guass_medianFilter.SSIM(ex2_origin_gray8, 0) << endl;
+		cout << "ex2_origin_gray8_addNoise_guass_medianFilter PSNR" << ex2_origin_gray8_addNoise_guass_medianFilter.PSNR(ex2_origin_gray8) << endl;
+
 		ex2_origin_gray8_addNoise_guass.Kernel_image(0, 3, 3, 0, ex2_origin_gray8_addNoise_guass.AVGKernelTemplate(3, 3), 1, 1);
 		ex2_origin_gray8_addNoise_guass.SaveBmp("ex2_origin_gray8_addNoise_guass_AVGKernelTemplate3_3.bmp");
+		cout << "ex2_origin_gray8_addNoise_guass_AVGKernelTemplate3_3 SSIM" << ex2_origin_gray8_addNoise_guass.SSIM(ex2_origin_gray8, 0) << endl;
+		cout << "ex2_origin_gray8_addNoise_guass_AVGKernelTemplate3_3 PSNR" << ex2_origin_gray8_addNoise_guass.PSNR(ex2_origin_gray8) << endl;
 		
 
 		IPcode1 ex2_origin_gray8_addNoise_Impulse = ex2_origin_gray8;
@@ -355,8 +370,13 @@ void main()
 		IPcode1 ex2_origin_gray8_addNoise_Impulse_medianFilter = ex2_origin_gray8_addNoise_Impulse;
 		ex2_origin_gray8_addNoise_Impulse_medianFilter.Kernel_image(0, 3, 3, 0, "median", 1, 1);
 		ex2_origin_gray8_addNoise_Impulse_medianFilter.SaveBmp("ex2_origin_gray8_addNoise_Impulse_medianFilter.bmp");
+		cout << "ex2_origin_gray8_addNoise_Impulse_medianFilter SSIM" << ex2_origin_gray8_addNoise_Impulse_medianFilter.SSIM(ex2_origin_gray8, 0) << endl;
+		cout << "ex2_origin_gray8_addNoise_Impulse_medianFilter PSNR" << ex2_origin_gray8_addNoise_Impulse_medianFilter.PSNR(ex2_origin_gray8) << endl;
+
 		ex2_origin_gray8_addNoise_Impulse.Kernel_image(0, 3, 3, 0, ex2_origin_gray8_addNoise_guass.AVGKernelTemplate(3, 3), 1, 1);
 		ex2_origin_gray8_addNoise_Impulse.SaveBmp("ex2_origin_gray8_addNoise_Impulse_AVGKernelTemplate3_3.bmp");
+		cout << "ex2_origin_gray8_addNoise_Impulse_AVGKernelTemplate3_3 SSIM" << ex2_origin_gray8_addNoise_Impulse.SSIM(ex2_origin_gray8, 0) << endl;
+		cout << "ex2_origin_gray8_addNoise_Impulse_AVGKernelTemplate3_3 PSNR" << ex2_origin_gray8_addNoise_Impulse.PSNR(ex2_origin_gray8) << endl;
 
 		IPcode1 ex2_origin_gray8_Equalization_Image = ex2_origin_gray8;
 		width = ex2_origin_gray8_Equalization_Image.ReadWidth();
