@@ -924,11 +924,11 @@ void IPcode1::Kernel_image(int channel,unsigned int Kernelwidth,unsigned int Ker
 	if (channel == 0 || channel == 1 || channel == 2)
 	{
 		makeBmpTimesof(Kernelwidth, Kernelheight); //先保证图片的长和宽都是所输入参数的倍数
-		unsigned int * amplitudeStore = NULL;
+		double * amplitudeStore = NULL;
 		double * phaseStore = NULL;
 		if (outmode == "ampl")
 		{
-			amplitudeStore = new unsigned int[infohead.biWidth*infohead.biHeight];
+			amplitudeStore = new double[infohead.biWidth*infohead.biHeight];
 		}
 		else if (outmode == "phase")
 		{
@@ -958,8 +958,48 @@ void IPcode1::Kernel_image(int channel,unsigned int Kernelwidth,unsigned int Ker
 				if (DFTpart.size() != Kernelwidth*Kernelheight )
 					throw exception("程序逻辑出错");
 				if (Operation == "DFT")
+				{
+					for (unsigned int y = 0; y < Kernelheight; y++)
+						for (unsigned int x = 0; x < Kernelwidth; x++)
+							DFTpart[x + y*Kernelwidth] = DFTpart[x + y*Kernelwidth] * pow(-1, x + y);
+					//需要事先平移到Kernelwidth Kernelheight的中心 P155
 					DFTpart = Operate::FFT_2D(DFTpart, Kernelwidth, Kernelheight);
-				else if (Operation == "IDFT")
+				}
+				if (Operation == "DFT_IDFT")
+				{
+					for (unsigned int y = 0; y < Kernelheight; y++)
+						for (unsigned int x = 0; x < Kernelwidth; x++)
+							DFTpart[x + y*Kernelwidth] = DFTpart[x + y*Kernelwidth] * pow(-1, x + y);
+					//需要事先平移到Kernelwidth Kernelheight的中心 P155
+
+					DFTpart = Operate::FFT_2D(DFTpart, Kernelwidth, Kernelheight);
+
+					if (inmode == "phase") //相角重建
+					{
+						for (unsigned int i = 0; i < Kernelheight*Kernelwidth; i++)
+						{
+							ComplexEXP tmp(DFTpart[i]);
+							DFTpart[i] = ComplexEXP(1, tmp.read_phase()).readcomp();
+						}
+					}
+					else if (inmode == "ampl") //谱重建
+					{
+						for (unsigned int i = 0; i < Kernelheight*Kernelwidth; i++)
+						{
+							ComplexEXP tmp(DFTpart[i]);
+							DFTpart[i] = ComplexEXP(tmp.read_amplitude(), 0).readcomp();
+						}
+					}
+					else
+						throw exception("输入了未定义的inmode");
+					DFTpart = Operate::IFFT_2D(DFTpart, Kernelwidth, Kernelheight);
+
+					for (unsigned int y = 0; y < Kernelheight; y++)
+						for (unsigned int x = 0; x < Kernelwidth; x++)
+							DFTpart[x + y*Kernelwidth] = DFTpart[x + y*Kernelwidth] / pow(-1, x + y);
+					//结束后在变回来
+				}
+				else if (Operation == "IDFT") //也与IDCT有同样的问题，输入的数据不是原始数据，是经过0-255变换或者对数变换的数据,要想研究谱重建和相角重建，就应该写一个类似DCT_NUMIN_IDCT的功能,除非输入数据是原始的DFT变换后的数据
 				{	
 					if (inmode == "phase")//只有IDFT关注inmode 
 					{
@@ -1082,10 +1122,21 @@ void IPcode1::Kernel_image(int channel,unsigned int Kernelwidth,unsigned int Ker
 
 		if (outmode == "ampl")
 		{
-			unsigned int * begin = amplitudeStore;
-			unsigned int * end = amplitudeStore + (infohead.biWidth*infohead.biHeight - 1);
-			vector<double> normal_list = normalization_zk<unsigned int>(begin, end);
-			Denormalization_zk<unsigned int>(begin, end, 0, 255, normal_list);
+			if (Operation == "DFT")
+			{
+				for (unsigned int i = 0; i < infohead.biWidth*infohead.biHeight; i++)
+				{
+					if (amplitudeStore[i] < 1)
+						amplitudeStore[i] = 0;
+					else
+						amplitudeStore[i] = 1 + log(abs(amplitudeStore[i]));
+				}
+				//DFT的动态范围非常大，需要取对数
+			}
+			double * begin = amplitudeStore;
+			double * end = amplitudeStore + (infohead.biWidth*infohead.biHeight - 1);
+			vector<double> normal_list = normalization_zk<double>(begin, end);
+			Denormalization_zk<double>(begin, end, 0, 255, normal_list);
 		}
 		else if (outmode == "phase")
 		{

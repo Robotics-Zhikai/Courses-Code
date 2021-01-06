@@ -338,6 +338,48 @@ void main()
 		ex2_origin_gray8.MakeRGB24_TO_Gray8();
 		ex2_origin_gray8.SaveBmp("ex2_origin_gray8.bmp");
 
+		IPcode1 ex2_origin_gray8_DFT_phase_IDFT_phase512 = ex2_origin_gray8;
+		ex2_origin_gray8_DFT_phase_IDFT_phase512.Kernel_image(0, 512, 512, "DFT_IDFT", "phase", "phase"); //相角重建
+		ex2_origin_gray8_DFT_phase_IDFT_phase512.SaveBmp("ex2_origin_gray8_DFT_phase_IDFT_phase512.bmp");
+
+		IPcode1 ex2_origin_gray8_DFT_phase_IDFT_ampl512 = ex2_origin_gray8;
+		ex2_origin_gray8_DFT_phase_IDFT_ampl512.Kernel_image(0, 512, 512, "DFT_IDFT", "phase", "ampl"); //相角重建
+		ex2_origin_gray8_DFT_phase_IDFT_ampl512.SaveBmp("ex2_origin_gray8_DFT_phase_IDFT_ampl512.bmp");
+
+		IPcode1 ex2_origin_gray8_DFT_ampl_IDFT_ampl512 = ex2_origin_gray8;
+		ex2_origin_gray8_DFT_ampl_IDFT_ampl512.Kernel_image(0, 512, 512, "DFT_IDFT", "ampl", "ampl"); //谱重建
+		ex2_origin_gray8_DFT_ampl_IDFT_ampl512.SaveBmp("ex2_origin_gray8_DFT_ampl_IDFT_ampl512.bmp");
+
+		IPcode1 ex2_origin_gray8_DFT_ampl_IDFT_phase512 = ex2_origin_gray8;
+		ex2_origin_gray8_DFT_ampl_IDFT_phase512.Kernel_image(0, 512, 512, "DFT_IDFT", "ampl", "phase"); //谱重建
+		ex2_origin_gray8_DFT_ampl_IDFT_phase512.SaveBmp("ex2_origin_gray8_DFT_ampl_IDFT_phase512.bmp");
+
+
+		IPcode1 ex2_origin_gray8_DFT_phase_IDFT_phase = ex2_origin_gray8;
+		ex2_origin_gray8_DFT_phase_IDFT_phase.Kernel_image(0, 8, 8, "DFT_IDFT", "phase", "phase"); //相角重建
+		ex2_origin_gray8_DFT_phase_IDFT_phase.SaveBmp("ex2_origin_gray8_DFT_phase_IDFT_phase.bmp");
+
+		IPcode1 ex2_origin_gray8_DFT_phase_IDFT_ampl = ex2_origin_gray8;
+		ex2_origin_gray8_DFT_phase_IDFT_ampl.Kernel_image(0, 8, 8, "DFT_IDFT", "phase", "ampl"); //相角重建
+		ex2_origin_gray8_DFT_phase_IDFT_ampl.SaveBmp("ex2_origin_gray8_DFT_phase_IDFT_ampl.bmp");
+		//其实相角重建的图phase输出和ampl结合起来才是最终的 相角不是0就是pi -pi ，从phase phase图可以看到，有三个灰度级 分别代表-pi 0 pi
+
+		IPcode1 ex2_origin_gray8_DFT_ampl_IDFT_ampl = ex2_origin_gray8;
+		ex2_origin_gray8_DFT_ampl_IDFT_ampl.Kernel_image(0, 8, 8, "DFT_IDFT", "ampl", "ampl"); //谱重建
+		ex2_origin_gray8_DFT_ampl_IDFT_ampl.SaveBmp("ex2_origin_gray8_DFT_ampl_IDFT_ampl.bmp");
+
+		IPcode1 ex2_origin_gray8_DFT_ampl_IDFT_phase = ex2_origin_gray8;
+		ex2_origin_gray8_DFT_ampl_IDFT_phase.Kernel_image(0, 8, 8, "DFT_IDFT", "ampl", "phase"); //谱重建
+		ex2_origin_gray8_DFT_ampl_IDFT_phase.SaveBmp("ex2_origin_gray8_DFT_ampl_IDFT_phase.bmp");
+
+		IPcode1 ex2_origin_gray8_DFT_ampl = ex2_origin_gray8;
+		ex2_origin_gray8_DFT_ampl.Kernel_image(0, 8, 8, "DFT", "whatever", "ampl");
+		ex2_origin_gray8_DFT_ampl.SaveBmp("ex2_origin_gray8_DFT_ampl.bmp");//这个是经过对数标定的
+
+		IPcode1 ex2_origin_gray8_DFT_phase = ex2_origin_gray8;
+		ex2_origin_gray8_DFT_phase.Kernel_image(0, 8, 8, "DFT", "whatever", "phase");
+		ex2_origin_gray8_DFT_phase.SaveBmp("ex2_origin_gray8_DFT_phase.bmp");
+
 		IPcode1 ex2_origin_gray8_Sobel_gui1 = ex2_origin_gray8;
 		ex2_origin_gray8_Sobel_gui1.Kernel_image(0, 3, 3, 1, "sobel", 1, 1);
 		ex2_origin_gray8_Sobel_gui1.SaveBmp("ex2_origin_gray8_Sobel_gui1.bmp");
