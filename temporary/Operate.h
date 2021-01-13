@@ -326,7 +326,7 @@ public:
 		}
 		return result;
 	}
-	vector<complex<double>> IFFT(const vector<complex<double>> & input)
+	vector<complex<double>> IDFT(const vector<complex<double>> & input)
 	{
 		auto N = input.size();
 		vector<complex<double>> result(N);
@@ -359,7 +359,7 @@ public:
 			result[i] /= N;
 		return result;
 	}
-	vector<complex<double>> FFT(const vector<complex<double>> & input)//一维的FFT
+	vector<complex<double>> IFFT(const vector<complex<double>> & input)
 	{
 		auto N = input.size();
 		vector<complex<double>> result(N);
@@ -371,6 +371,68 @@ public:
 		static vector<complex<double>> Omiga;
 		if (NOmiga != N || flagfirst == 1) //防止重复调用FFT时反复调用getOmiga
 										   //有可能在实际调用FFT时input数据每次都不一样，有时间的话可以考虑搞一个Omiga Set，只要曾经用过的Omiga，就存在Set里 每次只需要付出查询的成本即可
+										   //很简单的查询的时间成本可以降到O(1) 实现这个的话就是堆时间，没有什么技术含量
+		{
+			flagfirst = 0;
+			NOmiga = N;
+			Omiga = GetOmigaIFFT(N);
+		}
+		if (Omiga.size() != pow(N - 1, 2) + 1)
+			throw exception("代码逻辑出错，Omiga的维度与input不匹配");
+
+		if (IsInteger(log2(N)))
+		{
+			for (int i = 0; i < N; i++)
+				result[i] = input[i];
+			unsigned int IterateTimes = log2(N);
+			int k;
+			for (unsigned int s = 1; s <= IterateTimes; s++)
+			{
+				k = N / pow(2, s); //对偶节点的间隔k
+				int offset = 0;
+				while (1)
+				{
+					unsigned int p = 0;
+					for (int x = offset; x < offset + k; x++)
+					{
+						if (x == offset)
+							p = GetFFT_Omiga_p(x, s, IterateTimes);
+						auto store = Omiga[p] * result[x + k];
+						auto newresultx = result[x] + store;
+						result[x + k] = result[x] - store;
+						result[x] = newresultx;
+					}
+					offset += 2 * k;
+					if (offset > N - 1)
+						break;
+				}
+			}
+			vector<complex<double>> resultTmp(N);
+			for (int i = 0; i < N; i++)
+			{
+				resultTmp[i] = result[Inverse_uint(i, IterateTimes)];
+				resultTmp[i] /= N;
+			}
+			return resultTmp;
+		}
+		else
+		{
+			cout << "IFFT的输入数据长度不是2的整数次幂，计算效率低" << endl;
+			return IDFT(input);
+		}
+	}
+	vector<complex<double>> DFT(const vector<complex<double>> & input)
+	{
+		auto N = input.size();
+		vector<complex<double>> result(N);
+		if (N == 0)
+			return result;
+
+		static auto NOmiga = N;
+		static int flagfirst = 1;
+		static vector<complex<double>> Omiga;
+		if (NOmiga != N || flagfirst == 1) //防止重复调用DFT时反复调用getOmiga
+										   //有可能在实际调用DFT时input数据每次都不一样，有时间的话可以考虑搞一个Omiga Set，只要曾经用过的Omiga，就存在Set里 每次只需要付出查询的成本即可
 										   //很简单的查询的时间成本可以降到O(1) 实现这个的话就是堆时间，没有什么技术含量
 		{
 			flagfirst = 0;
@@ -389,6 +451,68 @@ public:
 			}
 		}
 		return result;
+	}
+	vector<complex<double>> FFT(const vector<complex<double>> & input)//一维的FFT
+	{
+		auto N = input.size();
+		vector<complex<double>> result(N);
+		if (N == 0)
+			return result;
+
+		static auto NOmiga = N;
+		static int flagfirst = 1;
+		static vector<complex<double>> Omiga;
+		if (NOmiga != N || flagfirst == 1) //防止重复调用FFT时反复调用getOmiga
+										   //有可能在实际调用DFT时input数据每次都不一样，有时间的话可以考虑搞一个Omiga Set，只要曾经用过的Omiga，就存在Set里 每次只需要付出查询的成本即可
+										   //很简单的查询的时间成本可以降到O(1) 实现这个的话就是堆时间，没有什么技术含量
+		{
+			flagfirst = 0;
+			NOmiga = N;
+			Omiga = GetOmiga(N);
+		}
+		if (Omiga.size() != pow(N - 1, 2) + 1)
+			throw exception("代码逻辑出错，Omiga的维度与input不匹配");
+
+		if (IsInteger(log2(N)))
+		{
+			for (int i = 0; i < N; i++)
+				result[i] = input[i];
+			unsigned int IterateTimes = log2(N);
+			int k;
+			for (unsigned int s = 1; s <= IterateTimes; s++)
+			{
+				k = N / pow(2, s); //对偶节点的间隔k
+				int offset = 0;
+				while (1)
+				{
+					unsigned int p = 0;
+					for (int x = offset; x < offset+k; x++)
+					{
+						if (x==offset)
+							p = GetFFT_Omiga_p(x, s, IterateTimes);
+						auto store = Omiga[p] * result[x + k];
+						auto newresultx = result[x] + store;
+						result[x + k] = result[x] - store;
+						result[x] = newresultx;
+					}
+					offset += 2 * k;
+					if (offset > N - 1)
+						break;
+				}
+			}
+			vector<complex<double>> resultTmp(N);
+			for (int i = 0; i < N; i++)
+			{
+				resultTmp[i] = result[Inverse_uint(i, IterateTimes)];
+			}
+			return resultTmp;
+		}
+		else
+		{
+			cout << "FFT的输入数据长度不是2的整数次幂，计算效率低" << endl;
+			return DFT(input);
+		}
+		
 	}
 	vector<complex<double>> FFT(const vector<ComplexEXP> &input) //保证不进行输入数据的任何修改且不额外开销耗费计算资源
 	{
@@ -409,14 +533,65 @@ public:
 		}
 		return FFT(input1);
 	}
+	double sinxDividex(double x)
+	{
+		if (abs(x) < dt)
+			return 1;
+		else
+			return sin(x) / x;
+	}
 private:
+	unsigned int Inverse_uint(unsigned int x, unsigned int LimitBitCount)//限制低LimitBitCount位进行倒序
+	{
+		unsigned int bitCount = sizeof(unsigned int) * 8;
+		if (LimitBitCount > bitCount)
+			throw exception("LimitBitCount>bitCount");
+
+		vector<int> bitInverse;
+		unsigned int base = 1;
+		for (int i = 0; i < LimitBitCount; i++)
+		{
+			auto basethis = base << i;
+			unsigned int thisbit = x&basethis;
+			if (thisbit == 0)
+				bitInverse.push_back(0);
+			else
+				bitInverse.push_back(1);
+		}
+
+		unsigned int result = 0;
+		auto bitInverseN = bitInverse.size();
+		base = 1;
+		for (int i = 1; i <= bitInverseN; i++)
+		{
+			result += bitInverse[bitInverseN - i] * base;
+			base = base << 1;
+		}
+		return result;
+	}
+	unsigned int GetFFT_Omiga_p(unsigned int x,int s, unsigned int Log2N)//得到omiga的p值(指数值)
+	{
+		x = (x >> (Log2N - s));
+		x = Inverse_uint(x, Log2N);
+		return x;
+	}
+	bool IsInteger(double in) //判断输入参数是否是整数
+	{
+		if (abs(round(in) - in) < 0.000000000000001)
+			return 1;
+		else
+			return 0;
+	}
 	vector<complex<double>> GetOmiga(int N)//输入为数据个数,在特定的N下，此函数如果重复多次调用的话会计算量非常大
 	{
 		vector<complex<double>> Omiga(pow(N - 1, 2) + 1);
 		Omiga[0] = 1;
 		for (int i = 1; i < pow(N - 1, 2) + 1; i++)
 		{
-			Omiga[i] = Omiga[i - 1] * (ComplexEXP(1, -2 * pi / N).readcomp());
+			if (i < N)
+				Omiga[i] = Omiga[i - 1] * (ComplexEXP(1, -2 * pi / N).readcomp());
+			else
+				Omiga[i] = Omiga[i%N];
 		}
 		return Omiga;
 	}
@@ -426,7 +601,10 @@ private:
 		Omiga[0] = 1;
 		for (int i = 1; i < pow(N - 1, 2) + 1; i++)
 		{
-			Omiga[i] = Omiga[i - 1] * (ComplexEXP(1, 2 * pi / N).readcomp());
+			if (i < N)
+				Omiga[i] = Omiga[i - 1] * (ComplexEXP(1, 2 * pi / N).readcomp());
+			else
+				Omiga[i] = Omiga[i%N];
 		}
 		return Omiga;
 	}

@@ -51,6 +51,8 @@ public:
 	void AddNoise(int Channel, vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru, string NoiseMode, double par0=0, double par1=0, double par2=0, double par3=0);
 	//默认情况时是所有通道都加
 
+	void MotionLinearBlur(int Channel, double xa, double yb, double T);//线性运动模糊
+
 	LONG ReadWidth()const { return infohead.biWidth; }
 	LONG ReadHeight()const { return infohead.biHeight; }
 

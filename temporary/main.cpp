@@ -312,11 +312,21 @@ void main()
 {
 	try
 	{
+		
+		unsigned int testuint = 4;
+		cout << (testuint&(unsigned int)8) << endl;
+		
 		unsigned char grhd=0;
 		grhd += 1232.1;
 		grhd = 255;
 		grhd++;
 		Operate stast;
+		vector<complex<double>> datatest = { 1 ,2,3,4,5,6,7,8 };
+		vector<complex<double>> IDFTresult = stast.IDFT(datatest);
+		vector<complex<double>> IFFTresult = stast.IFFT(datatest);
+		vector<complex<double>> DFTresult = stast.DFT(datatest);
+		vector<complex<double>> FFTresult = stast.FFT(datatest);
+
 		vector<double> DCTtest = { 1 ,2,3,4 };
 		vector<double> ssdafa = stast.IDCT_2D(DCTtest, 2);
 		Operate ttt;
@@ -337,6 +347,10 @@ void main()
 		IPcode1 ex2_origin_gray8 = ex2_origin;
 		ex2_origin_gray8.MakeRGB24_TO_Gray8();
 		ex2_origin_gray8.SaveBmp("ex2_origin_gray8.bmp");
+
+		IPcode1 origin_gray8_LinearBlur = ex2_origin_gray8;
+		origin_gray8_LinearBlur.MotionLinearBlur(0,0.03,0,1);
+		origin_gray8_LinearBlur.SaveBmp("origin_gray8_LinearBlurxa0.03.bmp");
 
 		IPcode1 ex2_origin_gray8_DFT_phase_IDFT_phase512 = ex2_origin_gray8;
 		ex2_origin_gray8_DFT_phase_IDFT_phase512.Kernel_image(0, 512, 512, "DFT_IDFT", "phase", "phase"); //œ‡Ω«÷ÿΩ®

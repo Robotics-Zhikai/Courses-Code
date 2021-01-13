@@ -579,7 +579,7 @@ vector<unsigned char> IPcode1::ReadPixel(int x, int y, int & bitlocation)
 
 void IPcode1::makeBmpTimesof(unsigned int widthtimes, unsigned int heighttimes)
 {
-	if (widthtimes <= 0 || heighttimes <= 0 || widthtimes > infohead.biWidth || heighttimes > infohead.biHeight)
+	if (widthtimes <= 0 || heighttimes <= 0 )//|| widthtimes > infohead.biWidth || heighttimes > infohead.biHeight) //这个应该可以变大
 		throw exception("widthtimes、heighttimes设置不对");
 	if (infohead.biBitCount == 8 || infohead.biBitCount == 24)
 	{
@@ -1551,4 +1551,73 @@ double IPcode1::Readcovariance(int Channel, const IPcode1& image)const
 		}
 	}
 	result /= infohead.biHeight*infohead.biWidth - 1;
+}
+
+void IPcode1::MotionLinearBlur(int Channel,double xa,double yb,double T)
+{
+	if (infohead.biBitCount == 8)
+	{
+		if (Channel != 0)
+			throw exception("灰度图只能由channel 0索引");
+	}
+	else if (infohead.biBitCount == 24)
+	{
+		if (Channel != 0 && Channel != 1 && Channel != 2)
+			throw exception("三通道，不能超出三通道 0 1 2 ");
+	}
+	else
+	{
+		cout << __FILE__ << __LINE__;
+		throw exception("暂时无法处理这时的情况");
+	}
+
+	makeBmpTimesof(2 * pow(2, ceil(log2(infohead.biWidth))), 2 * pow(2, ceil(log2(infohead.biHeight)))); 
+	// 为了加快FFT的速度把图像扩成2的幂次 同时为了减少滤波时的混叠，把图像扩展两倍
+
+	vector<complex<double>> image(infohead.biWidth*infohead.biHeight);
+	size_t countimage = 0;
+	for (LONG y = 0; y < infohead.biHeight; y++)
+	{
+		for (LONG x = 0; x < infohead.biWidth; x++)
+		{
+			int bitloc;
+			auto pix = GetPixel(x, y, bitloc);
+			image[countimage++] = pow(-1,x+y)*(*pix[Channel]); //变换图像的傅里叶变换到中心
+		}
+	}
+
+	auto imageFFT = FFT_2D(image, infohead.biWidth, infohead.biHeight);
+	vector<complex<double>> Filter(infohead.biWidth*infohead.biHeight);
+	size_t FilterCount = 0;
+	//double T = 1;
+	double a = xa;
+	double b = yb;
+	for (LONG v = 0; v < infohead.biHeight; v++)
+	{
+		for (LONG u = 0; u < infohead.biWidth; u++)
+		{
+			auto uv = pi*(a*(u - infohead.biWidth / 2.0) + b*(v - infohead.biHeight / 2.0));
+			Filter[FilterCount++] = ComplexEXP(T*sinxDividex(uv), -uv).readcomp();
+		}
+	}
+
+	if (imageFFT.size() != Filter.size())
+		throw exception("imageFFT.size()!=Filter.size()");
+
+	for (size_t i = 0; i < imageFFT.size(); i++)
+		imageFFT[i] = imageFFT[i] * Filter[i];
+
+	image = IFFT_2D(imageFFT, infohead.biWidth, infohead.biHeight);
+
+	for (LONG y = 0; y < infohead.biHeight; y++)
+	{
+		for (LONG x = 0; x < infohead.biWidth; x++)
+		{
+			int bitloc;
+			auto pix = GetPixel(x, y, bitloc);
+			*pix[Channel] = image[x + y*infohead.biHeight].real()*pow(-1, x + y);//变换回去
+			if (abs(image[x + y*infohead.biHeight].imag()) > 0.01)
+				cout << image[x + y*infohead.biHeight].imag() << endl; //测试代码
+		}
+	}
 }
