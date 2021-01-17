@@ -27,8 +27,8 @@ public:
 	vector<unsigned char> ReadPixel(int x, int y, int & bitlocation);//读取pixel的值，不进行修改
 
 	void Kernel_image(int channel, unsigned int Kernelwidth, unsigned int Kernelheight, string Operation, string inmode, string outmode, double Num=0);
-	//对第channel号通道进行分块的DFT,直接修改类本身的数据 mode表明是保留幅值还是保留相位 0表示保留幅值1表示保留相位
-	//默认的步长是width height
+	//对第channel号通道进行分块的DFT/DCT/DCTIDCT/DFTIDFT操作,直接修改类本身的数据 Operation表示操作 
+
 	void Kernel_image(int channel, unsigned int Kernelwidth, unsigned int Kernelheight, bool ChangeDimension,const vector<double>& KernalTemplate,int stepx,int stepy);
 	//用width和height的模板核对channel通道的图像进行处理 整体逻辑和上边的Kernel_image是差不多的 step表示每次在各方向上移动的步长
 	//KernalTemplate也是从左到右从下到上的数字排列的。 ChangeDimension表示变换后的量纲是否有改变 比如均值滤波和中值滤波量纲就没有改变
@@ -43,11 +43,15 @@ public:
 	vector<double> AVGKernelTemplate(unsigned int M, unsigned int N);
 
 	void MakeRGB24_TO_Gray8();
+	void MakeGray8_TO_BinaryImage_DirectThreshold();//直接阈值法将灰度图转化为二值图
+	void MakeGray8_TO_BinaryImage_HalfTone(); //基于误差扩散的半色调法将灰度图转化为二值图
 	void plot_DCTkernel_Image(int N); //绘制DCT正向变换核的图像 以当前图片的大小为基础，绘制正向变换核基图像
 	vector<double> Histogram(int Channel, vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru); 
 	//得到某一通道分布在给定范围内的本类图像数据的频率分布直方图
 	void Equalization_Image(int Channel, vector<LONG> ld , vector<LONG> lu , vector<LONG> rd, vector<LONG> ru);
 	//均衡化某一channel的直方图，并将效果显示在图片上
+	void Normalization_Image(int Channel, vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru);
+	//归一化某一channel的直方图，并将效果显示在图片上
 	void AddNoise(int Channel, vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru, string NoiseMode, double par0=0, double par1=0, double par2=0, double par3=0);
 	//默认情况时是所有通道都加
 

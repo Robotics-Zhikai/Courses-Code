@@ -957,6 +957,7 @@ void IPcode1::Kernel_image(int channel,unsigned int Kernelwidth,unsigned int Ker
 				}
 				if (DFTpart.size() != Kernelwidth*Kernelheight )
 					throw exception("程序逻辑出错");
+
 				if (Operation == "DFT")
 				{
 					for (unsigned int y = 0; y < Kernelheight; y++)
@@ -965,7 +966,7 @@ void IPcode1::Kernel_image(int channel,unsigned int Kernelwidth,unsigned int Ker
 					//需要事先平移到Kernelwidth Kernelheight的中心 P155
 					DFTpart = Operate::FFT_2D(DFTpart, Kernelwidth, Kernelheight);
 				}
-				if (Operation == "DFT_IDFT")
+				else if (Operation == "DFT_IDFT")
 				{
 					for (unsigned int y = 0; y < Kernelheight; y++)
 						for (unsigned int x = 0; x < Kernelwidth; x++)
@@ -1172,6 +1173,54 @@ void IPcode1::Kernel_image(int channel,unsigned int Kernelwidth,unsigned int Ker
 	}
 }
 
+void IPcode1::MakeGray8_TO_BinaryImage_HalfTone()
+{
+	if (infohead.biBitCount != 8)
+		throw exception("暂时无法处理infohead.biBitCount!=8的情况");
+	vector<LONG> ld = { 0,0 };
+	vector<LONG> lu = { 0,infohead.biHeight - 1 };
+	vector<LONG> rd = { infohead.biWidth - 1,0 };
+	vector<LONG> ru = { infohead.biWidth - 1,infohead.biHeight - 1 };
+	Normalization_Image(0, ld, lu, rd, ru);
+
+	for (LONG y = 1; y < infohead.biHeight; y++)
+	{
+		for (LONG x = 1; x < infohead.biWidth-1; x++)
+		{
+			int bitlocation;
+			auto pix = GetPixel(x, y, bitlocation);
+			if (*pix[0] >= 255 / 2)
+				*pix[0] = 255;
+			else
+				*pix[0] = 0;
+		}
+	}
+}
+
+void IPcode1::MakeGray8_TO_BinaryImage_DirectThreshold()
+{
+	if (infohead.biBitCount != 8)
+		throw exception("暂时无法处理infohead.biBitCount!=8的情况");
+	vector<LONG> ld = { 0,0 };
+	vector<LONG> lu = { 0,infohead.biHeight - 1 };
+	vector<LONG> rd = { infohead.biWidth - 1,0 };
+	vector<LONG> ru = { infohead.biWidth - 1,infohead.biHeight - 1 };
+
+	Normalization_Image(0, ld, lu, rd, ru);
+	for (LONG y = 0; y < infohead.biHeight; y++)
+	{
+		for (LONG x = 0; x < infohead.biWidth; x++)
+		{
+			int bitlocation;
+			auto pix = GetPixel(x, y, bitlocation);
+			if (*pix[0] >= 255 / 2)
+				*pix[0] = 255;
+			else
+				*pix[0] = 0;
+		}
+	}
+}
+
 void IPcode1::MakeRGB24_TO_Gray8()
 {
 	Transfer(RGB2GrayValue);
@@ -1372,6 +1421,59 @@ vector<double> IPcode1::Histogram(int Channel, vector<LONG> ld, vector<LONG> lu,
 		result[i] /= CountAll;
 	}
 	return result;
+}
+
+void IPcode1::Normalization_Image(int Channel, vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru)
+//转化到0-255 定死了 否则还得加一些限制条件 时间有限 就不写了
+{
+	if (infohead.biBitCount == 8)
+	{
+		if (Channel != 0)
+			throw exception("灰度图只能由channel 0索引");
+	}
+	else if (infohead.biBitCount == 24)
+	{
+		if (Channel != 0 && Channel != 1 && Channel != 2)
+			throw exception("三通道，不能超出三通道 0 1 2 ");
+	}
+	else
+	{
+		cout << __FILE__ << __LINE__;
+		throw exception("暂时无法处理这时的情况");
+	}
+
+	vector<unsigned char *>addrStore;
+	int maxele = -9999;
+	int minele = 9999;
+	for (LONG y = ld[1]; y <= lu[1]; y++)
+	{
+		for (LONG x = ld[0]; x <= rd[0]; x++)
+		{
+			int bitlocation;
+			auto pix = GetPixel(x, y, bitlocation);
+			addrStore.push_back(pix[Channel]);
+			if (*pix[Channel] > maxele)
+				maxele = *pix[Channel];
+			if (*pix[Channel] < minele)
+				minele = *pix[Channel];
+		}
+	}
+
+	if (maxele == minele)
+		return;
+	else
+	{
+		int c = minele;
+		int d = maxele;
+		int a = 0;
+		int b = 255;
+
+		for (size_t i = 0; i < addrStore.size(); i++)
+		{
+			double tmp = *addrStore[i];
+			*addrStore[i] = round((tmp - minele) / double(maxele - minele)*(b - a));
+		}
+	}
 }
 
 void IPcode1::Equalization_Image(int Channel, vector<LONG> ld, vector<LONG> lu, vector<LONG> rd, vector<LONG> ru)

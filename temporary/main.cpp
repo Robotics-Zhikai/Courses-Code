@@ -254,65 +254,160 @@ void Experiment1()
 {
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	//实验一
-	IPcode1 ip0(path);
-	IPcode1 ip1(path);
-	IPcode1 ip3(path);
-	IPcode1 ip4(path);
-	IPcode1 ip5(path);
+	IPcode1 lunaorigin(path);
+	lunaorigin.SaveBmp("lunaorigin.bmp");//保存初始图像
+	IPcode1 lunaorigin_crop300_460 = lunaorigin;
+	lunaorigin_crop300_460.CropBmp(0, 0, 300, 460); //以0,0作为起点，300的宽度，460的高度进行Crop
+	lunaorigin_crop300_460.SaveBmp("lunaorigin_crop300_460.bmp"); //保存剪切后的图像
 
-	int bitloc;
-	vector<unsigned char> vecpixel = ip0.ReadPixel(231, 231, bitloc);
-	for (int i = 0; i < 3; i++)
-	{
-		cout << int(vecpixel[i]) << " ";
-	}
+	vector<LONG> ld = { 0,0 };
+	vector<LONG> lu = { 0,lunaorigin_crop300_460.ReadHeight()-1 };
+	vector<LONG> rd = { lunaorigin_crop300_460.ReadWidth() - 1,0 };
+	vector<LONG> ru = { lunaorigin_crop300_460.ReadWidth() - 1,lunaorigin_crop300_460.ReadHeight() - 1 };
+	vector<double> Hist = lunaorigin_crop300_460.Histogram(0, ld, lu, rd, ru);
+
+	cout << "直方图如下，纵轴为频率：" << endl;
+	for (int i = 0; i < Hist.size(); i++)
+		cout << Hist[i] << " ";
 	cout << endl;
 
-	ip0.SaveBmp("origin.bmp");
-	ip1.Transfer(IPcode1::RGB2YIQ);
-	IPcode1 ip2 = ip1;
-	ip2.Transfer(IPcode1::YIQ2RGB);
-	ip3.Transfer(IPcode1::RGB2HSI);
-	ip4.Transfer(IPcode1::RGB2YCrCb);
-	ip5.Transfer(IPcode1::RGB2XYZ);
+	int bitloc;
+	vector<unsigned char> vecpixel = lunaorigin.ReadPixel(231, 231, bitloc);
+	cout << "231,231处的像素值如下：" << endl;
+	for (int i = 0; i < 3; i++)
+		cout << int(vecpixel[i]) << " ";
+	cout << endl;
 
-	ip1.SaveBmp("YIQ.bmp");
-	ip1.SaveChannel("YIQ_Y.bmp", 0);
-	ip1.SaveChannel("YIQ_I.bmp", 1);
-	ip1.SaveChannel("YIQ_Q.bmp", 2);
+	lunaorigin.SaveChannel("lunaorigin_R.bmp", 0);
+	lunaorigin.SaveChannel("lunaorigin_G.bmp", 1);
+	lunaorigin.SaveChannel("lunaorigin_B.bmp", 2);
 
-	ip2.SaveBmp("RGB.bmp");
-	ip2.SaveChannel("RGB_R.bmp", 0);
-	ip2.SaveChannel("RGB_G.bmp", 1);
-	ip2.SaveChannel("RGB_B.bmp", 2);
+	IPcode1 lunaorigin_RGB2YIQ = lunaorigin;
+	lunaorigin_RGB2YIQ.Transfer(IPcode1::RGB2YIQ);
+	IPcode1 lunaorigin_RGB2HSI = lunaorigin;
+	lunaorigin_RGB2HSI.Transfer(IPcode1::RGB2HSI);
+	IPcode1 lunaorigin_RGB2YCrCb = lunaorigin;
+	lunaorigin_RGB2YCrCb.Transfer(IPcode1::RGB2YCrCb);
+	IPcode1 lunaorigin_RGB2XYZ = lunaorigin;
+	lunaorigin_RGB2XYZ.Transfer(IPcode1::RGB2XYZ);
 
-	ip3.SaveBmp("HSI.bmp");
-	ip3.SaveChannel("HSI_H.bmp", 0);
-	ip3.SaveChannel("HSI_S.bmp", 1);
-	ip3.SaveChannel("HSI_I.bmp", 2);
+	lunaorigin_RGB2YIQ.SaveBmp("lunaorigin_RGB2YIQ.bmp");
+	lunaorigin_RGB2YIQ.SaveChannel("lunaorigin_RGB2YIQ_Y.bmp", 0);
+	lunaorigin_RGB2YIQ.SaveChannel("lunaorigin_RGB2YIQ_I.bmp", 1);
+	lunaorigin_RGB2YIQ.SaveChannel("lunaorigin_RGB2YIQ_Q.bmp", 2);
 
-	ip4.SaveBmp("YCrCb.bmp");
-	ip4.SaveChannel("YCrCb_Y.bmp", 0);
-	ip4.SaveChannel("YCrCb_Cr.bmp", 1);
-	ip4.SaveChannel("YCrCb_Cb.bmp", 2);
+	lunaorigin_RGB2HSI.SaveBmp("lunaorigin_RGB2HSI.bmp");
+	lunaorigin_RGB2HSI.SaveChannel("lunaorigin_RGB2HSI_H.bmp", 0);
+	lunaorigin_RGB2HSI.SaveChannel("lunaorigin_RGB2HSI_S.bmp", 1);
+	lunaorigin_RGB2HSI.SaveChannel("lunaorigin_RGB2HSI_I.bmp", 2);
 
-	ip5.SaveBmp("XYZ.bmp");
-	ip5.SaveChannel("XYZ_X.bmp", 0);
-	ip5.SaveChannel("XYZ_Y.bmp", 1);
-	ip5.SaveChannel("XYZ_Z.bmp", 2);
+	lunaorigin_RGB2YCrCb.SaveBmp("lunaorigin_RGB2YCrCb.bmp");
+	lunaorigin_RGB2YCrCb.SaveChannel("lunaorigin_RGB2YCrCb_Y.bmp", 0);
+	lunaorigin_RGB2YCrCb.SaveChannel("lunaorigin_RGB2YCrCb_Cr.bmp", 1);
+	lunaorigin_RGB2YCrCb.SaveChannel("lunaorigin_RGB2YCrCb_Cb.bmp", 2);
+
+	lunaorigin_RGB2XYZ.SaveBmp("lunaorigin_RGB2XYZ.bmp");
+	lunaorigin_RGB2XYZ.SaveChannel("lunaorigin_RGB2XYZ_X.bmp", 0);
+	lunaorigin_RGB2XYZ.SaveChannel("lunaorigin_RGB2XYZ_Y.bmp", 1);
+	lunaorigin_RGB2XYZ.SaveChannel("lunaorigin_RGB2XYZ_Z.bmp", 2);
 	///////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 void Experiment2()
 {
+	IPcode1 lunaorigin(path);
 
+	lunaorigin.plot_DCTkernel_Image(8);
+
+	IPcode1 lunaorigin_gray8 = lunaorigin;
+	lunaorigin_gray8.MakeRGB24_TO_Gray8();
+	lunaorigin_gray8.SaveBmp("lunaorigin_gray8.bmp");
+
+	IPcode1 lunaorigin_gray8_DCT_1_IDCT = lunaorigin_gray8;
+	lunaorigin_gray8_DCT_1_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "whatever", "ampl", 1);
+	cout << "lunaorigin_gray8_DCT_1_IDCT PSNR:" << lunaorigin_gray8_DCT_1_IDCT.PSNR(lunaorigin_gray8) << endl;
+	lunaorigin_gray8_DCT_1_IDCT.SaveBmp("lunaorigin_gray8_DCT_1_IDCT.bmp");
+
+	IPcode1 lunaorigin_gray8_DCT_2_IDCT = lunaorigin_gray8;
+	lunaorigin_gray8_DCT_2_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "whatever", "ampl", 2);
+	cout << "lunaorigin_gray8_DCT_2_IDCT PSNR:" << lunaorigin_gray8_DCT_2_IDCT.PSNR(lunaorigin_gray8) << endl;
+	lunaorigin_gray8_DCT_2_IDCT.SaveBmp("lunaorigin_gray8_DCT_2_IDCT.bmp");
+
+	IPcode1 lunaorigin_gray8_DCT_4_IDCT = lunaorigin_gray8;
+	lunaorigin_gray8_DCT_4_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "whatever", "ampl", 4);
+	cout << "lunaorigin_gray8_DCT_4_IDCT PSNR:" << lunaorigin_gray8_DCT_4_IDCT.PSNR(lunaorigin_gray8) << endl;
+	lunaorigin_gray8_DCT_4_IDCT.SaveBmp("lunaorigin_gray8_DCT_4_IDCT.bmp");
+
+	IPcode1 lunaorigin_gray8_DCT_6_IDCT = lunaorigin_gray8;
+	lunaorigin_gray8_DCT_6_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "whatever", "ampl", 6);
+	cout << "lunaorigin_gray8_DCT_6_IDCT PSNR:" << lunaorigin_gray8_DCT_6_IDCT.PSNR(lunaorigin_gray8) << endl;
+	lunaorigin_gray8_DCT_6_IDCT.SaveBmp("lunaorigin_gray8_DCT_6_IDCT.bmp");
+
+	IPcode1 lunaorigin_gray8_DCT_8_IDCT = lunaorigin_gray8;
+	lunaorigin_gray8_DCT_8_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "whatever", "ampl", 8);
+	cout << "lunaorigin_gray8_DCT_8_IDCT PSNR:" << lunaorigin_gray8_DCT_8_IDCT.PSNR(lunaorigin_gray8) << endl;
+	lunaorigin_gray8_DCT_8_IDCT.SaveBmp("lunaorigin_gray8_DCT_8_IDCT.bmp");
+
+	IPcode1 lunaorigin_gray8_DCT_10_IDCT = lunaorigin_gray8;
+	lunaorigin_gray8_DCT_10_IDCT.Kernel_image(0, 8, 8, "DCT_Numin_IDCT", "whatever", "ampl", 10);
+	cout << "lunaorigin_gray8_DCT_10_IDCT PSNR:" << lunaorigin_gray8_DCT_10_IDCT.PSNR(lunaorigin_gray8) << endl;
+	lunaorigin_gray8_DCT_10_IDCT.SaveBmp("lunaorigin_gray8_DCT_10_IDCT.bmp");
+		
+
+
+	IPcode1 lunaorigin_RGB2YCrCb = lunaorigin;
+	lunaorigin_RGB2YCrCb.Transfer(IPcode1::RGB2YCrCb);
+
+	IPcode1 lunaorigin_RGB2YCrCb_DFT_ampl_IDFT_ampl_512 = lunaorigin_RGB2YCrCb;
+	lunaorigin_RGB2YCrCb_DFT_ampl_IDFT_ampl_512.Kernel_image(0, 512, 512, "DFT_IDFT", "ampl", "ampl");
+	lunaorigin_RGB2YCrCb_DFT_ampl_IDFT_ampl_512.SaveChannel("lunaorigin_RGB2YCrCb_DFT_ampl_IDFT_ampl_512.bmp", 0);
+
+	IPcode1 lunaorigin_RGB2YCrCb_DFT_phase_IDFT_ampl_512 = lunaorigin_RGB2YCrCb;
+	lunaorigin_RGB2YCrCb_DFT_phase_IDFT_ampl_512.Kernel_image(0, 512, 512, "DFT_IDFT", "phase", "ampl");
+	lunaorigin_RGB2YCrCb_DFT_phase_IDFT_ampl_512.SaveChannel("lunaorigin_RGB2YCrCb_DFT_phase_IDFT_ampl_512.bmp", 0);
+
+
+	IPcode1 lunaorigin_RGB2YCrCb_DFT_ampl_IDFT_ampl = lunaorigin_RGB2YCrCb;
+	lunaorigin_RGB2YCrCb_DFT_ampl_IDFT_ampl.Kernel_image(0, 8, 8, "DFT_IDFT", "ampl", "ampl");
+	lunaorigin_RGB2YCrCb_DFT_ampl_IDFT_ampl.SaveChannel("lunaorigin_RGB2YCrCb_DFT_ampl_IDFT_ampl.bmp", 0);
+	IPcode1 lunaorigin_RGB2YCrCb_DFT_ampl_IDFT_phase = lunaorigin_RGB2YCrCb;
+	lunaorigin_RGB2YCrCb_DFT_ampl_IDFT_phase.Kernel_image(0, 8, 8, "DFT_IDFT", "ampl", "phase");
+	lunaorigin_RGB2YCrCb_DFT_ampl_IDFT_phase.SaveChannel("lunaorigin_RGB2YCrCb_DFT_ampl_IDFT_phase.bmp", 0);
+
+	IPcode1 lunaorigin_RGB2YCrCb_DFT_phase_IDFT_ampl = lunaorigin_RGB2YCrCb;
+	lunaorigin_RGB2YCrCb_DFT_phase_IDFT_ampl.Kernel_image(0, 8, 8, "DFT_IDFT", "phase", "ampl");
+	lunaorigin_RGB2YCrCb_DFT_phase_IDFT_ampl.SaveChannel("lunaorigin_RGB2YCrCb_DFT_phase_IDFT_ampl.bmp", 0);
+	IPcode1 lunaorigin_RGB2YCrCb_DFT_phase_IDFT_phase = lunaorigin_RGB2YCrCb;
+	lunaorigin_RGB2YCrCb_DFT_phase_IDFT_phase.Kernel_image(0, 8, 8, "DFT_IDFT", "phase", "phase");
+	lunaorigin_RGB2YCrCb_DFT_phase_IDFT_phase.SaveChannel("lunaorigin_RGB2YCrCb_DFT_phase_IDFT_phase.bmp", 0);
+
+
+	auto tbegin = clock();
+	IPcode1 lunaorigin_RGB2YCrCb_YDFT_ampl = lunaorigin_RGB2YCrCb;
+	lunaorigin_RGB2YCrCb_YDFT_ampl.Kernel_image(0, 8, 8, "DFT", "whatever", "ampl");
+	lunaorigin_RGB2YCrCb_YDFT_ampl.SaveChannel("lunaorigin_RGB2YCrCb_YDFT_ampl.bmp", 0);
+	clock_t tend = clock();
+	cout << "lunaorigin_RGB2YCrCb_YDFT_ampl花费了" << (double)(tend - tbegin) / CLOCKS_PER_SEC << "秒" << endl;
+
+	tbegin = clock();
+	IPcode1 lunaorigin_RGB2YCrCb_YDFT_phase = lunaorigin_RGB2YCrCb;
+	lunaorigin_RGB2YCrCb_YDFT_phase.Kernel_image(0, 8, 8, "DFT", "whatever", "phase");
+	lunaorigin_RGB2YCrCb_YDFT_phase.SaveChannel("lunaorigin_RGB2YCrCb_YDFT_phase.bmp", 0);
+	tend = clock();
+	cout << "lunaorigin_RGB2YCrCb_YDFT_phase花费了" << (double)(tend - tbegin) / CLOCKS_PER_SEC << "秒" << endl;
 }
 
+void Experiment3()
+{
+
+
+}
 void main()
 {
 	try
 	{
-		
+		Experiment2();
+		Experiment1();
 		unsigned int testuint = 4;
 		cout << (testuint&(unsigned int)8) << endl;
 		
