@@ -40,7 +40,7 @@ public:
 	double KernalTemplate_Multiple_subimage_y(int channel, LONG Globaly, unsigned int Kernelwidth, unsigned int Kernelheight, const vector<double>& KernalTemplate, LONG CenterX, LONG CenterY)const;
 	//给定Globaly 得到该行的值，上一个函数是连续调用这个子函数来得到的
 	double KernalTemplate_Multiple_subimage_x(int channel, LONG Globalx, unsigned int Kernelwidth, unsigned int Kernelheight, const vector<double>& KernalTemplate, LONG CenterX, LONG CenterY)const;
-	vector<double> AVGKernelTemplate(unsigned int M, unsigned int N);
+	static vector<double> AVGKernelTemplate(unsigned int M, unsigned int N);
 
 	void MakeRGB24_TO_Gray8();
 	void MakeGray8_TO_BinaryImage_DirectThreshold();//直接阈值法将灰度图转化为二值图

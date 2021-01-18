@@ -275,7 +275,10 @@ IPcode1::IPcode1(const IPcode1 & input)
 
 void IPcode1::SaveBmp(char * bmpname) 
 {
+	
 	SaveBmpTool(bmpname, pbmpBuf, infohead.biWidth, infohead.biHeight, infohead.biBitCount);
+	
+
 	//if (pbmpBuf == NULL)
 	//	return;
 	////颜色表大小，以字节为单位，灰度图像颜色表为1024字节，彩色图像颜色表大小为0
@@ -566,6 +569,8 @@ void IPcode1::SaveBmpTool(char * path, unsigned char *imgBuf, int width, int hei
 
 	//关闭文件
 	fclose(fp);
+
+	cout << string(path) << " 被保存了" << endl;
 }
 
 vector<unsigned char> IPcode1::ReadPixel(int x, int y, int & bitlocation)
@@ -1177,22 +1182,68 @@ void IPcode1::MakeGray8_TO_BinaryImage_HalfTone()
 {
 	if (infohead.biBitCount != 8)
 		throw exception("暂时无法处理infohead.biBitCount!=8的情况");
+
 	vector<LONG> ld = { 0,0 };
 	vector<LONG> lu = { 0,infohead.biHeight - 1 };
 	vector<LONG> rd = { infohead.biWidth - 1,0 };
 	vector<LONG> ru = { infohead.biWidth - 1,infohead.biHeight - 1 };
 	Normalization_Image(0, ld, lu, rd, ru);
 
-	for (LONG y = 1; y < infohead.biHeight; y++)
+	vector<double> ChangeValueRecord(infohead.biWidth*infohead.biHeight, 0); //需要修改的值的大小
+
+	int bitlocation;
+	vector<int> xoffset = { 1,-1,0,1 };
+	vector<int> yoffset = { 0,-1,-1,-1 };
+	vector<double> coef = { 7.0 / 16.0,3.0 / 16.0,5.0 / 16.0,1.0 / 16.0 }; //这三个vector size必须一样
+	if (!(xoffset.size() == yoffset.size() && yoffset.size() == coef.size()))
+		throw exception("三个vector size必须一样");
+	vector<unsigned char*> pixCurrent;
+
+	for (LONG y = 1; y < infohead.biHeight; y=y+3)
 	{
-		for (LONG x = 1; x < infohead.biWidth-1; x++)
+		for (LONG x = 1; x < infohead.biWidth-1; x=x+4)
 		{
-			int bitlocation;
-			auto pix = GetPixel(x, y, bitlocation);
-			if (*pix[0] >= 255 / 2)
-				*pix[0] = 255;
+			pixCurrent = GetPixel(x, y, bitlocation);
+
+			//auto pixRight = GetPixel(x+1, y, bitlocation);
+			//auto pixLeftDown = GetPixel(x-1, y-1, bitlocation);
+			//auto pixDown = GetPixel(x, y-1, bitlocation);
+			//auto pixRightDown = GetPixel(x+1, y-1, bitlocation);
+			//vector<vector<unsigned char*>> pixstore = { pixRight ,pixLeftDown ,pixDown ,pixRightDown };
+						
+			int error = 0;
+			if (*pixCurrent[0] >= 255 / 2)
+			{
+				error = 255 - (*pixCurrent[0]);
+			}
 			else
-				*pix[0] = 0;
+			{
+				error = 0 - (*pixCurrent[0]);
+			}
+
+			LONG ytmp;
+			LONG xtmp;
+			for (size_t i = 0; i < xoffset.size(); i++)
+			{
+				ytmp = y + yoffset[i];
+				xtmp = x + xoffset[i];
+				ChangeValueRecord[ytmp*infohead.biWidth + xtmp] += coef[i] * (-error);
+			}
+		}
+	}
+
+	for (LONG y = 0; y < infohead.biHeight; y++)
+	{
+		for (LONG x = 0; x < infohead.biWidth; x++)
+		{
+			pixCurrent = GetPixel(x, y, bitlocation);
+			double tmpvalue = *pixCurrent[0] + ChangeValueRecord[y*infohead.biWidth + x];
+			if (tmpvalue < 255 / 2)
+				tmpvalue = 0;
+			else
+				tmpvalue = 255;
+				
+			*pixCurrent[0] = tmpvalue;
 		}
 	}
 }
@@ -1718,8 +1769,8 @@ void IPcode1::MotionLinearBlur(int Channel,double xa,double yb,double T)
 			int bitloc;
 			auto pix = GetPixel(x, y, bitloc);
 			*pix[Channel] = image[x + y*infohead.biHeight].real()*pow(-1, x + y);//变换回去
-			if (abs(image[x + y*infohead.biHeight].imag()) > 0.01)
-				cout << image[x + y*infohead.biHeight].imag() << endl; //测试代码
+			//if (abs(image[x + y*infohead.biHeight].imag()) > 0.01)
+				//cout << image[x + y*infohead.biHeight].imag() << endl; //测试代码
 		}
 	}
 }
