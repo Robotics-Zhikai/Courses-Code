@@ -1,7 +1,12 @@
 #include "main.h"
 #include "IPcode1.h"
 
+//路径示例
 //char path[300] = "D:\\Study\\硕士\\我的工作\\硕士学位课程\\数字图像处理\\Code\\lena512color.bmp";
+void CopyRight()
+{
+	cout << "王志恺 20S108359" << endl;
+}
 char path[300];
 
 void Debug()
@@ -371,6 +376,7 @@ void Experiment1()
 {
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	//实验一
+	CopyRight();
 	cout << "实验一开始" << endl;
 	IPcode1 lunaorigin(path);
 	lunaorigin.SaveBmp("lunaorigin.bmp");//保存初始图像
@@ -435,6 +441,7 @@ void Experiment1()
 
 void Experiment2()
 {
+	CopyRight();
 	cout << "实验二开始" << endl;
 
 	IPcode1 lunaorigin(path);
@@ -523,6 +530,7 @@ void Experiment2()
 
 void Experiment3()
 {
+	CopyRight();
 	cout << "实验三开始" << endl;
 
 	IPcode1 lunaorigin(path);
@@ -651,6 +659,7 @@ void Experiment3()
 
 void Experiment4()
 {
+	CopyRight();
 	cout << "实验四开始" << endl;
 
 	IPcode1 lunaorigin(path);
