@@ -345,11 +345,41 @@ namespace section10_3_1
 	}
 }
 
+namespace section10_3_2
+{
+	auto f_ex10_14 = 
+		[](int a, int b)
+	{
+		return a + b; 
+	};
 
+	auto ex10_15(int a)
+	{
+		return [a](int b) {return a + b; };
+	}
+
+	void biggies(vector<string>& words,vector<string>::size_type sz)//求大于等于一个给定长度的单词有多少,并打印
+	{
+		sort(words.begin(), words.end(), [](const string& s1, const string& s2) {return s1.size() < s2.size(); });//按长度排序
+		auto ele = find_if(words.begin(), words.end(), [sz](const string&s1) {return s1.size() > sz ? 1 : 0; });
+		auto count = words.end() - ele;
+		cout << "大于" << sz << "长度的单词有" << count << "个,分别是" << endl;
+		for_each(ele, words.end(), [](const string&s1) {cout << s1 << " "; });
+	}
+}
 void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//10.3.2节
+		cout << section10_3_2::ex10_15(3)(4) << endl;
+		section10_3_2::biggies(section10_3_1::ex10_13, 4);
+		sort(section10_3_1::Sales_datav.begin(), section10_3_1::Sales_datav.end(), [](const Sales_data&s1, const Sales_data&s2) {return s1.isbn().size() < s2.isbn().size(); });
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//10.3.1节
 		std::vector<std::string> v{ "1234", "1234", "1234", "Hi", "alan", "wang" };
