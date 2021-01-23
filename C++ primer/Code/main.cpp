@@ -261,6 +261,7 @@ namespace ex12_6
 	shared_ptr<vector<int>> returnvecintIntelligence()
 	{
 		//return new vector<int>;//不能用new初始化，因为不存在对应的构造函数
+		//这是因为智能指针对于内置指针类型是explicit的，不能作为拷贝构造函数返回
 		return make_shared<vector<int>>();
 	}
 
@@ -304,10 +305,84 @@ namespace ex12_6
 		input = make_shared<vector<int>>(); //指向了一个临时对象 这样的话就把分配的内存释放自由了
 	}
 }
+
+namespace ex10_9
+{
+	template<typename Ty>
+	void ElimDups(vector<Ty>& input) //消除重复数据
+	{
+		sort(input.begin(), input.end());//如果去掉此行的话unique不能很好的去除
+		auto unieued = unique(input.begin(), input.end());
+		input.erase(unieued, input.cend());
+	}
+}
+
+namespace section10_3_1
+{
+	bool Isshorter(const string&s1, const string &s2)
+	{
+		if (s1.size() < s2.size())
+			return 1;
+		else
+			return 0;
+	}
+
+	bool compareIsbn(const Sales_data&s1, const Sales_data&s2)
+	{
+		return s1.isbn().size() > s2.isbn().size();
+	}
+
+	Sales_data d1("aa"), d2("aaaa"), d3("aaa"), d4("z"), d5("aaaaz");
+	std::vector<Sales_data> Sales_datav{ d1, d2, d3, d4, d5 };
+
+	auto ex10_13 = std::vector<std::string>{ "aaaaassaa","a", "as", "aaaaaabba","aasss",  "aaa" };
+	bool IsMore5(const string&s1)
+	{
+		if (s1.size() > 5)
+			return 1;
+		else
+			return 0;
+	}
+}
+
+
 void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//10.3.1节
+		std::vector<std::string> v{ "1234", "1234", "1234", "Hi", "alan", "wang" };
+		ex10_9::ElimDups(v);
+		stable_sort(v.begin(), v.end(), section10_3_1::Isshorter);
+
+		sort(section10_3_1::Sales_datav.begin(), section10_3_1::Sales_datav.end(), section10_3_1::compareIsbn);
+		//sort(section10_3_1::ex10_13.begin(), section10_3_1::ex10_13.end(), section10_3_1::Isshorter);
+		partition(section10_3_1::ex10_13.begin(), section10_3_1::ex10_13.end(), section10_3_1::IsMore5);
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//10.2节
+		vector<double> ex10_4 = { 1.1,3,2,5,6,2,1,5,2,3,1 };
+		cout << accumulate(ex10_4.cbegin(), ex10_4.cend(), 0.0) << endl;
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//10.1
+		vector<int> ex10_1_1 = { 1,3,2,1,2,3,4,1,5,7,8,5,23,7 };
+		cout << count(ex10_1_1.cbegin(), ex10_1_1.cbegin()+3, 1) << endl;
+		vector<string> ex10_1_2 = { "asda s","asda s","s" };
+		cout << count(ex10_1_2.cbegin(), ex10_1_2.cbegin() + 3, "asda s") << endl;
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+		
+		auto sdsad = new auto(Sales_data());
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//12.1.3节
 		//shared_ptr<int> tmpsharedptr1 = new int(43); //看源码的话发现地址到智能指针的构造函数是explicit的，因此不能用拷贝构造函数，这涉及到隐式转化

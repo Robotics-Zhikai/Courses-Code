@@ -4,6 +4,8 @@
 #include <vector>
 #include <allocators>
 #include <string>
+#include <numeric>
+#include <algorithm>
 //namespace Exercise
 //{
 //	int ivar = 0;
