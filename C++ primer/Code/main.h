@@ -4,8 +4,9 @@
 #include <vector>
 #include <allocators>
 #include <string>
-#include <numeric>
+#include <numeric> //accumulate
 #include <algorithm>
+#include <functional> //bind
 //namespace Exercise
 //{
 //	int ivar = 0;

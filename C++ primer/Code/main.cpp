@@ -347,6 +347,7 @@ namespace section10_3_1
 
 namespace section10_3_2
 {
+	
 	auto f_ex10_14 = 
 		[](int a, int b)
 	{
@@ -366,11 +367,98 @@ namespace section10_3_2
 		cout << "大于" << sz << "长度的单词有" << count << "个,分别是" << endl;
 		for_each(ele, words.end(), [](const string&s1) {cout << s1 << " "; });
 	}
+
+	void ex10_21(int in)
+	{
+		auto f = [&in]()->bool //如果不指明bool，会推断出函数的返回类型是int lambda
+		{
+			if (in > 0)
+				in--;
+			else if (in < 0)
+				in++;
+			else
+				return 1;
+			return 0;
+		};
+
+		while (!f())
+			cout << in << endl;;
+	}
+
+
+	
+	
 }
+
+namespace sec10_3_4
+{
+	using namespace std::placeholders;
+	bool Iflowerthansz(const string& s1, int sz)
+	{
+		if (s1.size() <= sz)
+			return 1;
+		else
+			return 0;
+	}
+
+	size_t CheckSizeLambda(const vector<int> & num, const string& s1) //返回索引值
+	{
+		return find_if(num.begin(), num.end(), [&s1](int n) {return s1.size() < n; })-num.begin(); //lambda是一个可调用对象
+
+	}
+
+	bool CheckSize(string::size_type num, const string& s1)
+	{
+		if (s1.size() < num)
+			return 1;
+		else
+			return 0;
+	}
+	size_t CheckSizeBind(const vector<int>&num, const string&s1) //返回索引值
+	{
+		return find_if(num.begin(), num.end(), bind(CheckSize, _1, s1)) - num.begin();
+	}
+
+	//void foreach_exe(string::size_type num, const string& s1)
+	//{
+	//	if (!CheckSize(num, s1))
+	//		cout << s1 << endl;
+	//}
+	void biggies(const vector<string>& str, string::size_type num) //求大于等于一个给定长度的单词有多少,并打印
+	{
+		auto foreach_exe = [&](const string& s1)
+		{
+			if (!CheckSize(num, s1))
+				cout << s1 << endl;
+		};
+		for_each(str.begin(), str.end(), foreach_exe); //用lambda可调用对象
+		//for_each(str.begin(), str.end(), bind(foreach_exe, num, _1)); //bind生成一个可调用对象  注释掉的这两个可以组合着用
+	}
+}
+
 void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//10.3.4节
+		cout << count_if(section10_3_1::ex10_13.begin(), section10_3_1::ex10_13.end(), bind(sec10_3_4::Iflowerthansz, sec10_3_4::_1, 6)) << endl;
+		cout << sec10_3_4::CheckSizeLambda(vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8}, string("gasdf")) << endl;
+		cout << sec10_3_4::CheckSizeBind(vector<int>{0, 1, 2, 3, 4, 5, 6, 7, 8}, string("gasdf")) << endl;
+		sec10_3_4::biggies(section10_3_1::ex10_13, 4);
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//10.3.3节
+		//ex 10.20
+		cout << count_if(section10_3_1::ex10_13.begin(), section10_3_1::ex10_13.end(), [](const string&s1)->bool {if (s1.size() > 6) return 1; else return 0; }) << endl;
+		section10_3_2::ex10_21(10);
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//10.3.2节
 		cout << section10_3_2::ex10_15(3)(4) << endl;
