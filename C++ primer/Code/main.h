@@ -7,6 +7,8 @@
 #include <numeric> //accumulate
 #include <algorithm>
 #include <functional> //bind
+#include <list> //list
+#include<iterator>//back_inserter
 //namespace Exercise
 //{
 //	int ivar = 0;

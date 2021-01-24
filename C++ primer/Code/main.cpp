@@ -436,10 +436,50 @@ namespace sec10_3_4
 	}
 }
 
+namespace sec10_4_1
+{
+	std::vector<int> vec{ 1, 1, 3, 3, 5, 5, 7, 7, 9 };
+	std::list<int> lst;
+
+	vector<int> ex10_28 = { 1,2,3,4,5,6,7,8,9 };
+	vector<int> insertercopy, backcopy, frontcopy;
+}
 void main()
 {
 	try
 	{
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//10.4.3节
+		for_each(sec10_4_1::vec.crbegin(), sec10_4_1::vec.crend(), [](int n) {cout << n << " "; });
+		cout << endl;
+		auto it = sec10_4_1::vec.cend();
+		while (it != sec10_4_1::vec.cbegin())
+			cout << *(--it) << " ";
+		cout << endl;
+		std::list<int> ex10_36 = { 1, 2, 3, 4, 0, 5, 6 };
+		auto last0 = find(ex10_36.rbegin(), ex10_36.rend(), 0);
+
+		vector<int> ex10_37 = { 1,5,12,4,4,3,7,8,9,6 };
+		list<int> reverse;
+		copy(ex10_37.cbegin() + 3, ex10_37.cbegin() + 8, front_inserter(reverse));
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//10.4.1节
+		sort(sec10_4_1::vec.begin(), sec10_4_1::vec.end());
+		unique_copy(sec10_4_1::vec.begin(), sec10_4_1::vec.end(), front_inserter(sec10_4_1::lst));
+		copy(sec10_4_1::ex10_28.begin(), sec10_4_1::ex10_28.end(), inserter(sec10_4_1::insertercopy, sec10_4_1::insertercopy.begin()));
+		//copy(sec10_4_1::ex10_28.begin(), sec10_4_1::ex10_28.end(), front_inserter(sec10_4_1::insertercopy)); // vector不能push front
+		////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//10.3.4节
 		cout << count_if(section10_3_1::ex10_13.begin(), section10_3_1::ex10_13.end(), bind(sec10_3_4::Iflowerthansz, sec10_3_4::_1, 6)) << endl;
