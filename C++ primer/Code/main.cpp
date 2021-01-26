@@ -510,10 +510,59 @@ namespace sec11_1
 	}
 }
 
+namespace sec11_2_1
+{
+	void ex_11_7_add_family(map<string, vector<string>>& families,const string& firstname,const vector<string>& lastnames )
+	{
+		//auto sda = families[firstname]; //只要调用这个方括号，就自动把字符串加入到了map中
+		//sda.empty();
+		if (!families[firstname].empty())
+			for (size_t i = 0; i < lastnames.size(); i++)
+				families[firstname].push_back(lastnames[i]);
+		else
+			families[firstname] = lastnames;
+	}
+	void printfamilies(const map<string, vector<string>>& families)
+	{
+		for (auto it = families.begin(); it != families.end(); it++) //map可以用双向迭代器访问
+		{
+			cout << it->first << endl;
+			for (const auto &c : it->second)
+				cout << c << " ";
+			cout << endl;
+		}
+	}
+	void test_ex_11_7()
+	{
+		map<string, vector<string>> families;
+		ex_11_7_add_family(families, "wang", vector<string>{"zk", "s", "xk"});
+		ex_11_7_add_family(families, "wang", vector<string>{"zk1", "s1", "xk1"});
+		ex_11_7_add_family(families, "zhang", vector<string>{"zk1", "s1", "xk1"}); 
+		ex_11_7_add_family(families, "zhang", vector<string>{"zk11", "s11", "xk11"});
+		printfamilies(families);
+	}
+	void unique_vector_str(vector<string>& input)
+	{
+		sort(input.begin(), input.end()); //用标准库算法进行去重
+		auto uniqueptr = unique(input.begin(), input.end());
+		input.erase(uniqueptr, input.end());
+	}
+}
+
 void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//11.2.1节
+		sec11_2_1::test_ex_11_7();
+		vector<string> vecstr = { "af", "af", "asfa", "af", "h23","asfa" };
+		sec11_2_1::unique_vector_str(vecstr);
+		set<string> dd = { "af", "af", "asfa", "af", "h23","asfa" };
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//11.1节
 		sec11_1::CountString(sec11_1::testdata);
