@@ -12,7 +12,7 @@ class Sales_data {
 public:
 	~Sales_data()
 	{
-		std::cout << "Sales_dataÎö¹¹";
+		std::cout << "Sales_dataÎö¹¹" << std::endl;
 	}
 	Sales_data(const std::string &s, unsigned n, double p) :bookNo(s), units_sold(n), revenue(n*p)
 	{

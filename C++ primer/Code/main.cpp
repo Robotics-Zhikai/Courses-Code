@@ -444,10 +444,97 @@ namespace sec10_4_1
 	vector<int> ex10_28 = { 1,2,3,4,5,6,7,8,9 };
 	vector<int> insertercopy, backcopy, frontcopy;
 }
+
+namespace ex12_26
+{
+	void input_string_output_reversestring(size_t n)
+	{
+		string * newtest = new string[n]();//只能是空括号，不能是其他
+		*(newtest + 3) = string("gtr");
+
+		allocator<string> tmpalloc;
+		string * beginptr = tmpalloc.allocate(n);
+		//*beginptr = string("asdasf"); //在这里会运行时报错，因为从来没有construct过。
+		string * q = beginptr;
+		string s;
+		for (int i = 0; i < n; i++)
+		{
+			cin >> s;
+			tmpalloc.construct(beginptr++,s);
+		}
+		while (q != beginptr)
+		{
+			cout << *(--beginptr) << endl;
+			tmpalloc.destroy(beginptr);
+		}
+		*(beginptr+3) = string("asdasf"); //在这里就不会报错，因为已经construct了一次了
+	}
+}
+
+namespace sec11_1
+{
+	vector<string> testdata = { "example.","example,","Example","gasdas","example","example","examp,le" };
+	void CountString(const vector<string> &input) //单词计数程序
+	{
+		map<string, size_t> record;
+		for (size_t i = 0; i < input.size(); i++)
+			record[input[i]]++;
+		for (auto &r : record)
+		{
+			cout << r.first << "单词出现" << r.second << "次" << endl;		
+		}
+	}
+
+	void CountStringIgnorePuc(vector<string> input)
+	{
+		map<string, size_t> record;
+		char * tmpstring = NULL;
+		for (size_t i = 0; i < input.size(); i++)
+		{
+			tmpstring = new char[input[i].size()+1];
+			size_t cout = 0;
+			for (auto c : input[i])
+			{
+				if (ispunct(c))
+					continue;
+				if (isupper(c))
+					c = tolower(c);
+				*(tmpstring + (cout++)) = c;
+			}
+			*(tmpstring + cout) = '\0';
+			input[i] = string(tmpstring);
+			delete[]tmpstring;
+			record[input[i]]++;
+		}
+			
+	}
+}
+
 void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//11.1节
+		sec11_1::CountString(sec11_1::testdata);
+		sec11_1::CountStringIgnorePuc(sec11_1::testdata);
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//ex12_26
+		allocator<string> sec12_2_2;
+		auto beginptr = sec12_2_2.allocate(100);
+		sec12_2_2.construct(beginptr , "dasd");
+		ex12_26::input_string_output_reversestring(10);
+		////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//12.1.5节
 		//int * sec12_1_5addr = new int(32);
 		//{
 		//	unique_ptr<int> sec12_1_5_intell(sec12_1_5addr);
@@ -460,6 +547,9 @@ void main()
 
 		//unique_ptr<int> ex12_16(new int(32));
 		//unique_ptr<int> ex_12_16_1(ex12_16); //报错是已删除的函数
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
 
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//10.4.3节

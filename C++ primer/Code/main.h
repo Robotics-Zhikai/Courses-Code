@@ -9,6 +9,11 @@
 #include <functional> //bind
 #include <list> //list
 #include<iterator>//back_inserter
+#include <map> //map
+#include <set> //set
+
+ 
+
 //namespace Exercise
 //{
 //	int ivar = 0;
