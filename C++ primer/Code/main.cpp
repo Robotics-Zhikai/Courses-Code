@@ -549,10 +549,81 @@ namespace sec11_2_1
 	}
 }
 
+namespace sec11_2_2
+{
+	map<vector<int>::iterator, int> sasf;
+	map<list<int>::iterator, int> agsg;
+	list<int> test1122 = { 1,2,3,4 };
+	vector<int> vectest1122 = { 1,2,3,4 };
+	bool compisbn(const Sales_data& s1, const Sales_data& s2)
+	{
+		return s1.isbn() < s2.isbn();
+	}
+}
+
+namespace sec_11_2_3
+{
+	vector <pair<string,int>> combiPair(const vector<string>& s, const vector<int>& integar)
+	{
+		vector <pair<string, int>> result;
+		for (size_t i = 0; i < s.size(); i++)
+			result.push_back({ s[i],integar[i] });
+		return result;
+	}
+	class families //有点像数据库的意思了 主键和数据
+	{
+		using Datatype = map<string,vector<pair<string, string>>>;
+	public:
+		void addchild(const string& firstname, const string& lastname, const string& birthday)
+		{
+			Data[firstname].push_back(make_pair(lastname, birthday));
+		}
+		void printData()const
+		{
+			for (auto const & s : Data)
+			{
+				cout << s.first << " ";
+				for (auto const & s1 : s.second)
+					cout << s1.first << " " << s1.second;
+				cout << endl;
+			}
+		}
+	private:
+		Datatype Data;
+	};
+}
+
 void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//11.2.3节
+		auto testmakepair = make_pair(Sales_data(), int(3));
+		auto test11_12 = sec_11_2_3::combiPair({ "wang","zhao" }, { 1,2 });
+		sec_11_2_3::families ex11_14;
+		ex11_14.addchild("wang", "zk", "98.1");
+		ex11_14.addchild("wang", "dsa", "99.2");
+		ex11_14.addchild("zhang", "zk", "98.1");
+		ex11_14.addchild("zhang", "dsa", "99.2");
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//11.2.2节
+		
+		//sec11_2_2::agsg[sec11_2_2::test1122.begin()] = 5; //会报错没有定义小于号
+		sec11_2_2::sasf[sec11_2_2::vectest1122.begin() + 3] = 8;
+		sec11_2_2::sasf[sec11_2_2::vectest1122.begin() + 4] = 9; //尾后迭代器
+		//sec11_2_2::test1122.begin()<sec11_2_2::test1122.end() //list的迭代器没有小于操作，只有++ --。
+
+		multiset<Sales_data, bool(*)(const Sales_data&, const Sales_data&)> multi1122(sec11_2_2::compisbn); 
+		//有一个好处是，compisbn所在的位置可以调用其他内容但是类型相同的函数
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//11.2.1节
 		sec11_2_1::test_ex_11_7();
