@@ -552,6 +552,7 @@ namespace sec11_2_1
 namespace sec11_2_2
 {
 	map<vector<int>::iterator, int> sasf;
+	
 	map<list<int>::iterator, int> agsg;
 	list<int> test1122 = { 1,2,3,4 };
 	vector<int> vectest1122 = { 1,2,3,4 };
@@ -597,6 +598,24 @@ void main()
 {
 	try
 	{
+		vector<int> sec11_3_3 = { 1,2,3,4,6,7,3,2,2,1,6,3 }; //顺序容器不能添加入const int 因为allocator不能加入const元素
+		sec11_3_3.erase(sec11_3_3.begin(), sec11_3_3.begin()+1);
+		map<string, string> maptesttype;
+		map<string, string>::mapped_type sgagah = maptesttype[string("fag")];
+		map<string, string>::value_type ahasfhdg = *maptesttype.begin();
+		map<string, string>::key_type ahhsli = maptesttype.begin()->first;
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//11.3.1节
+		map<string, vector<string>> sasf = { {string("sdafa0"),vector<string>{ "asfga0s","asgagh0" }} };
+		//*sasf.begin() = make_pair(string("sdafa"),string{ "asfgas","asgagh" }); //由于关键字是const类型的，因此不能直接赋值
+		(*sasf.begin()).second = { "asf" };
+		
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//11.2.3节
 		auto testmakepair = make_pair(Sales_data(), int(3));
@@ -606,7 +625,8 @@ void main()
 		ex11_14.addchild("wang", "dsa", "99.2");
 		ex11_14.addchild("zhang", "zk", "98.1");
 		ex11_14.addchild("zhang", "dsa", "99.2");
-
+		
+		
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 
