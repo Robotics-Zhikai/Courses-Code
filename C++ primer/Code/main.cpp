@@ -594,16 +594,177 @@ namespace sec_11_2_3
 	};
 }
 
-void main()
+namespace sec11_3_5
 {
-	try
+	multimap<string, string> bookstore = {
+		{ "alan", "DMA" },
+		{ "pezy", "LeetCode" },
+		{ "alan", "CLRS" },
+		{ "wang", "FTP" },
+		{ "pezy", "CP5" },
+		{ "wang", "CPP-Concurrency" }
+	};
+	void eraseKey(multimap<string, string>& bookstore, multimap<string, string>::key_type value)
+	{
+		auto countnum = bookstore.count(value);
+		multimap<string, string>::iterator ptrbegin = bookstore.find(value);
+		for (int i = 0; i < countnum; i++)
+			bookstore.erase(ptrbegin++);
+	}
+	void printbookstore(const multimap<string, string>& bookstore)
+	{
+		bool flag = 1;
+		for (auto it = bookstore.begin(); it != bookstore.end(); it++)
+		{
+			static string tmpstore = it->first;
+			if (tmpstore != it->first||flag)
+			{
+				flag = 0;
+				tmpstore = it->first;
+				cout << tmpstore << endl;
+			}
+			cout << it->second << endl;
+		}
+	}
+	
+	void test()
+	{
+		map<string, vector<int>> ex11_28 = { { "Alan",{ 1,2,3,4,5, } },{ "John",{ 1,5,6,7,8 } } };
+		map<string, vector<int>>::iterator finded = ex11_28.find("Alan");
+		eraseKey(bookstore, "wan1g");
+		printbookstore(bookstore);
+	}
+}
+
+namespace sec11_3_6
+{
+	ifstream ifs_map("./word_transformation.txt"), ifs_content("./given_to_transform.txt");
+
+	void skipSpace(const string & str, string::iterator & it)
+	{
+		for (; it != str.end(); it++)
+			if (!isspace(*it))
+				break;
+	}
+	void skipWord(const string& str, string::iterator&it)
+	{
+		if (it!=str.end()&&isspace(*it))
+			skipSpace(str, it);
+		for (; it != str.end(); it++)
+			if (isspace(*it))
+				break;
+	}
+
+
+	map<string, string> getmap(ifstream& ifsmap)
+	{
+		map<string, string> transformMap;
+		string linestr;
+		while (getline(ifs_map, linestr))
+		{
+			string::iterator it = linestr.begin();
+			string::iterator keyend = linestr.end();
+			string::iterator mappedbegin = linestr.end();
+			skipSpace(linestr, it);
+			string::iterator keybegin = it;
+			for ( ; it != linestr.end(); it++)
+			{
+				if (isspace(*it))
+				{
+					keyend = it;
+					break;
+				}
+			}
+			skipSpace(linestr, it);
+			mappedbegin = it;
+			
+			string::reverse_iterator rit = linestr.rbegin();
+			if (mappedbegin != linestr.end())
+			{
+				for (; rit != linestr.rend(); rit++)
+					if (!isspace(*rit))
+						break;
+			}
+			string key(keybegin, keyend);
+			string mappedvalue(mappedbegin, rit.base());
+			transformMap[key] = mappedvalue;
+		}
+		return transformMap;
+	}
+
+	
+
+	void TranslateWords(const map<string, string> &maptrans, ifstream& given,ofstream& outfile)
+	{
+		string linestr;
+		while (getline(given, linestr))
+		{
+			string::iterator it = linestr.begin();
+
+			while (it != linestr.end())
+			{
+				skipSpace(linestr, it);
+				auto wordbegin = it;
+				skipWord(linestr, it);
+				auto wordend = it;
+				string word(wordbegin, wordend);
+				
+				map<string, string>::const_iterator foundword = maptrans.find(word);
+				if (foundword != maptrans.end())
+					outfile << maptrans.find(word)->second << " ";
+				else
+					outfile << word << " ";
+			}
+			outfile << endl;
+		}
+	}
+
+	void test()
+	{
+		auto maptrans = getmap(ifs_map);
+		TranslateWords(maptrans, ifs_content, ofstream("ex11_33out.txt"));
+	}
+}
+
+namespace sec11_3_3
+{
+	void test()
 	{
 		vector<int> sec11_3_3 = { 1,2,3,4,6,7,3,2,2,1,6,3 }; //顺序容器不能添加入const int 因为allocator不能加入const元素
-		sec11_3_3.erase(sec11_3_3.begin(), sec11_3_3.begin()+1);
+		sec11_3_3.erase(sec11_3_3.begin(), sec11_3_3.begin() + 1);
 		map<string, string> maptesttype;
 		map<string, string>::mapped_type sgagah = maptesttype[string("fag")];
 		map<string, string>::value_type ahasfhdg = *maptesttype.begin();
 		map<string, string>::key_type ahhsli = maptesttype.begin()->first;
+	}
+}
+void main()
+{
+	try
+	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//11.3.6节
+		sec11_3_6::test();
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//11.3.5节
+		sec11_3_5::test();
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//11.3.3节
+		sec11_3_3::test();
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//11.3.1节
 		map<string, vector<string>> sasf = { {string("sdafa0"),vector<string>{ "asfga0s","asgagh0" }} };

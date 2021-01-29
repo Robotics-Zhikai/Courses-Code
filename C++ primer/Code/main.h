@@ -13,7 +13,8 @@
 #include <set> //set
 #include <limits.h> //里边定义了一组常量，限定编译器运行的这台机器的不同整数数据类型的取值范围
 #include <stdint.h>
- 
+#include <fstream> //文件操作
+#include <cctype> // 判断char的性质 是大写小写空格等
 
 //namespace Exercise
 //{
