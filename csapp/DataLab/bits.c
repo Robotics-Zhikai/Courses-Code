@@ -235,10 +235,15 @@ int negate(int x) {
  *   Rating: 3
  */
 int isAsciiDigit(int x) {
-  int part1 = !((x&0xf0)^0x30);
-  int part2 = x&0x0f;
-  part2 = (part2^0x0a)&(part2^0x0a)&(part2^0x0a)&(part2^0x0a)&(part2^0x0a)&(part2^0x0a);
-  return 2; //
+  //构造lower和upper双重验证，只有二者所验证的区间进过处理都为0才认为处于该范围内
+  //补码加减法就是正常的二进制数加减，然后截断到int的取值范围内
+  int upper = ~((1<<31)|(0x39));
+  int lower = (~0x30)+1;
+
+  int upperplusx = upper + x;
+  int lowerplusx = lower + x;
+  return (!(upperplusx>>31))&(!(lowerplusx>>31)); //int 转bool 只有在int为0时bool为0 int不为0时bool为1
+
 }
 /* 
  * conditional - same as x ? y : z 
@@ -248,7 +253,12 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+  int ifx = ((!(!x))<<31)>>31; //!果然是转化为bool的 两个！之后就可以规范一下数
+  int first = ifx&y;
+
+  int second = (~ifx)&z;
+  return first|second;
+  
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -258,7 +268,28 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+  int isequal = !(x^y); //返回1 
+
+  //实际上只需要很简单的当符号不同时正数为大，当符号相同时相减判断符号即可。符号相同时相减一定不会溢出。
+  int issamesign = !(((x>>31)&1)^((y>>31)&1)); 
+  int xminusy = x+((~y)+1);
+  int second = (issamesign&((xminusy>>31)&1))|(!issamesign&!((y>>31)&1));//这个就可以实现类似于if的效果
+
+  return isequal|second;
+
+
+  //下面注释掉的这些失败的代码试图处理负极值的情况，或者说试图处理溢出的情况，这是失败的，因为溢出时符号位是多少是不确定的
+  // int ispositivex = !((x>>31)&1);
+  // int ispositivey = !((y>>31)&1);
+
+  // int second = !ispositivex&(ispositivey);
+  // int third = ((x+((~y)+1))>>31)&0x01; 
+  // int isminy = !(y^(1<<31)); //如果y是最小值，ismin是1 否则是0
+  // return (third|second|isequal)&(!((!isequal)&isminy)); 
+
+  // int second = ((x+((~y)+1))>>31)&0x01; //加-y这种是不行的，比如说当x为-127，y为128，这样一减的话会溢出
+  
+  // return (isequal|second)&(!((!isequal)&isminy));
 }
 //4
 /* 
@@ -270,7 +301,11 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+  //利用当逻辑值为1时的数的相反数的符号位不同这一概念
+  //但是需要注意，当取负数最小值时，取相反数的符号相同，但是不影响最终结果,因为是取或的
+  int negx = (~x)+1;
+  return ((((x|negx)>>31)&1)+1)&1;
+
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -285,6 +320,7 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
+  
   return 0;
 }
 //float
