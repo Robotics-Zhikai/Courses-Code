@@ -15,6 +15,8 @@
 #include <stdint.h>
 #include <fstream> //文件操作
 #include <cctype> // 判断char的性质 是大写小写空格等
+#include <string>
+#include <sstream>//向string写入数据，从string读取数据，就像string是一个IO流一样
 
 //namespace Exercise
 //{

@@ -8,6 +8,7 @@
 #include "CP5_ex7_57.h"
 #include "CP5_ex13_18.h"
 #include "CP5_ex12_2.h"
+#include "QuerySystem.h"
 using namespace std;
 
 class Y;
@@ -738,10 +739,28 @@ namespace sec11_3_3
 		map<string, string>::key_type ahhsli = maptesttype.begin()->first;
 	}
 }
+
+namespace QuerySystem
+{
+	void testQuerySystem(string path)
+	{
+		TextQuery test(path);
+	}
+}
 void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//sec12.3
+		QuerySystem::testQuerySystem(string("./storyDataFile.txt"));
+
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//11.3.6½Ú
 		sec11_3_6::test();
