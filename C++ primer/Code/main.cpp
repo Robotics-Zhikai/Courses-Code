@@ -744,7 +744,14 @@ namespace QuerySystem
 {
 	void testQuerySystem(string path)
 	{
-		TextQuery test(path);
+		QueryResult queryres;
+		{
+			TextQuery test(path); //即便这个销毁了，还是能够引用它内部的元素
+			queryres = test.query("bird,1");
+			queryres = test.query("bird,1");
+			//set<decltype(vector<int>().size())> //这样可以自动推断
+		}
+		print(cout, queryres);
 	}
 }
 void main()
@@ -754,7 +761,7 @@ void main()
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//sec12.3
 		QuerySystem::testQuerySystem(string("./storyDataFile.txt"));
-
+		
 
 
 		////////////////////////////////////////////////////////////////////////////////////////////
