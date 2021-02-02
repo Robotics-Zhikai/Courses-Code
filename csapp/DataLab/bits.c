@@ -421,7 +421,7 @@ int floatFloat2Int(unsigned uf) {
   else frac1 = frac1>>(23-biasedExp); 
   //如果小于等于23的话，相当于把小数点右移<=23位，转换到int表示后需要把小数点后的小数值截断
 
-  if(sign) return ~frac1+1; //这里还是有点问题 再考虑一下(对于溢出的界定)
+  if(sign) return ~frac1+1; //这里还是有点问题 再考虑一下(对于溢出的界定) 或者用vs试一下看看结果
   //如果原始的float是负数的话，就对frac1取负数;但需要注意的是，当biasedExp=31,最高值为1时，取负数不是真实的负数，虽然没有溢出，
   //但是结果偏差很大
   else if (frac1>>31) return 0x80000000;
@@ -463,5 +463,19 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+  int maxpow = 0xfe - 127; //exp段能表示的最大指数
+  int minpow = 1 - 127; //exp段能表示的最小指数
+  if(x>maxpow)
+  {
+    return 0x7f800000;//返回正无穷
+  }
+  else if (x<minpow)
+  {
+    return 0;
+  }
+  else
+  {
+    return (x+127)<<23;
+  }
+  
 }
