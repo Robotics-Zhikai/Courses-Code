@@ -320,8 +320,26 @@ int logicalNeg(int x) {
  *  Rating: 4
  */
 int howManyBits(int x) {
-  
-  return 0;
+  //要想找到最小能够代表位数的值，对于正数，需要找最高位为1的位数
+  //对于负数，需要找最高位为0的位数
+  int b16,b8,b4,b2,b1,b0; //判断高n位是否有1值 
+  int ispositive = ~(x>>31); //当为正数时，所有位都为1 当为负数时，所有位都为0
+  x = (ispositive&x)|((~ispositive)&(~x)); //正数不变，负数取反.这样就把整个问题规约到了一个问题上
+
+  //下面的思路非常巧妙 把问题分解为多个子问题 有点二分的思想
+  b16 = (!!(x>>16))<<4; //当高16位存在1时，记b16=16 否则b16 = 0
+  x = x>>b16;//当b16确实有值时，右移16位，判断到底是高8位还是低八位 否则不移动，直接判断低16位
+  b8 = (!!(x>>8))<<3;// 当高8位存在1时，记b8 = 8，否则b8=0
+  x = x>>b8;
+  b4 = (!!(x>>4))<<2;
+  x = x>>b4;
+  b2 = (!!(x>>2))<<1;
+  x = x>>b2;
+  b1 = !!(x>>1); //这一步是必须的，因为不是所有数在上述步骤中都要右移。当上述所有步都要右移时b1一定为0
+  x = x>>b1;
+  b0 = x;
+
+  return b0+b1+b2+b4+b8+b16+1;
 }
 //float
 /* 
@@ -336,7 +354,30 @@ int howManyBits(int x) {
  *   Rating: 4
  */
 unsigned floatScale2(unsigned uf) {
-  return 2;
+  unsigned exp = (uf<<1)>>24;
+  unsigned result = uf;
+  unsigned sign = (uf>>31)<<31;
+  //注意下边if的顺序，顺序不对的话会出现错误
+  if(exp==0) //说明exp段为0
+  {
+    result = result<<1;
+    result = result|sign;
+  }
+  else if (exp==0xff) //当是这个时，数要不是Nan，要不是inf 最后都会返回本身
+  {
+
+  }
+  else if (exp!=0xfe) //当是这个时，说明是正常的，×2只需要将exp位+1即可
+  {
+    result = result + (1<<23);
+  }
+  else if (exp==0xfe)//当exp等于0xfe时,任何数×2都会溢出 
+  {
+    result = result + (1<<23);
+    result = (result>>23)<<23;
+  }
+  
+  return result;
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -351,7 +392,62 @@ unsigned floatScale2(unsigned uf) {
  *   Rating: 4
  */
 int floatFloat2Int(unsigned uf) {
-  return 2;
+  //把float分解成3部分
+  int exp = (uf>>23)&0xff;
+  int frac = uf & 0x7fffff;
+  int sign = uf&(1<<31);
+
+  int frac1 = frac|0x800000;
+   //扩展尾数，在最高位的最高位扩展一位1，
+  int biasedExp = exp-127; //加了偏置的指数位
+
+  if (exp==0xff) return 0x80000000; //溢出或者nan时返回固定数
+  if (exp==0x00) return 0;//当exp为0时，整个浮点数一定不会超过0.5，返回0
+
+  
+ 
+
+  if(biasedExp>31) return 0x80000000; 
+  //把浮点数转化为整数的过程看成是一个基于frac1的小数点移动的过程，初始时小数点在frac1的最高位的后边
+  //然后乘以2^biasedExp就相当于把小数点右移biasedExp 当右移32次时浮点数表示的值是33位的，4字节的int已经不足以表示那个值了，出现了溢出。
+  //因此小数点右移31位是临界值
+  else if (biasedExp<0) return 0;
+  //当biasedexp小于0时，意味着小数点要向左移一位，就是说整数部分一定是0，截断小数部分，就返回0。
+  //注意这里与中间值向偶数舍入是无关的，向偶数舍入是指当要把高精度小数表示为一低精度小数以便float能表示时，进行向偶数位转换的操作
+  //但是这里是直接转换为int，就直接截断就行。
+
+  if (biasedExp>23) frac1 = frac1<<(biasedExp-23);
+  //如果大于23的话，相当于把小数点右移大于23位，转化到int表示后需要把frac1左移biasedExp-23，用0补齐
+  else frac1 = frac1>>(23-biasedExp); 
+  //如果小于等于23的话，相当于把小数点右移<=23位，转换到int表示后需要把小数点后的小数值截断
+
+  if(sign) return ~frac1+1; //这里还是有点问题 再考虑一下(对于溢出的界定) 或者用vs试一下看看结果
+  //如果原始的float是负数的话，就对frac1取负数;但需要注意的是，当biasedExp=31,最高值为1时，取负数不是真实的负数，虽然没有溢出，
+  //但是结果偏差很大
+  else if (frac1>>31) return 0x80000000;
+  //如果原始float是正数，biasedExp=31,经过小数点移动的尾数的最高位就到了31位，也就是说
+  //int的最高位成了1。如果是负数，则在if语句中已经有了处理，不会出现溢出；否则如果是正数，再判断出最高位是1
+  //那么要想表示这个正数的话需要再多加一位，则表明溢出了
+  else return frac1;
+
+  //下边这个失败的尝试试图通过按位赋权累加的方法得到结果再截断，这样是不能不借助float得出结果的。
+  // int exp = (uf<<1)>>24;
+  // int E;
+  
+  // if (exp==0xff)  return 0x80000000;
+  // else if(exp == 0)
+  // {
+  //   E = 1 - 127;
+  //   return 0;
+  // }
+  // else
+  // {
+  //   E = exp - 127;
+  //   if (E<-1)
+  //     return 0;
+  // }
+  
+  // return 1;
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -367,5 +463,19 @@ int floatFloat2Int(unsigned uf) {
  *   Rating: 4
  */
 unsigned floatPower2(int x) {
-    return 2;
+  int maxpow = 0xfe - 127; //exp段能表示的最大指数
+  int minpow = 1 - 127; //exp段能表示的最小指数
+  if(x>maxpow)
+  {
+    return 0x7f800000;//返回正无穷
+  }
+  else if (x<minpow)
+  {
+    return 0;
+  }
+  else
+  {
+    return (x+127)<<23;
+  }
+  
 }
