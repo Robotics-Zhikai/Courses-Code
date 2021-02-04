@@ -2,6 +2,7 @@
 #define CP5_ex13_5_h
 #include "main.h"
 #include <iostream>
+using namespace std;
 
 std::string * psstore;
 class HasPtr
@@ -59,4 +60,70 @@ const double HasPtr::teststatic7 = 3.5;
 double HasPtr::teststatic8;
 
 
+class HasPtrValue //行为像值的类
+{
+public:
+	HasPtrValue(const string & s = string()) :ps(new string(s)), i(0) {}
+	HasPtrValue(const HasPtrValue& hpv) :ps(new string(*hpv.ps)), i(hpv.i) {}//最好在冒号之后初始化，可以免除执行默认初始化
+	HasPtrValue& operator=(const HasPtrValue & hpv)
+	{
+		*ps = *hpv.ps;
+		i = hpv.i;
+		return *this;
+	}
+	~HasPtrValue()
+	{
+		delete ps;
+	}
+private:
+	string * ps;
+	int i;
+};
+
+class HasPtrptr //行为像指针的类 有点智能指针的意思
+{
+public:
+
+	explicit HasPtrptr(const string & s = string()) :ps(new string(s)), i(1) 
+	{
+		refcount[ps]++;
+	}
+	HasPtrptr(const HasPtrptr& hpp) //引入一个指向相同地址的对象
+	{
+		refcount[hpp.ps]++;
+		ps = hpp.ps;
+		i = hpp.i;
+	}
+	HasPtrptr& operator=(const HasPtrptr & hpp)
+	{
+		refcount[hpp.ps]++;
+
+		if (--refcount[ps] == 0)
+		{
+			auto it = refcount.find(ps);
+			delete it->first;
+			refcount.erase(it);
+		}
+
+		ps = hpp.ps;
+		i = hpp.i;
+		return *this;
+	}
+	~HasPtrptr()
+	{
+		if (--refcount[ps] == 0)
+		{
+			auto it = refcount.find(ps);
+			delete it->first;
+			refcount.erase(it);
+		}		
+	}
+
+private:
+	string * ps;
+	int i;
+	static map<string*,int> refcount ;//定义地址到引用数的映射 也就是引用计数 
+	//实际上用动态分配的指针可以实现同样的效果，操作指针指向的数的改变可以分布式共享 否则如果是值的话，不会进行分布式共享
+};
+map<string*, int> HasPtrptr::refcount ;
 #endif

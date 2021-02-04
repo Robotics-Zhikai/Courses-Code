@@ -751,19 +751,49 @@ namespace QuerySystem
 			queryres = test.query("bird,1");
 			//set<decltype(vector<int>().size())> //这样可以自动推断
 		}
-		print(cout, queryres);
+		print(std::cout, queryres);
 	}
+}
+
+namespace testhasptr_chap13
+{
+	void test()
+	{
+		HasPtrValue test11("215");
+		HasPtrValue test22 = test11;
+
+		{
+			HasPtrptr test1(string("1"));
+			HasPtrptr test2(string("2"));
+			HasPtrptr test3(string("3"));
+			HasPtrptr test4 = test1;
+			HasPtrptr test6 = test2;
+			{
+				HasPtrptr test5 = test2;
+			}
+		}
+		
+	}
+	
+	
+
 }
 void main()
 {
 	try
 	{
 		////////////////////////////////////////////////////////////////////////////////////////////
-		//sec12.3
-		QuerySystem::testQuerySystem(string("./storyDataFile.txt"));
+		//chapter13
+		testhasptr_chap13::test();
+
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
 		
 
-
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//sec12.3
+		QuerySystem::testQuerySystem(string("./storyDataFile.txt"));
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 
