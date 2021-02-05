@@ -62,14 +62,29 @@ double HasPtr::teststatic8;
 
 class HasPtrValue //行为像值的类
 {
+	friend void swap(HasPtrValue & h1, HasPtrValue& h2); //会在排序时被用到 提升效率
 public:
 	HasPtrValue(const string & s = string()) :ps(new string(s)), i(0) {}
-	HasPtrValue(const HasPtrValue& hpv) :ps(new string(*hpv.ps)), i(hpv.i) {}//最好在冒号之后初始化，可以免除执行默认初始化
-	HasPtrValue& operator=(const HasPtrValue & hpv)
+	//经过测试，带有下边的默认参数的也能用作拷贝构造函数
+	HasPtrValue(const HasPtrValue& hpv,int test = 3) :ps(new string(*hpv.ps)), i(hpv.i+ test) {}//最好在冒号之后初始化，可以免除执行默认初始化
+	//HasPtrValue& operator=(const HasPtrValue & hpv)
+	//{
+	//	*ps = *hpv.ps;
+	//	i = hpv.i;
+	//	cout << "HasPtrValue& operator=(const HasPtrValue & hpv)" << endl;
+	//	return *this;
+	//}
+	HasPtrValue& operator=(HasPtrValue hpv) 
+		//值传递一个临时变量，然后swap 这样虽然相比较于上边注释掉的那个operator=多了一次拷贝构造函数，
+		//但是都用了swap，不会存在一段代码段重复在多处用的情况
 	{
-		*ps = *hpv.ps;
-		i = hpv.i;
+		swap( *this,hpv); //拷贝并交换 技术
+		cout << "HasPtrValue& operator=(HasPtrValue hpv)" << endl;
 		return *this;
+	}
+	bool operator<(const HasPtrValue& h2)const
+	{
+		return *ps < *h2.ps;
 	}
 	~HasPtrValue()
 	{
@@ -79,6 +94,13 @@ private:
 	string * ps;
 	int i;
 };
+void swap(HasPtrValue & h1, HasPtrValue& h2) //避免了默认情况会声明一个temp然后拷贝构造进行内存分配耗费的时间
+{
+	//using std::swap;
+	swap(h1.ps, h2.ps);
+	swap(h1.i, h2.i);
+	cout << "swap(HasPtrValue & h1, HasPtrValue& h2)" << endl;
+}
 
 class HasPtrptr //行为像指针的类 有点智能指针的意思
 {

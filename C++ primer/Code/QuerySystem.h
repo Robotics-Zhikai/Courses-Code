@@ -34,7 +34,7 @@ private:
 };
 
 
-class TextQuery
+class TextQuery //一个TextQuery管理一个文本及映射，按理说应该要求拷贝构造函数和拷贝赋值函数是delete的
 {
 public:
 	using textptr = shared_ptr<vector<string>>;
@@ -82,18 +82,6 @@ private:
 		}
 	}
 };
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }

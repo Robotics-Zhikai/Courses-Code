@@ -774,20 +774,71 @@ namespace testhasptr_chap13
 		}
 		
 	}
-	
-	
+}
 
+namespace sec12_1_6
+{
+	ifstream ifs("./storyDataFile.txt");
+	
+	void ex12_20()
+	{
+		string line;
+		vector<string> vecline;
+		while (getline(ifs, line))
+			vecline.push_back(line);
+		const StrBlob Blob(vecline);
+		for (auto it = Blob.begin(); it != Blob.end(); it.incr())
+		{
+			cout << it.deref() << endl;
+		}
+	}
+}
+
+namespace ex13_28
+{
+	class TreeNode
+	{
+	public:
+		TreeNode() :left(NULL), right(NULL) {}
+	private:
+		string value;
+		int count;
+		TreeNode * left;
+		TreeNode * right;
+	};
+}
+
+namespace sec13_3
+{
+	void ex13_31()
+	{
+		//vector<HasPtrValue> wt = { "4","5","ah","5y" }; //由于编译器只进行一步转换 所以这样是不对的
+		vector<HasPtrValue> wt = { string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y") };
+		//不同规模的数据sort时调用的函数是不同的，小规模只调用operator= 大规模时不光调用operator=还要调用swap
+		sort(wt.begin(), wt.end());
+	}
 }
 void main()
 {
 	try
 	{
 		////////////////////////////////////////////////////////////////////////////////////////////
+		//sec13.3
+		sec13_3::ex13_31();
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//sec12.3
+		sec12_1_6::ex12_20();
+		////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+		////////////////////////////////////////////////////////////////////////////////////////////
 		//chapter13
 		testhasptr_chap13::test();
-
-
-
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 
