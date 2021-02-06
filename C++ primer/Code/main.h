@@ -19,6 +19,7 @@
 #include <sstream>//向string写入数据，从string读取数据，就像string是一个IO流一样
 #include <memory> // shared_ptr 智能指针
 
+
 //namespace Exercise
 //{
 //	int ivar = 0;

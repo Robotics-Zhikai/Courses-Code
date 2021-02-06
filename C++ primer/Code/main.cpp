@@ -9,6 +9,8 @@
 #include "CP5_ex13_18.h"
 #include "CP5_ex12_2.h"
 #include "QuerySystem.h"
+#include "Folder.h"
+#include "Message.h"
 using namespace std;
 
 class Y;
@@ -816,6 +818,18 @@ namespace sec13_3
 		vector<HasPtrValue> wt = { string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y"),string("4"),string("5"),string("ah"),string("5y") };
 		//不同规模的数据sort时调用的函数是不同的，小规模只调用operator= 大规模时不光调用operator=还要调用swap
 		sort(wt.begin(), wt.end());
+	}
+}
+
+#include "Message.h"
+#include "Folder.h"
+namespace MessageFolder
+{
+
+	void test()
+	{
+		Message safga;
+		
 	}
 }
 void main()
