@@ -1,7 +1,7 @@
 #ifndef QUERY_SYSTEM
 #define QUERY_SYSTEM
 #include "main.h"
-
+#include "StrVec.h"
 namespace QuerySystem
 {
 
@@ -22,14 +22,14 @@ class QueryResult //储存查询结果，包含查询的字符串和文本数据地址和所处行号的地址
 	}
 public:
 	QueryResult() = default;
-	QueryResult(const string& instr, shared_ptr<vector<string>>& intextptr,
+	QueryResult(const string& instr, shared_ptr<StrVec>& intextptr,
 		shared_ptr<set<size_t>>& setptr) :word(instr), text(intextptr), setptr(setptr) {}
 	set<size_t>::iterator begin()const { return setptr->begin(); }
 	set<size_t>::iterator end()const { return setptr->end(); }
-	shared_ptr<vector<string>> get_file()const { return text; }
+	shared_ptr<StrVec> get_file()const { return text; }
 private:
 	string word;
-	shared_ptr<vector<string>> text;
+	shared_ptr<StrVec> text;
 	shared_ptr<set<size_t>> setptr;
 };
 
@@ -37,10 +37,10 @@ private:
 class TextQuery //一个TextQuery管理一个文本及映射，按理说应该要求拷贝构造函数和拷贝赋值函数是delete的
 {
 public:
-	using textptr = shared_ptr<vector<string>>;
+	using textptr = shared_ptr<StrVec>;
 	using mappingptr = shared_ptr<map<string, set<size_t>>>; 
 
-	TextQuery(const string& path):text(new vector<string>)
+	TextQuery(const string& path):text(new StrVec)
 	{
 		ifstream file(path);
 		readText(file);

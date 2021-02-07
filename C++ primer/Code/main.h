@@ -18,7 +18,7 @@
 #include <string>
 #include <sstream>//向string写入数据，从string读取数据，就像string是一个IO流一样
 #include <memory> // shared_ptr 智能指针
-
+#include <utility>//移动构造函数 move
 
 //namespace Exercise
 //{

@@ -11,6 +11,8 @@
 #include "QuerySystem.h"
 #include "Folder.h"
 #include "Message.h"
+#include "StrVec.h"
+#include "String.h"
 using namespace std;
 
 class Y;
@@ -749,8 +751,8 @@ namespace QuerySystem
 		QueryResult queryres;
 		{
 			TextQuery test(path); //即便这个销毁了，还是能够引用它内部的元素
-			queryres = test.query("bird,1");
-			queryres = test.query("bird,1");
+			queryres = test.query("Daddy");
+			queryres = test.query("Daddy");
 			//set<decltype(vector<int>().size())> //这样可以自动推断
 		}
 		print(std::cout, queryres);
@@ -821,6 +823,40 @@ namespace sec13_3
 	}
 }
 
+namespace sec13_5
+{
+	void ex13_42()
+	{
+		{
+			string str1 = "ga";
+			String teststr = "ga";
+			teststr.print();
+			String teststr1 = "";
+			teststr1.print();
+			String teststr2 = teststr;
+			teststr2.print();
+			teststr2 = teststr1;
+			teststr2.print();
+		}
+		
+
+		//String teststr2;
+
+		StrVec test;
+		StrVec test1 = {};
+		StrVec test2 = { "s","f" };
+		test2.print();
+		test2.push_back("gag");
+		test2.print();
+		test2.resize(100);
+		test2.print();
+		test2.resize(2);
+		test2.print();
+		test2.reserve(200);
+		test2.print();
+	}
+}
+
 #include "Message.h"
 #include "Folder.h"
 namespace MessageFolder
@@ -836,6 +872,19 @@ void main()
 {
 	try
 	{
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//sec12.5
+		sec13_5::ex13_42();
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//sec12.3
+		QuerySystem::testQuerySystem(string("./storyDataFile.txt"));
+		////////////////////////////////////////////////////////////////////////////////////////////
+
+
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//sec13.3
 		sec13_3::ex13_31();
@@ -856,10 +905,7 @@ void main()
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 
-		////////////////////////////////////////////////////////////////////////////////////////////
-		//sec12.3
-		QuerySystem::testQuerySystem(string("./storyDataFile.txt"));
-		////////////////////////////////////////////////////////////////////////////////////////////
+		
 		
 
 
