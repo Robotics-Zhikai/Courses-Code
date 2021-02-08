@@ -74,6 +74,11 @@ public:
 	//	cout << "HasPtrValue& operator=(const HasPtrValue & hpv)" << endl;
 	//	return *this;
 	//}
+	HasPtrValue(HasPtrValue&& hpv)noexcept
+		:ps(hpv.ps),i(hpv.i)
+	{
+		hpv.ps = nullptr;
+	}
 	HasPtrValue& operator=(HasPtrValue hpv) 
 		//值传递一个临时变量，然后swap 这样虽然相比较于上边注释掉的那个operator=多了一次拷贝构造函数，
 		//但是都用了swap，不会存在一段代码段重复在多处用的情况
@@ -82,6 +87,13 @@ public:
 		cout << "HasPtrValue& operator=(HasPtrValue hpv)" << endl;
 		return *this;
 	}
+	//HasPtrValue& operator=(HasPtrValue&& hpv) //这两个operator同时出现的话会报错operator=不明确，因为对于右值变量都能调用
+	//{
+	//	swap(*this, hpv);
+	//	return *this;
+	//}
+
+
 	bool operator<(const HasPtrValue& h2)const
 	{
 		return *ps < *h2.ps;

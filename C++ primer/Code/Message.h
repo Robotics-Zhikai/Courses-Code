@@ -19,7 +19,18 @@ public:
 		//经过初始化后，新建的Msg已经有了指向的folder，但是folder还没有该msg
 		add_to_folders(*this);  //如果使用默认的拷贝构造函数，则不会调用add_to_folders，folders没有及时更新
 	}
-	Message& operator=(const Message& msg) //拷贝赋值时，原对象的所有内容都赋给了新对象，原对象消失
+	Message(Message&& msg) :contents(std::move(msg.contents)),folders(std::move(msg.folders))
+		//相当于剪切，把原始对象消除，移动到新对象
+	{
+		for (auto f : folders)
+		{
+			f->remMsg(&msg);
+			f->addMsg(this);
+		}
+		msg.folders.clear(); //移后源对象不能对其值做任何假设，确保销毁msg是无害的，因为msg的析构函数遍历folders，希望能确定set是空的
+	}
+
+	Message& operator=(const Message& msg) //拷贝赋值时，原对象的所有内容都赋给了新对象，原对象不消失，新对象原来的内容消失
 		//这个不用拷贝并交换技术来实现，如果用的话，首先会调用拷贝构造函数，把this add_to_folders
 		//然后再调用swap的话，又需要调用this remove_from_Folders，多此一举
 	{
@@ -27,6 +38,22 @@ public:
 		contents = msg.contents;
 		folders = msg.folders;
 		add_to_folders(msg);
+		return *this;
+	}
+	Message& operator=(Message&& msg)//原对象销毁 新对象原来的内容消失
+	{
+		//之所以拷贝赋值函数没有检查自赋值（浪费资源的问题），是因为原对象不销毁，不存在两次remmsg的问题
+		if (&msg != this) //直接检查自赋值情况，可以避免f->remMsg执行两次 浪费资源 虽然运行没问题
+		{
+			remove_from_Folders();//把当前的msg存在的文件都移走
+			contents = std::move(msg.contents);
+			folders = std::move(msg.folders);
+			for (auto f : folders)
+			{
+				f->remMsg(&msg);
+				f->addMsg(this);
+			}
+		}
 		return *this;
 	}
 	~Message() //内容和folders会自动消除，但是folders引用的不会自动消除 只能是手动调用。

@@ -868,14 +868,67 @@ namespace MessageFolder
 		
 	}
 }
+
+namespace ex13_48
+{
+	void test()
+	{
+		StrVec af;
+		af.push_back("wot");
+		char text[] = "world";
+
+		String && tmp = "hello"; //这个会调用String的构造函数 但是越过之后不会调用析构函数,因为有一个左值引用了
+		String tmp1 = tmp; //因为变量表达式是左值，所以调用的是拷贝构造函数而不是移动构造函数
+		String tmp2 = tmp;
+		String tmp3 = std::move(tmp); //调用move显示的将左值转化为右值引用 进而调用移动构造函数
+		String tmp4 = std::move(tmp);
+		String tmp5 = std::move(String("he")); //这个即会调用移动构造函数 也会调用char*的构造函数 还会调用析构函数
+		String tmp6 = "he"; // 但是这个的话编译器直接用char*初始化构造了，没有析构
+
+		String s0;
+		String s1("hello");
+		String s2(s0);
+		String s3 = s1;
+		String s4(text);
+		s2 = s1;
+
+		std::vector<String> svec;
+		svec.reserve(8);
+		svec.push_back(s0); //每次push_back都要拷贝构造一次
+		svec.push_back(s1);
+		svec.push_back(s2);
+		svec.push_back(s3);
+		svec.push_back(s4); //左值输入调用的是拷贝构造函数
+		svec.push_back("good job"); //右值引用调用的是移动构造函数 
+		svec.push_back("good job1");
+	}
+}
+
+namespace sec13_6_2
+{
+
+}
 void main()
 {
 	try
 	{
+		{
+			String("tmp1");
+			String && str = String("tmp");
+			String & str1 = str;
+			str1 = "t12";
+			cout << "ssaf" << endl;
+		}
+		
+		////////////////////////////////////////////////////////////////////////////////////////////
+		//ex13_48
+		ex13_48::test();
+
+		////////////////////////////////////////////////////////////////////////////////////////////
+		
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//sec12.5
 		sec13_5::ex13_42();
-
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 

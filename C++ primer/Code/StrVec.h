@@ -11,6 +11,13 @@ public:
 		first_free = p.second;
 		cap = first_free;
 	}
+	StrVec(StrVec&& s1) noexcept 
+		:element(s1.element),first_free(s1.first_free),cap(s1.cap)
+	{
+		s1.element = nullptr; //如果不置nullptr的话，在析构右值引用时会把移动后的对象也析构了
+		s1.first_free = nullptr;
+		s1.cap = nullptr;
+	}
 	StrVec(const initializer_list<string> & in):StrVec()
 	{
 		auto p = alloc_n_copy(in.begin(), in.end());
@@ -26,6 +33,21 @@ public:
 		element = p.first;
 		first_free = p.second;
 		cap = first_free;
+		return *this;
+	}
+	StrVec& operator=(StrVec && s1) noexcept
+	{
+		if (&s1 != this)//处理自赋值的情况，否则的话首先就把自己free了，之后的操作也就都没有意义了
+		{
+			free();
+			element = s1.element;
+			first_free = s1.first_free;
+			cap = s1.cap;
+
+			s1.element = nullptr;
+			s1.first_free = nullptr;
+			s1.cap = nullptr;
+		}
 		return *this;
 	}
 	string& operator[](size_t i)

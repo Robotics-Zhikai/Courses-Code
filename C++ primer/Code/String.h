@@ -12,23 +12,51 @@ public:
 		endele = beginele + sc;
 		for (auto it = beginele; it != endele; ++it)
 			alloc.construct(it, *(in++));
+		
 	}
 	String(const String& str)
 	{
 		auto pairp = alloc_n_copy(str.beginele, str.endele);
 		beginele = pairp.first;
 		endele = pairp.second;
+		cout << "String拷贝构造函数Call" << endl;
 	}
+	String(String && str)noexcept
+		:beginele(str.beginele),endele(str.endele)
+	{
+		str.beginele = nullptr;
+		str.endele = nullptr;
+		cout << "String移动构造函数Call" << endl;
+	}
+
 	String & operator=(const String& str)
 	{
 		auto pairp = alloc_n_copy(str.beginele, str.endele);
 		free();
 		beginele = pairp.first;
 		endele = pairp.second;
+
+		cout << "String拷贝赋值函数Call" << endl;
 		return *this;
+	}
+	String & operator=(String && str)noexcept
+	{
+		if (&str != this)
+		{
+			free();
+			beginele = str.beginele;
+			endele = str.endele;
+
+			str.beginele = nullptr;
+			str.endele = nullptr;
+		}
+		cout << "String移动赋值函数Call" << endl;
+		return *this;
+
 	}
 	~String()
 	{
+		cout << "String析构函数Call" << endl;
 		free();
 	}
 	void print()
