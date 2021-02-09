@@ -2,17 +2,18 @@
 #include "main.h"
 #include "another.h"
 #include "CLASS.h"
-#include "CP5_ex7_41.h"
+#include "Sales_data.h"
 #include "CP5_ex7_53.h"
-#include "CP5_ex13_5.h"
-#include "CP5_ex7_57.h"
+#include "Account.h"
+#include "StrBlob.h"
 #include "CP5_ex13_18.h"
-#include "CP5_ex12_2.h"
+#include "HasPtr.h"
 #include "QuerySystem.h"
 #include "Folder.h"
 #include "Message.h"
 #include "StrVec.h"
 #include "String.h"
+#include "Quote.h"
 using namespace std;
 
 class Y;
@@ -893,6 +894,13 @@ namespace ex13_48
 		//在调用点处调用构造函数，构造了一临时变量，然后取该临时变量的地址赋给tmp9.但是由于是临时变量，在程序越过这个语句时，
 		//临时变量销毁，tmp9所引用的地址是无效的。
 
+		{
+			String("tmp1");
+			String && str = String("tmp");
+			String & str1 = str;
+			str1 = "t12";
+			cout << "ssaf" << endl;
+		}
 
 		String s0;
 		String s1("hello");
@@ -913,26 +921,47 @@ namespace ex13_48
 	}
 }
 
-namespace sec13_6_2
+namespace sec15_2_2
 {
+	void ex15_6()
+	{
+		Quote tmpQuote0("book0",13.4);
+		Bulk_quote tmp1("book1",54.56,40,0.5);
+		//tmp1.net_prize(5,5);
+		tmp1.net_prize(5);
+		print_total(cout, tmpQuote0, 10);
+		print_total(cout, tmp1, 54); //这个输入的是动态类型
+	}
+	void ex15_7()
+	{
+		Quote q("textbook", 10.60);
+		Bulk_quote bq("textbook", 10.60, 10, 0.3);
+		Strategy_ex15_7 lq("Bible", 10.60, 10, 0.3);
 
+		print_total(std::cout, q, 5);
+		print_total(std::cout, bq, 5);
+		print_total(std::cout, lq, 5);
+
+		print_total(std::cout, q, 15);
+		print_total(std::cout, bq, 15);
+		print_total(std::cout, lq, 15);
+	}
+
+	void test()
+	{
+		ex15_7();
+		ex15_6();
+	}
 }
 void main()
 {
 	try
 	{
-		{
-			String("tmp1");
-			String && str = String("tmp");
-			String & str1 = str;
-			str1 = "t12";
-			cout << "ssaf" << endl;
-		}
 		
+		sec15_2_2::test();
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//ex13_48
 		ex13_48::test();
-
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 		////////////////////////////////////////////////////////////////////////////////////////////
@@ -967,16 +996,11 @@ void main()
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 
-		
-		
-
-
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//11.3.6节
 		sec11_3_6::test();
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
-
 
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//11.3.5节
@@ -984,24 +1008,17 @@ void main()
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 
-
-
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//11.3.3节
 		sec11_3_3::test();
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 
-
-
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//11.3.1节
 		map<string, vector<string>> sasf = { {string("sdafa0"),vector<string>{ "asfga0s","asgagh0" }} };
 		//*sasf.begin() = make_pair(string("sdafa"),string{ "asfgas","asgagh" }); //由于关键字是const类型的，因此不能直接赋值
 		(*sasf.begin()).second = { "asf" };
-		
-
-
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 
@@ -1015,8 +1032,6 @@ void main()
 		ex11_14.addchild("wang", "dsa", "99.2");
 		ex11_14.addchild("zhang", "zk", "98.1");
 		ex11_14.addchild("zhang", "dsa", "99.2");
-		
-		
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 

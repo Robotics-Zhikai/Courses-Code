@@ -1,4 +1,4 @@
-#include "CP5_ex7_41.h"
+#include "Sales_data.h"
 
 // constructor
 Sales_data::Sales_data(std::istream &is) : Sales_data()

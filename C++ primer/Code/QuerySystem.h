@@ -1,5 +1,4 @@
-#ifndef QUERY_SYSTEM
-#define QUERY_SYSTEM
+#pragma once
 #include "main.h"
 #include "StrVec.h"
 namespace QuerySystem
@@ -86,4 +85,3 @@ private:
 
 }
 
-#endif

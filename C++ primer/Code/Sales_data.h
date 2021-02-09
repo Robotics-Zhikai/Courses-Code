@@ -1,5 +1,4 @@
-#ifndef CP5_ex7_41_h
-#define CP5_ex7_41_h
+#pragma once
 
 #include <string>
 #include <iostream>
@@ -79,4 +78,3 @@ std::istream &read(std::istream &is, Sales_data &item);
 std::ostream &print(std::ostream &os, const Sales_data &item);
 Sales_data add(const Sales_data &lhs, const Sales_data &rhs);
 
-#endif

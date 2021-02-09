@@ -1,5 +1,4 @@
-#ifndef CP5_ex13_5_h
-#define CP5_ex13_5_h
+#pragma once
 #include "main.h"
 #include <iostream>
 using namespace std;
@@ -160,4 +159,3 @@ private:
 	//实际上用动态分配的指针可以实现同样的效果，操作指针指向的数的改变可以分布式共享 否则如果是值的话，不会进行分布式共享
 };
 map<string*, int> HasPtrptr::refcount ;
-#endif

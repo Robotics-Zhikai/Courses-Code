@@ -1,7 +1,5 @@
-#ifndef ANOTHER_H
-#define ANOTHER_H
+#pragma once
 
 void fuc();
 
 
-#endif

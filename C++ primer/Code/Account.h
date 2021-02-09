@@ -1,5 +1,4 @@
-#ifndef CP5_ex7_57_h
-#define CP5_ex7_57_h
+#pragma once
 #include "main.h"
 #include <iostream>
 #include <string>
@@ -47,4 +46,3 @@ double Account::rate = 0.0001;
 long Account::NumID = 0;
 const std::string Account::DefaultCombination = "000000";//由银行统一决定初始的默认密码是多少
 
-#endif

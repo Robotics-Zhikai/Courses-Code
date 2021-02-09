@@ -1,5 +1,4 @@
-#ifndef CP5_ex7_53_h
-#define CP5_ex7_53_h
+#pragma once
 
 class Debug
 {
@@ -18,4 +17,3 @@ private:
 	bool other;
 };
 
-#endif

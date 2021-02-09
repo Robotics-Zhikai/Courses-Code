@@ -1,5 +1,4 @@
-#ifndef CP5_ex13_18_h
-#define CP5_ex13_18_h
+#pragma once
 
 #include <string>
 #include <iostream>
@@ -20,4 +19,3 @@ private:
 
 long Employee::ID_distribute = 0;
 
-#endif

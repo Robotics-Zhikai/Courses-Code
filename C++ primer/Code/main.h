@@ -1,5 +1,4 @@
-#ifndef MAIN_H
-#define MAIN_H
+#pragma once
 
 #include <vector>
 #include <allocators>
@@ -8,7 +7,7 @@
 #include <algorithm>
 #include <functional> //bind
 #include <list> //list
-#include<iterator>//back_inserter
+#include <iterator>//back_inserter
 #include <map> //map
 #include <set> //set
 #include <limits.h> //里边定义了一组常量，限定编译器运行的这台机器的不同整数数据类型的取值范围
@@ -50,4 +49,3 @@ namespace Exercise1
 	extern float cout ;
 }
 
-#endif

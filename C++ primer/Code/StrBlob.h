@@ -1,10 +1,9 @@
-#ifndef CP5_ex12_2_h
-#define CP5_ex12_2_h
+#pragma once
 
 #include <string>
 #include <iostream>
 #include <memory>
-
+using namespace std;
 
 
 class StrBlob
@@ -116,4 +115,3 @@ void StrBlob::check(size_type i, const std::string &msg)const
 }
 StrBlobPtr StrBlob::begin()const { return StrBlobPtr(*this, 0); }
 StrBlobPtr StrBlob::end()const { return StrBlobPtr(*this, data->size()); }
-#endif
