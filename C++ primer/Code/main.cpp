@@ -885,6 +885,15 @@ namespace ex13_48
 		String tmp5 = std::move(String("he")); //这个即会调用移动构造函数 也会调用char*的构造函数 还会调用析构函数
 		String tmp6 = "he"; // 但是这个的话编译器直接用char*初始化构造了，没有析构
 
+		String tmp7 = "h1";
+		//(tmp7.testcopymove()).testcopymove(); //由于testcopymove声明了左值，所以不能用右值调用testcopymove  会报错
+		tmp7.testcopymove(); //在调用点处调用构造函数，构造了一个临时变量 然后由于没有左值引用该临时变量，就被销毁了
+		String tmp8 = tmp7.testcopymove(); //编译器略过了tmp8的拷贝构造函数，直接用tmp7.testcopymove()的返回值构造tmp8
+		String * tmp9 = &(tmp7.testcopymove());
+		//在调用点处调用构造函数，构造了一临时变量，然后取该临时变量的地址赋给tmp9.但是由于是临时变量，在程序越过这个语句时，
+		//临时变量销毁，tmp9所引用的地址是无效的。
+
+
 		String s0;
 		String s1("hello");
 		String s2(s0);

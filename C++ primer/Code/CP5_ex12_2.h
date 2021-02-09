@@ -31,6 +31,7 @@ public:
 	bool empty() const { return data->empty(); }
 	//添加和删除元素
 	void push_back(const std::string &input) { data->push_back(input); }
+	void push_back(string && input) { data->push_back(std::move(input)); }//加上move就是调用移动版本的push_back,否则调用拷贝版本的push_back 
 	void pop_back() { check(0, "data指向的元素为空！"); data->pop_back(); }
 	//元素访问
 	std::string& front() { check(0, "data指向的元素为空！"); return data->front(); };
