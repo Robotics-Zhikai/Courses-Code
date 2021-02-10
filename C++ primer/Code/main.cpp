@@ -936,8 +936,25 @@ namespace sec15_2_2
 	{
 		Quote q("textbook", 10.60);
 		Bulk_quote bq("textbook", 10.60, 10, 0.3);
-		Strategy_ex15_7 lq("Bible", 10.60, 10, 0.3);
+		bq.net_prize(1, 2);
+		bq.net_prize(2);
+		Quote& sf = bq;
+		sf.net_prize(1);//通过引用调用虚函数
+		//sf.net_prize(2, 3); //虽然是引用，动态类型，运行时决定，但是这是用在虚函数上的，因此不能用非虚函数，这句话会报错
+		Bulk_quote& sff = bq; //这样相当于把sff看成了一个对象
+		sff.net_prize(1);
+		sff.net_prize(3, 2); //但是这样的话就可以调用了。因此注意理解：当我们使用“基类”的引用或指针调用一个虚成员函数时会执行动态绑定
 
+		q.testvirtual();
+		bq.testvirtual();
+		//调用带有默认参数的testvirtual，不是通过基类引用和指针调用的，所以默认参数是各自的默认参数 9 和19  但是对于通过基类引用
+		//和指针调用的就所有默认参数都是9 见print_total函数
+
+		Strategy_ex15_7 lq("Bible", 10.60, 10, 0.3);
+		testclass lq1("Bible1", 10.60, 10, 0.3);
+
+		lq1.net_prize(5,3);
+		print_total(std::cout, lq1, 5);
 		print_total(std::cout, q, 5);
 		print_total(std::cout, bq, 5);
 		print_total(std::cout, lq, 5);
@@ -953,11 +970,50 @@ namespace sec15_2_2
 		ex15_6();
 	}
 }
+
+namespace ex15_11
+{
+	void printdebug(Quote& item)
+	{
+		item.debug();
+	}
+	void test()
+	{
+		Quote q("aaa", 10.60);
+		Bulk_quote bq("bbb", 111, 10, 0.3);
+		Strategy_ex15_7 lq("ccc", 222, 10, 0.3);
+		
+		cout << "/////////////////////////////////////////////////////////" << endl;
+		Quote & r1 = q;
+		r1.debug();
+		Quote & r2 = bq;
+		r2.debug();
+		Quote & r3 = lq;
+		r3.debug(); //当且仅当对通过引用或指针调用虚函数时，才会在运行时解析该调用，只有在此时动态类型与静态类型才不一样。
+		//这跟下一栏的还不一样，因为本栏都是通过引用调用的，而下一栏根本不是引用，是赋值！！！！
+		cout << "/////////////////////////////////////////////////////////" << endl;
+		Quote& r = q;
+		r.debug();
+		r = bq; //调用的是拷贝赋值函数,在编译阶段就知道调用哪个。只会赋值基类部分，派生类会被忽略掉
+		r.debug();
+		r = lq; //也就是说是通过普通类型非引用非指针来调用的！！！！！！！
+		r.debug(); //编译器在编译阶段就能确定是Quote类型的，因此调用的debug都是对应派生类的基类debug
+		cout << "/////////////////////////////////////////////////////////" << endl;
+		printdebug(q);
+		printdebug(bq);
+		printdebug(lq); //编译器编译printdebug(Quote& item)时，不知道具体的基类引用绑定在什么派生类上，因此留给运行调用时决定。动态类型，调用的是各自
+						//派生类的debug函数
+		cout << "/////////////////////////////////////////////////////////" << endl;
+	}
+
+}
 void main()
 {
 	try
 	{
-		
+	
+		ex15_11::test();
+
 		sec15_2_2::test();
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//ex13_48
