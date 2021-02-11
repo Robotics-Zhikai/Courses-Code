@@ -9,7 +9,7 @@ public:
 	Quote(const string& bn, double pr) :bookNo(bn),prize(pr){}
 	string ISBN()const { return bookNo; } //ISBN不能被改变
 
-	void testnotvirtual(int n)
+	void testnotvirtual(int n)const
 	{
 		cout << "ss" << endl;
 	}
@@ -27,10 +27,60 @@ public:
 		cout << "bookNo:" << bookNo << endl;
 		cout << "prize:" << prize << endl;
 	}
+	//double newpurevirtual() = 0;//这也是一样的，平白无故在基类里定义了一个纯虚函数，会报错
 private:
 	string bookNo;
 protected:
 	double prize = 0.0;
+};
+
+class Disc_quote:public Quote
+{
+public:
+	//double newpurevirtual() = 0; //如果平白无故定义一个纯虚函数，基类没有声明是虚函数，那么会报错
+	double net_prize(size_t n)const = 0; //这个等于0也会起到检查派生类与基类对应函数是否完全相同的作用 与override的安全保障作用一样
+	//string ISBN()const override;//报错使用override不能重写基类成员
+	void debug()const override
+	{
+		Quote::debug();
+		cout << "quantity:" << quantity << endl;
+		cout << "discount:" << discount << endl;
+	}
+	Disc_quote() = default;
+	Disc_quote(const string & book, double pr, size_t qt, double dc) :Quote(book, pr),quantity(qt),discount(dc) {}
+protected:
+	size_t quantity = 0; //折扣作用的购买量
+	double discount = 0.0;//折扣作用量
+};
+
+class Bulk_quoteNew :public Disc_quote
+{
+public:
+	Bulk_quoteNew() = default;
+	Bulk_quoteNew(const string & book, double pr, size_t qt, double dc) :Disc_quote(book, pr, qt, dc) {}
+	double net_prize(size_t n)const override
+	{
+		if (n >= quantity)
+			return n*prize*(1 - discount);
+		else
+			return n*prize;
+		testnotvirtual(3);//间接基类也是可以调用的
+	}
+};
+
+class Strategy_ex15_7New :public Disc_quote
+{
+public:
+	Strategy_ex15_7New() = default;
+	Strategy_ex15_7New(const string & book, double pr, size_t qt, double dc):Disc_quote(book, pr, qt, dc) {}
+	double net_prize(size_t n)const override
+	{
+		//Disc_quote dsag;//报错不允许使用抽象类型的对象 因为包含有一个纯虚函数
+		if (n <= quantity)
+			return n*prize*(1 - discount);
+		else
+			return quantity*prize*(1 - discount) + (n - quantity)*prize;
+	}
 };
 
 //计算并打印销售给定数量的某种书籍所得费用
