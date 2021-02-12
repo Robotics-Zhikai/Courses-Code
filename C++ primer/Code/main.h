@@ -19,6 +19,8 @@
 #include <memory> // shared_ptr 智能指针
 #include <utility>//移动构造函数 move
 
+const double pi = 3.1415926;
+
 //namespace Exercise
 //{
 //	int ivar = 0;

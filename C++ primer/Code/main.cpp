@@ -14,6 +14,8 @@
 #include "StrVec.h"
 #include "String.h"
 #include "Quote.h"
+#include "CP5_ex15_20.h"
+#include "CP5_ex15_21_22.h"
 using namespace std;
 
 class Y;
@@ -598,6 +600,17 @@ namespace sec_11_2_3
 	private:
 		Datatype Data;
 	};
+
+	void test()
+	{
+		auto testmakepair = make_pair(Sales_data(), int(3));
+		auto test11_12 = sec_11_2_3::combiPair({ "wang","zhao" }, { 1,2 });
+		sec_11_2_3::families ex11_14;
+		ex11_14.addchild("wang", "zk", "98.1");
+		ex11_14.addchild("wang", "dsa", "99.2");
+		ex11_14.addchild("zhang", "zk", "98.1");
+		ex11_14.addchild("zhang", "dsa", "99.2");
+	}
 }
 
 namespace sec11_3_5
@@ -979,6 +992,10 @@ namespace ex15_11
 	}
 	void test()
 	{
+		pro_quote pro_quote1;
+		//pro_quote1.ISBN();//因为是protected继承，所以即便是基类的public，也还是不能调用的.要想调用的话，需要弄using
+		//pro_quote1.bookNo //protected继承，private仍然是private，不能调用
+
 		Quote q("aaa", 10.60);
 		Bulk_quote bq("bbb", 111, 10, 0.3);
 		Strategy_ex15_7 lq("ccc", 222, 10, 0.3);
@@ -1007,11 +1024,63 @@ namespace ex15_11
 	}
 
 }
+
+namespace ex15_20
+{
+	void test()
+	{
+		pub_derv pub_derv;
+		priv_derv priv_derv;
+		prot_derv prot_derv;
+		derived_from_public derived_from_public;
+		derived_from_private derived_from_private;
+		derived_from_protected derived_from_protected;
+		//derived_from_protected.pub_mem(); //protected类型，不可以被成员函数访问到
+
+		//如果外界调用引用的话，有一个派生类向基类的转化
+		pub_derv.memfcn(pub_derv);
+		pub_derv.memfcn(derived_from_public);
+		derived_from_public.memfcn(pub_derv);
+		derived_from_public.memfcn(derived_from_public);
+	}
+}
+
+namespace ex15_22
+{
+	void test()
+	{
+		//shape shapetmp; //报错不允许使用抽象基类的对象
+		//shape_2D shape2dtmp;//报错不允许使用抽象基类的对象
+		//shape_3D shape3dtmp; //报错不允许使用抽象基类的对象
+		circle circletmp("sad", { 1,1 },3);
+		circletmp.coutname();
+		printdebug(cout, circletmp);
+		cout << circletmp.volume() << endl;
+		cout << circletmp.area() << endl;
+		rectangle rectangletmp("sga", { 3,4 }, 5, 6);
+		rectangletmp.coutname();
+		printdebug(cout, rectangletmp);
+		cout << rectangletmp.volume() << endl;
+		cout << rectangletmp.area() << endl;
+		sphere spheretmp("sphere", { 5,4 }, 3);
+		spheretmp.coutname();
+		printdebug(cout, spheretmp);
+		cout << spheretmp.volume() << endl;
+		cout << spheretmp.area() << endl;
+		cone conetmp("cone", { 3,2 }, 6, 8);
+		conetmp.coutname();
+		printdebug(cout, conetmp);
+		cout << conetmp.volume() << endl;
+		cout << conetmp.area() << endl;
+		//似乎没有必要弄受保护的成员
+	}
+}
 void main()
 {
 	try
 	{
-	
+		ex15_22::test();
+		ex15_20::test();
 		ex15_11::test();
 
 		sec15_2_2::test();
@@ -1081,13 +1150,7 @@ void main()
 
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//11.2.3节
-		auto testmakepair = make_pair(Sales_data(), int(3));
-		auto test11_12 = sec_11_2_3::combiPair({ "wang","zhao" }, { 1,2 });
-		sec_11_2_3::families ex11_14;
-		ex11_14.addchild("wang", "zk", "98.1");
-		ex11_14.addchild("wang", "dsa", "99.2");
-		ex11_14.addchild("zhang", "zk", "98.1");
-		ex11_14.addchild("zhang", "dsa", "99.2");
+		sec_11_2_3::test();
 		////////////////////////////////////////////////////////////////////////////////////////////
 		
 

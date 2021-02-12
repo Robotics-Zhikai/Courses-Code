@@ -34,6 +34,26 @@ protected:
 	double prize = 0.0;
 };
 
+class pro_quote :protected Quote
+{
+public:
+	void test()
+	{
+		//bookNo; //protected继承，基类的private还是private，所以不能访问。因为派生访问说明符对于派生类的成员能否访问其直接基类的成员没什么影响
+		prize;
+	}
+};
+
+class pro_pro_quote :protected pro_quote
+{
+public:
+	void test()
+	{
+		ISBN(); //class pro_quote :protected Quote时间接基类的public成了protected，可以直接在派生类内调用，但是用户不行
+		//bookNo; //protected继承对于private的处理任旧是private，所以这个不能引用
+	}
+};
+
 class Disc_quote:public Quote
 {
 public:
@@ -183,3 +203,4 @@ public:
 		return 1;
 	}
 };
+
