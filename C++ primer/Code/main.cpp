@@ -1075,10 +1075,74 @@ namespace ex15_22
 		//似乎没有必要弄受保护的成员
 	}
 }
+
+namespace sec15_6
+{
+	class base
+	{
+	public:
+		virtual int fcn()
+		{
+			cout << "base" << endl;
+			return 1;
+		}
+	};
+	class D1 :public base
+	{
+	public:
+		int fcn(int);
+		virtual void f2() {}
+	};
+	class D1_5 :public base
+	{
+	public:
+		int fcn()
+		{
+			cout << "class D1_5 :public base" << endl;
+			return 1;
+		}
+	};
+	class D2_5 :public D1_5
+	{
+	public:
+		void nothing();
+	};
+
+	class D2 :public D1
+	{
+	public:
+		int fcn(int);
+		int fcn();
+		void f2()
+		{
+			return;
+		}
+	};
+
+	void test()
+	{
+		D1 D1;
+		//D1.fcn(); //直接通过派生类希望调用基类的同名函数，但是已经被fcn(int)隐藏了
+		base * tmp = &D1;
+		//tmp->fcn(6); //由于tmp的静态类型是base，因此fcn(int)找不到
+		tmp->fcn();
+		//在编译时先通过base找到fcn，发现fcn是一个没有输入参数的虚函数，说明要运行时调用，发生了动态绑定。
+		//运行时进入D1，然后首先遇到fcn(int)，但是发现其不是一个没有输入参数的虚函数，因此进入基类继续寻找，直到找到一个没有输入参数的虚函数
+
+		D2_5 D2_5;
+		base * tmp1 = &D2_5;
+		tmp1->fcn(); 
+		//在编译时先通过base找到fcn()，发现其是不带参数的虚函数，则编译器产生的代码将在运行时确定到底该运行虚函数的哪个版本。
+		//在运行时，发现动态类型是D2_5，扫一遍D2_5发现没有不带参数的fcn，然后进入基类，发现有一个不带参数的fcn，这时候就调用这个fcn
+		//需要注意的是，这个fcn不是base域的，而是base的直接派生域的 因此P549的名字查找与继承无论如何都是必要的步骤
+
+	}
+}
 void main()
 {
 	try
 	{
+		sec15_6::test();
 		ex15_22::test();
 		ex15_20::test();
 		ex15_11::test();

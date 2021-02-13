@@ -5,8 +5,25 @@ class Quote
 {
 	friend double print_total(ostream &os, const Quote& item, size_t n);
 public:
-	Quote() = default;
-	Quote(const string& bn, double pr) :bookNo(bn),prize(pr){}
+	Quote() { cout << "Quote()" << endl; }
+	Quote(const string& bn, double pr) :bookNo(bn), prize(pr) { cout << "Quote(const string& bn, double pr) " << endl; }
+	Quote(const Quote& qt) :bookNo(qt.bookNo), prize(qt.prize) { cout << "Quote(const Quote& qt)" << endl; }
+	Quote(Quote&& qt) :bookNo(std::move(qt.bookNo)), prize(qt.prize) { cout << "Quote(Quote&& qt)" << endl; }
+	Quote& operator=(const Quote& qt)
+	{
+		bookNo = qt.bookNo;
+		prize = qt.prize;
+		cout << "Quote& operator=(const Quote& qt)" << endl;
+		return *this;
+	}
+	Quote& operator=(Quote&& qt)
+	{
+		bookNo = std::move(qt.bookNo);
+		prize = qt.prize;
+		cout << "Quote& operator=(Quote&& qt)" << endl;
+		return *this;
+	}
+
 	string ISBN()const { return bookNo; } //ISBN不能被改变
 
 	void testnotvirtual(int n)const
@@ -29,7 +46,7 @@ public:
 	}
 	//double newpurevirtual() = 0;//这也是一样的，平白无故在基类里定义了一个纯虚函数，会报错
 private:
-	string bookNo;
+	string bookNo = "";
 protected:
 	double prize = 0.0;
 };
@@ -66,8 +83,26 @@ public:
 		cout << "quantity:" << quantity << endl;
 		cout << "discount:" << discount << endl;
 	}
-	Disc_quote() = default;
-	Disc_quote(const string & book, double pr, size_t qt, double dc) :Quote(book, pr),quantity(qt),discount(dc) {}
+	Disc_quote() { cout << "Disc_quote()" << endl; };
+	Disc_quote(const string & book, double pr, size_t qt, double dc) :Quote(book, pr), quantity(qt), discount(dc) { cout << "Disc_quote(const string & book, double pr, size_t qt, double dc)" << endl; }
+	Disc_quote(const Disc_quote& dq) :Quote(dq),quantity(dq.quantity), discount(dq.discount) { cout << "Disc_quote(const Disc_quote& dq)" << endl; }
+	Disc_quote(Disc_quote&& dq) :Quote(std::move(dq)),quantity(dq.quantity), discount(dq.discount) { cout << "Disc_quote(Disc_quote&& dq)" << endl; }
+	Disc_quote& operator=(const Disc_quote& dq)
+	{
+		Quote::operator=(dq);
+		quantity = dq.quantity;
+		discount = dq.discount;
+		cout << "Disc_quote& operator=(const Disc_quote& dq)" << endl;
+		return *this;
+	}
+	Disc_quote& operator=(Disc_quote&& dq)
+	{
+		Quote::operator=(std::move(dq));
+		quantity = dq.quantity;
+		discount = dq.discount;
+		cout << "Disc_quote& operator=(Disc_quote&& dq)" << endl;
+		return *this;
+	}
 protected:
 	size_t quantity = 0; //折扣作用的购买量
 	double discount = 0.0;//折扣作用量
@@ -76,8 +111,24 @@ protected:
 class Bulk_quoteNew :public Disc_quote
 {
 public:
-	Bulk_quoteNew() = default;
-	Bulk_quoteNew(const string & book, double pr, size_t qt, double dc) :Disc_quote(book, pr, qt, dc) {}
+	Bulk_quoteNew() { cout << "Bulk_quoteNew()" << endl; };
+	Bulk_quoteNew(const string & book, double pr, size_t qt, double dc) :Disc_quote(book, pr, qt, dc) { cout << "Bulk_quoteNew(const string & book, double pr, size_t qt, double dc)" << endl; }
+	Bulk_quoteNew(const Bulk_quoteNew& bq) :Disc_quote(bq) { cout << "Bulk_quoteNew(const Bulk_quoteNew& bq)" << endl; }
+	Bulk_quoteNew(Bulk_quoteNew&& bq) :Disc_quote(std::move(bq)) { cout << "Bulk_quoteNew(Bulk_quoteNew&& bq)" << endl; }
+	Bulk_quoteNew& operator=(const Bulk_quoteNew& bq)
+	{
+		Disc_quote::operator=(bq);
+		cout << "Bulk_quoteNew& operator=(const Bulk_quoteNew& bq)" << endl;
+		return *this;
+	}
+	Bulk_quoteNew& operator=(Bulk_quoteNew&& bq)
+	{
+		Disc_quote::operator=(std::move(bq));
+		cout << "Bulk_quoteNew& operator=(Bulk_quoteNew&& bq)" << endl;
+		return *this;
+	}
+	
+	
 	double net_prize(size_t n)const override
 	{
 		if (n >= quantity)
