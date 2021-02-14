@@ -16,6 +16,7 @@
 #include "Quote.h"
 #include "CP5_ex15_20.h"
 #include "CP5_ex15_21_22.h"
+#include "Basket.h"
 using namespace std;
 
 class Y;
@@ -1185,10 +1186,34 @@ namespace sec15_8
 		cout << sum << endl;
 	}
 }
+
+namespace ex15_30
+{
+	void test()
+	{
+		Bulk_quote asga;
+		asga.net_prize(1, 1);
+		asga.net_prize(2);
+		Quote* sag = &asga;
+		sag->net_prize(3);
+
+
+		Basket basket;
+		for (unsigned i = 0; i != 10; ++i)
+			basket.add_item(Bulk_quote("Bible", 20.6, 20, 0.3)); //20本为打折限度，0.3为折扣量 206
+		for (unsigned i = 0; i != 10; ++i)
+			basket.add_item(Bulk_quoteNew("C++Primer", 30.9, 5, 0.4)); //5本为打折限度，0.4为折扣量 10*30.9*0.6=185.4
+		for (unsigned i = 0; i != 10; ++i)
+			basket.add_item(Quote("CLRS", 40.1)); //只按原价销售 401
+
+		cout << basket.total_receipt() << endl;
+	}
+}
 void main()
 {
 	try
 	{
+		ex15_30::test();
 		sec15_8::test();
 		ex15_26::test();
 		sec15_6::test();

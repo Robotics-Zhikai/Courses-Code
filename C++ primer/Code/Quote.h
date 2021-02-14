@@ -31,6 +31,17 @@ public:
 		cout << "virtual ~Quote()" << endl;
 	}
 
+	virtual Quote* clone()const &//clone当前的对象 返回clone的地址
+	{
+		return new Quote(*this); //拷贝实现
+	}
+	virtual Quote* clone() && 
+		//当这个声明为const时，*this也成了常量，调用Quote(std::move(*this))并不会调用移动构造函数，而是调用拷贝构造，因为移动构造函数期望一个不是const定义的
+		//当clone()声明为const，且调用Quote(std::move(*this))时，定义Quote(const Quote&& qt)会调用移动构造函数
+	{
+		return new Quote(std::move(*this)); //移动实现
+	}
+
 	string ISBN()const { return bookNo; } //ISBN不能被改变
 
 	void testnotvirtual(int n)const
@@ -114,6 +125,8 @@ public:
 	{
 		cout << "~Disc_quote()" << endl;
 	}
+
+	
 protected:
 	size_t quantity = 0; //折扣作用的购买量
 	double discount = 0.0;//折扣作用量
@@ -143,7 +156,16 @@ public:
 		cout << "~Bulk_quoteNew()" << endl;
 	}
 	
-	
+	Bulk_quoteNew* clone()const & override //虽然虚函数要求的是返回类型相同，但是C++Primer5可知P537，返回类型是类本身的指针或引用时上述规则无效
+									  //这也是override可以用的原因，override了virtual Quote* clone()const
+	{
+		return new Bulk_quoteNew(*this);
+	}
+	Bulk_quoteNew* clone() && override
+	{
+		return new Bulk_quoteNew(std::move(*this));
+	}
+
 	double net_prize(size_t n)const override
 	{
 		if (n >= quantity)
@@ -199,13 +221,22 @@ public:
 		cout << n << endl;
 	}
 
-	double net_prize(size_t n,double n1)const //这个单纯的当成了派生类的成员函数
+	double net_prize(size_t n,double n1)const //这个单纯的当成了派生类的成员函数 
 	{
 		if (n >= min_qty)
 			return n*prize*(1 - discount);
 		else
 			return n*prize;
 	}
+	Bulk_quote * clone()const & override
+	{
+		return new Bulk_quote(*this);
+	}
+	Bulk_quote * clone() && override
+	{
+		return new Bulk_quote(std::move(*this));
+	}
+
 	double net_prize(size_t n/*,int sfag*/)const override //只有override能得到覆盖的保证 否则用virtual是不能得到覆盖的保证的
 		//override不是必须的，如果参数与基类完全相同且不加override，那么默认是覆盖了基类的同名函数的
 		//但是当可能写错时，比如写成了上边的两个入口参数，与需要覆盖的基类虚函数不匹配，那么加上override后就能报错
