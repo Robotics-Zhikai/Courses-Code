@@ -8,7 +8,7 @@ public:
 	Quote() { cout << "Quote()" << endl; }
 	Quote(const string& bn, double pr) :bookNo(bn), prize(pr) { cout << "Quote(const string& bn, double pr) " << endl; }
 	Quote(const Quote& qt) :bookNo(qt.bookNo), prize(qt.prize) { cout << "Quote(const Quote& qt)" << endl; }
-	Quote(Quote&& qt) :bookNo(std::move(qt.bookNo)), prize(qt.prize) { cout << "Quote(Quote&& qt)" << endl; }
+	Quote(Quote&& qt)noexcept :bookNo(std::move(qt.bookNo)), prize(std::move(qt.prize)) { cout << "Quote(Quote&& qt)" << endl; }
 	Quote& operator=(const Quote& qt)
 	{
 		bookNo = qt.bookNo;
@@ -16,12 +16,19 @@ public:
 		cout << "Quote& operator=(const Quote& qt)" << endl;
 		return *this;
 	}
-	Quote& operator=(Quote&& qt)
+	Quote& operator=(Quote&& qt)noexcept
 	{
-		bookNo = std::move(qt.bookNo);
-		prize = qt.prize;
+		if (this != &qt)
+		{
+			bookNo = std::move(qt.bookNo);
+			prize = std::move(qt.prize);
+		}
 		cout << "Quote& operator=(Quote&& qt)" << endl;
 		return *this;
+	}
+	virtual ~Quote()  // 根节点定义一个虚析构函数
+	{
+		cout << "virtual ~Quote()" << endl;
 	}
 
 	string ISBN()const { return bookNo; } //ISBN不能被改变
@@ -30,7 +37,7 @@ public:
 	{
 		cout << "ss" << endl;
 	}
-	virtual ~Quote() = default; // 根节点定义一个虚析构函数
+	
 	virtual double net_prize(size_t n)const //意味着派生类需要override这个函数 因为派生类有可能改变了prize的值
 	{
 		return prize * n;
@@ -86,7 +93,7 @@ public:
 	Disc_quote() { cout << "Disc_quote()" << endl; };
 	Disc_quote(const string & book, double pr, size_t qt, double dc) :Quote(book, pr), quantity(qt), discount(dc) { cout << "Disc_quote(const string & book, double pr, size_t qt, double dc)" << endl; }
 	Disc_quote(const Disc_quote& dq) :Quote(dq),quantity(dq.quantity), discount(dq.discount) { cout << "Disc_quote(const Disc_quote& dq)" << endl; }
-	Disc_quote(Disc_quote&& dq) :Quote(std::move(dq)),quantity(dq.quantity), discount(dq.discount) { cout << "Disc_quote(Disc_quote&& dq)" << endl; }
+	Disc_quote(Disc_quote&& dq)noexcept :Quote(std::move(dq)),quantity(std::move(dq.quantity)), discount(std::move(dq.discount)) { cout << "Disc_quote(Disc_quote&& dq)" << endl; }
 	Disc_quote& operator=(const Disc_quote& dq)
 	{
 		Quote::operator=(dq);
@@ -95,13 +102,17 @@ public:
 		cout << "Disc_quote& operator=(const Disc_quote& dq)" << endl;
 		return *this;
 	}
-	Disc_quote& operator=(Disc_quote&& dq)
+	Disc_quote& operator=(Disc_quote&& dq) noexcept
 	{
 		Quote::operator=(std::move(dq));
-		quantity = dq.quantity;
-		discount = dq.discount;
+		quantity = std::move(dq.quantity);
+		discount = std::move(dq.discount);
 		cout << "Disc_quote& operator=(Disc_quote&& dq)" << endl;
 		return *this;
+	}
+	~Disc_quote() override //加上override可以保证根节点存在虚析构函数
+	{
+		cout << "~Disc_quote()" << endl;
 	}
 protected:
 	size_t quantity = 0; //折扣作用的购买量
@@ -114,18 +125,22 @@ public:
 	Bulk_quoteNew() { cout << "Bulk_quoteNew()" << endl; };
 	Bulk_quoteNew(const string & book, double pr, size_t qt, double dc) :Disc_quote(book, pr, qt, dc) { cout << "Bulk_quoteNew(const string & book, double pr, size_t qt, double dc)" << endl; }
 	Bulk_quoteNew(const Bulk_quoteNew& bq) :Disc_quote(bq) { cout << "Bulk_quoteNew(const Bulk_quoteNew& bq)" << endl; }
-	Bulk_quoteNew(Bulk_quoteNew&& bq) :Disc_quote(std::move(bq)) { cout << "Bulk_quoteNew(Bulk_quoteNew&& bq)" << endl; }
+	Bulk_quoteNew(Bulk_quoteNew&& bq)noexcept :Disc_quote(std::move(bq)) { cout << "Bulk_quoteNew(Bulk_quoteNew&& bq)" << endl; }
 	Bulk_quoteNew& operator=(const Bulk_quoteNew& bq)
 	{
 		Disc_quote::operator=(bq);
 		cout << "Bulk_quoteNew& operator=(const Bulk_quoteNew& bq)" << endl;
 		return *this;
 	}
-	Bulk_quoteNew& operator=(Bulk_quoteNew&& bq)
+	Bulk_quoteNew& operator=(Bulk_quoteNew&& bq) noexcept
 	{
 		Disc_quote::operator=(std::move(bq));
 		cout << "Bulk_quoteNew& operator=(Bulk_quoteNew&& bq)" << endl;
 		return *this;
+	}
+	~Bulk_quoteNew() override
+	{
+		cout << "~Bulk_quoteNew()" << endl;
 	}
 	
 	

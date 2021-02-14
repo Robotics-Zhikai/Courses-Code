@@ -1138,10 +1138,59 @@ namespace sec15_6
 
 	}
 }
+
+namespace ex15_26
+{
+	Bulk_quoteNew test()
+	{
+		{
+			Bulk_quoteNew Bulk_quoteNew1;
+			Bulk_quoteNew Bulk_quoteNew2("twet", 46, 3, 4);
+			Bulk_quoteNew Bulk_quoteNew3 = Bulk_quoteNew2;
+			Bulk_quoteNew3 = Bulk_quoteNew1;
+		}
+		Bulk_quoteNew Bulk_quoteNew4;
+		return Bulk_quoteNew4;
+	}
+}
+
+namespace sec15_8
+{
+	void test()
+	{
+		vector<Quote> vecquote;
+		Bulk_quoteNew Bulk_quoteNew1("sga", 3, 4, 0.5);
+		for (int i = 0; i < 10; i++)
+		{
+			vecquote.push_back(Bulk_quoteNew1);
+			cout << endl; //从输出窗口可以很明显的看到vector的行为，每次pushback都要先把旧元素移动到新的空间然后拷贝构造一个新元素
+		}
+			
+		double sum = 0;
+		for (int i = 0; i < vecquote.size(); i++)
+			sum += vecquote[i].net_prize(6);
+		cout << sum << endl;
+
+		vector<shared_ptr<Quote>> vecquote1;
+		shared_ptr<Bulk_quoteNew> Bulk_quoteNew_ptr = make_shared<Bulk_quoteNew>("sga", 3, 4, 0.5);
+		for (int i = 0; i < 10; i++)
+		{
+			vecquote1.push_back(Bulk_quoteNew_ptr);
+			cout << endl;
+		}
+			
+		sum = 0;
+		for (int i = 0; i < vecquote1.size(); i++)
+			sum += vecquote1[i]->net_prize(6); //这个是动态绑定 前提一定是指针或引用+虚函数
+		cout << sum << endl;
+	}
+}
 void main()
 {
 	try
 	{
+		sec15_8::test();
+		ex15_26::test();
 		sec15_6::test();
 		ex15_22::test();
 		ex15_20::test();
