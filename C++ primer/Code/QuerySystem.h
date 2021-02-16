@@ -15,14 +15,14 @@ class QueryResult //储存查询结果，包含查询的字符串和文本数据地址和所处行号的地址
 		size_t countline = 0;
 		for (auto it = que.setptr->begin(); it != que.setptr->end(); it++)
 		{
-			os << "(line " << countline++ << ") " << (*que.text)[*it] << endl;
+			os << "(line " << *it << ") " << (*que.text)[*it] << endl;
 		}
 		return os;
 	}
 public:
 	QueryResult() = default;
-	QueryResult(const string& instr, shared_ptr<StrVec>& intextptr,
-		shared_ptr<set<size_t>>& setptr) :word(instr), text(intextptr), setptr(setptr) {}
+	QueryResult(const string& instr,const shared_ptr<StrVec>& intextptr,
+		const shared_ptr<set<size_t>>& setptr) :word(instr), text(intextptr), setptr(setptr) {}
 	set<size_t>::iterator begin()const { return setptr->begin(); }
 	set<size_t>::iterator end()const { return setptr->end(); }
 	shared_ptr<StrVec> get_file()const { return text; }
@@ -44,11 +44,12 @@ public:
 		ifstream file(path);
 		readText(file);
 	}
-	QueryResult query(const string & word) //最好把查询函数定义成const，减少任何改变数据库的风险
+	QueryResult query(const string & word)const //最好把查询函数定义成const，减少任何改变数据库的风险
 	{
 		static shared_ptr<set<size_t>> nodata(new set<size_t>); //这个是必须的，因为shared ptr在销毁时会调用delete，必须实现有new的出现 
-		if (mapping.find(word) != mapping.end())
-			return QueryResult(word, text, mapping[word]);//如果只有这个语句的话，索引map会自动生成一个empty的mappedtype 造成索引set.size时出错
+		auto found = mapping.find(word);
+		if (found != mapping.end())
+			return QueryResult(word, text, found->second /*mapping[word]*/);//如果只有这个语句的话，索引map会自动生成一个empty的mappedtype 造成索引set.size时出错
 		else
 			return QueryResult(word, text, nodata);
 	}
@@ -82,6 +83,145 @@ private:
 	}
 };
 
+class Query;
+class Query_base //不希望用户或派生类直接使用Query_base，因此所有的成员都非public
+{
+	friend Query;
+protected:
+	virtual ~Query_base() = default; //但这个作为根节点要用到虚析构函数，因此是protected成员
+private:
+	virtual QueryResult eval(const TextQuery& t)const = 0;
+	virtual string rep()const = 0;
+
+};
+
+class WordQuery:public Query_base
+{
+	friend class Query;
+private:
+	WordQuery(const string & s) :word(s) { }
+	QueryResult eval(const TextQuery& t)const override { return t.query(word); }
+	string rep()const override { return "(" + word + ")"; }
+
+	string word;
+};
+
+class Query
+{
+	friend Query operator~(const Query & qe);
+	friend Query operator&(const Query & l, const Query& r);
+	friend Query operator|(const Query & l, const Query& r);
+public:
+	Query(const string &str) :q(new WordQuery(str)) {};
+	QueryResult eval(const TextQuery& t)const { return q->eval(t); }
+	string rep()const { return q->rep(); }
+	~Query() { cout << "~Query()" << endl; };
+private:
+	Query(const shared_ptr<Query_base>& q) :q(q) {} //不希望用户代码能随便定义Query
+	shared_ptr<Query_base> q;
+};
+
+class HistoryQuery//构建一个历史库
+{
+public:
+	void addQuery(const Query& qe)
+	{
+		his_database.push_back(qe);
+	}
+	Query& operator[](size_t n)
+	{
+		return his_database[n];
+	}
+	size_t size()const { return his_database.size(); }
+private:
+	vector<Query> his_database;
+};
+
+class NotQuery :public Query_base
+{
+	friend Query operator~(const Query & qe);
+private:
+	NotQuery(const Query& qe) :qe(qe) {}
+
+	string rep()const override
+	{
+		return "~(" + qe.rep() + ")";
+	}
+	QueryResult eval(const TextQuery& t)const override
+	{
+		QueryResult tmpresult = qe.eval(t);
+		auto text = tmpresult.get_file();
+		set<size_t>::iterator beg = tmpresult.begin();
+		set<size_t>::iterator end = tmpresult.end();
+		set<size_t> set_not;
+		for (size_t i = 0; i < text->size(); i++)
+		{
+			if (beg!=end && i == *beg)
+				++beg;
+			else
+				set_not.insert(i);
+		}
+		return QueryResult(rep(),text,shared_ptr<set<size_t>>(new set<size_t>(std::move(set_not))));
+	}
+
+	Query qe;
+};
+
+class BinaryQuery:public Query_base
+{
+protected: //若定义为private，那么此类的派生类不能调用rep(),而由于没有重写eval，则此类还是抽象基类，不能随便让用户定义成员，因此是protected类
+	BinaryQuery(const Query& l, const Query& r, string o) :lhs(l), rhs(r), opSym(o) {}
+	string rep()const override { return "(" +lhs.rep()+" " + opSym + " " + rhs.rep()+")"; }
+
+	Query lhs, rhs;
+	string opSym; // 指明二元运算的符号
+};
+
+class AndQuery :public BinaryQuery
+{
+	friend Query operator&(const Query & l, const Query& r);
+private:
+	AndQuery(const Query& l, const Query& r):BinaryQuery(l,r,"&") {}
+	QueryResult eval(const TextQuery& t)const override
+	{
+		QueryResult lhsresult = lhs.eval(t);
+		QueryResult rhsresult = rhs.eval(t);
+		set<size_t> setresult;
+		set_intersection(lhsresult.begin(), lhsresult.end(), rhsresult.begin(), rhsresult.end(), inserter(setresult, setresult.begin()));
+		return QueryResult(rep(), lhsresult.get_file(), shared_ptr<set<size_t>>(new set<size_t>(std::move(setresult))));
+	}
+};
+
+class OrQuery :public BinaryQuery
+{
+	friend Query operator|(const Query & l, const Query& r);
+private:
+	OrQuery(const Query&l, const Query&r) :BinaryQuery(l, r, "|") {}
+	QueryResult eval(const TextQuery& t)const override
+	{
+		QueryResult lhsresult = lhs.eval(t);
+		QueryResult rhsresult = rhs.eval(t);
+		set<size_t> setresult(lhsresult.begin(), lhsresult.end());
+		setresult.insert(rhsresult.begin(), rhsresult.end());
+		return QueryResult(rep(), lhsresult.get_file(), shared_ptr<set<size_t>>(new set<size_t>(std::move(setresult))));
+	}
+};
+
+Query operator~(const Query & qe)
+{
+	shared_ptr<Query_base> p(new NotQuery(qe));
+	return Query(p);
+}
+
+Query operator&(const Query & l,const Query& r)
+{
+	return Query(shared_ptr<Query_base>(new AndQuery(l, r)));
+}
+
+Query operator|(const Query & l, const Query& r)
+{
+	return Query(shared_ptr<Query_base>(new OrQuery(l, r)));
+}
 
 }
 

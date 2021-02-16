@@ -1209,10 +1209,44 @@ namespace ex15_30
 		cout << basket.total_receipt() << endl;
 	}
 }
+
+namespace QuerySystem
+{
+	void sec15_9()
+	{
+		TextQuery tQuery("test.txt");
+		HistoryQuery HistoryQuery;
+		{
+			Query q = Query("fiery")&Query("bird") | Query("wind");
+			HistoryQuery.addQuery(q);
+			q = (~Query("she"));
+			HistoryQuery.addQuery(q);
+
+			q = Query("her"); //这行出去只调用一次析构函数 ，因为是拷贝赋值函数，临时变量出去这行后任然会被销毁
+
+			Query q1 = Query("her"); //这行出去不调用析构函数，因为是拷贝构造，编译器略过，不销毁临时变量，成了左值，局部变量出作用域后才调用析构函数
+
+			q = ~Query("her");//因为是拷贝赋值函数 ~Query("her")有两个临时对象，出去这行后会调用两次析构函数
+			HistoryQuery.addQuery(q);
+
+			q = ~Query("her") & (~Query("she")); //所有这些表达式都没有执行查询操作，只是把查询语句存在这里了
+			HistoryQuery.addQuery(q);
+
+			q = ~Query("her") | (~Query("she"));
+			HistoryQuery.addQuery(q);
+		} //比如有一个场景，在这里边查询并输出了，实时查询结果查询完毕后就销毁了，然后在以后的某一天想看看historyquery
+		
+		for (int i = 0; i < HistoryQuery.size(); i++)
+		{
+			print(cout, HistoryQuery[i].eval(tQuery));
+		}
+	}
+}
 void main()
 {
 	try
 	{
+		QuerySystem::sec15_9();
 		ex15_30::test();
 		sec15_8::test();
 		ex15_26::test();
