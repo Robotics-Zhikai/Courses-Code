@@ -2,7 +2,7 @@
 #include "main.h"
 namespace abstract_factory
 {
-	
+//抽象工厂类模式
 
 class User
 {
@@ -213,6 +213,7 @@ void test()
 
 }
 
-
+//https://design-patterns.readthedocs.io/zh_CN/latest/creational_patterns/abstract_factory.html
+//大话设计模式
 
 }
