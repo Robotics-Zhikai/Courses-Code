@@ -1,5 +1,6 @@
 #pragma once
 #include "main.h"
+#include "reflect.h"
 namespace abstract_factory
 {
 //抽象工厂类模式
@@ -153,8 +154,27 @@ Database Databasethis;//只要调用这个 就可以替代所有的
 
 //开放-封闭原则告诉我们：对于扩展，我们开放；但对于修改，要尽量关闭
 
-//上述代码还可以利用反射来进行改进 反射的实现需要用到单例模式，等学到单例模式的时候再实现吧
+//上述代码还可以利用反射来进行改进 反射的实现需要用到单例模式
+factory_base * Sqlservelret() { return new SqlserverFactory; }
+factory_base * Accessret() { return new AccessFactory; }
+RegisterAction sq("Sqlservel", (PTRCreateObject)Sqlservelret);
+RegisterAction Ac("Access", (PTRCreateObject)Accessret);
+//这完全可以放在配置文件里，与业务逻辑的实现无关
 
+class DatabaseAdvance
+{
+public:
+	shared_ptr<factory_base> retfac(string strdatabase)
+	{
+		//auto a = Reflect::getInstance().getClassByName(strdatabase);
+		//auto a22 = Reflect::getInstance().getClassByName(strdatabase)();
+		//auto a1 = (factory_base*)Reflect::getInstance().getClassByName(strdatabase);
+		//auto a2 = (factory_base*)Reflect::getInstance().getClassByName(strdatabase)();//void*地址转化成factory_base*
+		return shared_ptr<factory_base>((factory_base*)Reflect::getInstance().getClassByName(strdatabase)());
+		//用到了单例模式，只能有一个map<string,PTRCreateObject> 实现反射机制
+		//借助反射机制，就不需要调用多个case了，if  switch啥的
+	}
+};
 
 /*
 工厂方法也具有唯一性，一般情况下，一个具体工厂中只有一个工厂方法或者一组重载的工厂方法。
@@ -205,12 +225,23 @@ void test()
 	fcbase->return_Idepartment()->insert_department(Department());
 	fcbase->return_Idepartment()->get_department(1);
 
-	//经过简单工厂模式改进的抽象工厂模式，不需要修改new
+	//经过简单工厂模式改进的抽象工厂模式，不需要修改new 但是需要修改Databasethis的成员变量
 	Databasethis.retfac()->return_Iuser()->insert_user(User());
 	Databasethis.retfac()->return_Iuser()->get_user(1);
 	Databasethis.retfac()->return_Idepartment()->insert_department(Department());
 	Databasethis.retfac()->return_Idepartment()->get_department(1);
 
+	//经过反射改进的简单工厂和抽象工厂模式结合 不需要修改任何源代码 只需要输入参数即可
+	DatabaseAdvance DatabaseAdvance;
+	DatabaseAdvance.retfac("Sqlservel")->return_Iuser()->insert_user(User());
+	DatabaseAdvance.retfac("Sqlservel")->return_Iuser()->get_user(1);
+	DatabaseAdvance.retfac("Sqlservel")->return_Idepartment()->insert_department(Department());
+	DatabaseAdvance.retfac("Sqlservel")->return_Idepartment()->get_department(1);
+
+	DatabaseAdvance.retfac("Access")->return_Iuser()->insert_user(User());
+	DatabaseAdvance.retfac("Access")->return_Iuser()->get_user(1);
+	DatabaseAdvance.retfac("Access")->return_Idepartment()->insert_department(Department());
+	DatabaseAdvance.retfac("Access")->return_Idepartment()->get_department(1);
 }
 
 //https://design-patterns.readthedocs.io/zh_CN/latest/creational_patterns/abstract_factory.html
