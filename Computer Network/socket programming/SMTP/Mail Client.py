@@ -13,7 +13,7 @@ mailport = 25
 fromaddress = '***************@163.com' #将要发送邮件的邮箱地址
 toaddress = '***************@qq.com' #目的邮箱地址
 
-#http://tool.chinaz.com/Tools/base64.aspx 网站base64
+#http://tool.chinaz.com/Tools/base64.aspx 网站base64 也可以调用python的base64
 username = '***************jb20=' #fromaddress的带@163.com的base64编码
 password = '***************UQ==' #网易邮箱的授权码的base64编码 不是密码 需要在网易邮箱的客户端内操作
 
