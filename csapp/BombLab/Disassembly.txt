@@ -514,87 +514,104 @@ Disassembly of section .text:
   4010f2:	5b                   	pop    %rbx
   4010f3:	c3                   	retq   
 
-00000000004010f4 <phase_6>:
-  4010f4:	41 56                	push   %r14
-  4010f6:	41 55                	push   %r13
-  4010f8:	41 54                	push   %r12
-  4010fa:	55                   	push   %rbp
-  4010fb:	53                   	push   %rbx
+00000000004010f4 <phase_6>: #是一个根据7-输入的6个<=6的数字序列重排链表使得重排的链表中的元素从大到小排列的一个炸弹解药
+                            #链表储存在0x6032d0 需要在gdb中调用x/96bx 0x6032d0得到
+  4010f4:	41 56                	push   %r14 #被调用者保存的
+  4010f6:	41 55                	push   %r13 #被调用者保存的
+  4010f8:	41 54                	push   %r12 #被调用者保存
+  4010fa:	55                   	push   %rbp #被调用者保存的
+  4010fb:	53                   	push   %rbx #被调用者保存的
   4010fc:	48 83 ec 50          	sub    $0x50,%rsp
   401100:	49 89 e5             	mov    %rsp,%r13
-  401103:	48 89 e6             	mov    %rsp,%rsi
-  401106:	e8 51 03 00 00       	callq  40145c <read_six_numbers>
+  401103:	48 89 e6             	mov    %rsp,%rsi #rdi是第一个参数 输入的字符串 rsi是第二个输入参数
+  401106:	e8 51 03 00 00       	callq  40145c <read_six_numbers> #起始地址是rsp，从输入的字符串得到6个数，存储在rsp开始的地址
   40110b:	49 89 e6             	mov    %rsp,%r14
   40110e:	41 bc 00 00 00 00    	mov    $0x0,%r12d
-  401114:	4c 89 ed             	mov    %r13,%rbp
-  401117:	41 8b 45 00          	mov    0x0(%r13),%eax
+  401114:	4c 89 ed             	mov    %r13,%rbp      #将输入的每个数在每个循环赋值给rbp
+  401117:	41 8b 45 00          	mov    0x0(%r13),%eax #将输入的每个数在每个循环赋值给eax
   40111b:	83 e8 01             	sub    $0x1,%eax
   40111e:	83 f8 05             	cmp    $0x5,%eax
   401121:	76 05                	jbe    401128 <phase_6+0x34>
-  401123:	e8 12 03 00 00       	callq  40143a <explode_bomb>
+  401123:	e8 12 03 00 00       	callq  40143a <explode_bomb> #如果eax>5，则爆炸 推断出每个数小于等于6
   401128:	41 83 c4 01          	add    $0x1,%r12d
   40112c:	41 83 fc 06          	cmp    $0x6,%r12d
   401130:	74 21                	je     401153 <phase_6+0x5f>
-  401132:	44 89 e3             	mov    %r12d,%ebx
+  401132:	44 89 e3             	mov    %r12d,%ebx #%ebx每次循环加一 ebx = 1 
   401135:	48 63 c3             	movslq %ebx,%rax
-  401138:	8b 04 84             	mov    (%rsp,%rax,4),%eax
-  40113b:	39 45 00             	cmp    %eax,0x0(%rbp)
+  401138:	8b 04 84             	mov    (%rsp,%rax,4),%eax #将下一个输入的数赋值给eax
+  40113b:	39 45 00             	cmp    %eax,0x0(%rbp)  #如果当前数等于前一个数的话 则爆炸 循环6个数
   40113e:	75 05                	jne    401145 <phase_6+0x51>
   401140:	e8 f5 02 00 00       	callq  40143a <explode_bomb>
-  401145:	83 c3 01             	add    $0x1,%ebx
+  401145:	83 c3 01             	add    $0x1,%ebx  #ebx = 2
   401148:	83 fb 05             	cmp    $0x5,%ebx
-  40114b:	7e e8                	jle    401135 <phase_6+0x41>
+  40114b:	7e e8                	jle    401135 <phase_6+0x41>  #双重循环的内循环 某一数的后边肯定不等于某一数
   40114d:	49 83 c5 04          	add    $0x4,%r13
   401151:	eb c1                	jmp    401114 <phase_6+0x20>
   401153:	48 8d 74 24 18       	lea    0x18(%rsp),%rsi
   401158:	4c 89 f0             	mov    %r14,%rax
   40115b:	b9 07 00 00 00       	mov    $0x7,%ecx
+
   401160:	89 ca                	mov    %ecx,%edx
-  401162:	2b 10                	sub    (%rax),%edx
-  401164:	89 10                	mov    %edx,(%rax)
+  401162:	2b 10                	sub    (%rax),%edx  #7-第一个输入的数赋值给edx
+  401164:	89 10                	mov    %edx,(%rax)  #再把修改后的数放到原处
   401166:	48 83 c0 04          	add    $0x4,%rax
   40116a:	48 39 f0             	cmp    %rsi,%rax
-  40116d:	75 f1                	jne    401160 <phase_6+0x6c>
+  40116d:	75 f1                	jne    401160 <phase_6+0x6c>  #这个循环用7减去所有输入的数再把结果放回原位
+  #把输入的数字循环减去了7
+
   40116f:	be 00 00 00 00       	mov    $0x0,%esi
   401174:	eb 21                	jmp    401197 <phase_6+0xa3>
-  401176:	48 8b 52 08          	mov    0x8(%rdx),%rdx
-  40117a:	83 c0 01             	add    $0x1,%eax
-  40117d:	39 c8                	cmp    %ecx,%eax
+
+                                        #0x6032d0是一个链表的头结点 通过x/96bx 0x6032d0可以验证出这两行的结论来
+  401176:	48 8b 52 08          	mov    0x8(%rdx),%rdx   #这是一个单向链表不断向下的递归操作 8是结构体中地址元素的偏移
+  40117a:	83 c0 01             	add    $0x1,%eax    
+  40117d:	39 c8                	cmp    %ecx,%eax    
   40117f:	75 f5                	jne    401176 <phase_6+0x82>
+
   401181:	eb 05                	jmp    401188 <phase_6+0x94>
+
   401183:	ba d0 32 60 00       	mov    $0x6032d0,%edx
-  401188:	48 89 54 74 20       	mov    %rdx,0x20(%rsp,%rsi,2)
+  401188:	48 89 54 74 20       	mov    %rdx,0x20(%rsp,%rsi,2) #往rsp0x20偏移开始放给定的8字节的数据 实际上就是代表链表顺序的顺序地址
   40118d:	48 83 c6 04          	add    $0x4,%rsi
   401191:	48 83 fe 18          	cmp    $0x18,%rsi
   401195:	74 14                	je     4011ab <phase_6+0xb7>
-  401197:	8b 0c 34             	mov    (%rsp,%rsi,1),%ecx
-  40119a:	83 f9 01             	cmp    $0x1,%ecx
+  401197:	8b 0c 34             	mov    (%rsp,%rsi,1),%ecx  #ecx每次循环等于堆栈中的各偏移数字值 也就是7减去输入的数字
+  40119a:	83 f9 01             	cmp    $0x1,%ecx          #ecx是偏移后的数字值
   40119d:	7e e4                	jle    401183 <phase_6+0x8f>
+
   40119f:	b8 01 00 00 00       	mov    $0x1,%eax
   4011a4:	ba d0 32 60 00       	mov    $0x6032d0,%edx
-  4011a9:	eb cb                	jmp    401176 <phase_6+0x82>
-  4011ab:	48 8b 5c 24 20       	mov    0x20(%rsp),%rbx
-  4011b0:	48 8d 44 24 28       	lea    0x28(%rsp),%rax
-  4011b5:	48 8d 74 24 50       	lea    0x50(%rsp),%rsi
-  4011ba:	48 89 d9             	mov    %rbx,%rcx
-  4011bd:	48 8b 10             	mov    (%rax),%rdx
-  4011c0:	48 89 51 08          	mov    %rdx,0x8(%rcx)
-  4011c4:	48 83 c0 08          	add    $0x8,%rax
+  4011a9:	eb cb                	jmp    401176 <phase_6+0x82> #如果偏移后的数字值大于1，则沿着链表下潜ecx次
+  #将链表打乱顺序，具体的顺序是以地址的形式储存在rsp0x20偏移开始的栈区的
+
+  4011ab:	48 8b 5c 24 20       	mov    0x20(%rsp),%rbx #将在栈中储存的第一个结点地址赋值给rbx
+  4011b0:	48 8d 44 24 28       	lea    0x28(%rsp),%rax #将在栈中储存的第二个结点地址的地址赋值给rax
+  4011b5:	48 8d 74 24 50       	lea    0x50(%rsp),%rsi #将在栈中储存的最后一个结点地址的地址赋值给rsi
+  4011ba:	48 89 d9             	mov    %rbx,%rcx   #rcx是第一个结点地址
+
+  4011bd:	48 8b 10             	mov    (%rax),%rdx #将第二个结点地址赋值给rdx 将第三个结点地址赋值给rdx
+  4011c0:	48 89 51 08          	mov    %rdx,0x8(%rcx) #将第二个结点地址赋值给第一个结点地址指向的下一个地址 将第三个结点地址赋值给第二个结点地址指向的下一个地址
+  4011c4:	48 83 c0 08          	add    $0x8,%rax  #将第三个结点地址的地址赋值给rax
   4011c8:	48 39 f0             	cmp    %rsi,%rax
   4011cb:	74 05                	je     4011d2 <phase_6+0xde>
-  4011cd:	48 89 d1             	mov    %rdx,%rcx
+  4011cd:	48 89 d1             	mov    %rdx,%rcx  #将第二个结点地址赋值给rcx
   4011d0:	eb eb                	jmp    4011bd <phase_6+0xc9>
-  4011d2:	48 c7 42 08 00 00 00 	movq   $0x0,0x8(%rdx)
+  4011d2:	48 c7 42 08 00 00 00 	movq   $0x0,0x8(%rdx)  #令链表闭合，使得最终的尾结点的next为NULL
+  #将打乱顺序的链表重新组合 形成新的链表
+
   4011d9:	00 
   4011da:	bd 05 00 00 00       	mov    $0x5,%ebp
-  4011df:	48 8b 43 08          	mov    0x8(%rbx),%rax
-  4011e3:	8b 00                	mov    (%rax),%eax
+  
+  4011df:	48 8b 43 08          	mov    0x8(%rbx),%rax #将第一个结点的Next指针值赋值给rax
+  4011e3:	8b 00                	mov    (%rax),%eax  #将rax->val赋值给eax
   4011e5:	39 03                	cmp    %eax,(%rbx)
   4011e7:	7d 05                	jge    4011ee <phase_6+0xfa>
-  4011e9:	e8 4c 02 00 00       	callq  40143a <explode_bomb>
+  4011e9:	e8 4c 02 00 00       	callq  40143a <explode_bomb> #如果前一个结点的val值<后一个 爆炸
   4011ee:	48 8b 5b 08          	mov    0x8(%rbx),%rbx
   4011f2:	83 ed 01             	sub    $0x1,%ebp
   4011f5:	75 e8                	jne    4011df <phase_6+0xeb>
+  #也就是说只有当经过重新调整顺序后的链表顺序是严格按照从大到小排列时才不爆炸
+
   4011f7:	48 83 c4 50          	add    $0x50,%rsp
   4011fb:	5b                   	pop    %rbx
   4011fc:	5d                   	pop    %rbp
