@@ -620,21 +620,29 @@ Disassembly of section .text:
   401201:	41 5e                	pop    %r14
   401203:	c3                   	retq   
 
-0000000000401204 <fun7>:
+0000000000401204 <fun7>: #这个返回2才不爆炸 esi是人为输入的值 rdi一开始是根节点
+                        #rdi是某一结点的地址 0x8(%rdi)是左子节点的地址 0x10(%rdi)是右子节点的地址 (rdi)是对应结点的值
+                        #整个从0x6030f0地址开始的内存是一个二叉树
+                        #在草稿上根据从0x6030f0地址开始的内存画出二叉树来，然后根据二叉搜索找到一个结点，然后回弹，由
+                        #汇编代码可以看到每次回弹都要改变eax，找到回弹过程中能够使得eax=2的子节点即可
   401204:	48 83 ec 08          	sub    $0x8,%rsp
-  401208:	48 85 ff             	test   %rdi,%rdi
+  401208:	48 85 ff             	test   %rdi,%rdi #看是否到达叶子结点
   40120b:	74 2b                	je     401238 <fun7+0x34>
-  40120d:	8b 17                	mov    (%rdi),%edx
-  40120f:	39 f2                	cmp    %esi,%edx
-  401211:	7e 0d                	jle    401220 <fun7+0x1c>
-  401213:	48 8b 7f 08          	mov    0x8(%rdi),%rdi
+  40120d:	8b 17                	mov    (%rdi),%edx 
+  40120f:	39 f2                	cmp    %esi,%edx 
+  401211:	7e 0d                	jle    401220 <fun7+0x1c> #根节点的值如果<=输入值的话 进入右子节点
+                                                          #否则进入左子节点
+  401213:	48 8b 7f 08          	mov    0x8(%rdi),%rdi #一遇到这种，很有可能就是指针的递归重复赋值 就涉及到数据结构了
   401217:	e8 e8 ff ff ff       	callq  401204 <fun7>
+
   40121c:	01 c0                	add    %eax,%eax
   40121e:	eb 1d                	jmp    40123d <fun7+0x39>
+
   401220:	b8 00 00 00 00       	mov    $0x0,%eax
   401225:	39 f2                	cmp    %esi,%edx
-  401227:	74 14                	je     40123d <fun7+0x39>
-  401229:	48 8b 7f 10          	mov    0x10(%rdi),%rdi
+  401227:	74 14                	je     40123d <fun7+0x39> #相当于输入的数值进入搜索二叉树中，当找到该数时，退出到上一层递归中
+                                                          #然后看找到的结点是在左子节点还是右子结点
+  401229:	48 8b 7f 10          	mov    0x10(%rdi),%rdi #偏移16个字节
   40122d:	e8 d2 ff ff ff       	callq  401204 <fun7>
   401232:	8d 44 00 01          	lea    0x1(%rax,%rax,1),%eax
   401236:	eb 05                	jmp    40123d <fun7+0x39>
@@ -648,18 +656,20 @@ Disassembly of section .text:
   401248:	ba 0a 00 00 00       	mov    $0xa,%edx
   40124d:	be 00 00 00 00       	mov    $0x0,%esi
   401252:	48 89 c7             	mov    %rax,%rdi
-  401255:	e8 76 f9 ff ff       	callq  400bd0 <strtol@plt>
-  40125a:	48 89 c3             	mov    %rax,%rbx
+  401255:	e8 76 f9 ff ff       	callq  400bd0 <strtol@plt> #调用这个函数可以检测输入是英文还是数字
+  40125a:	48 89 c3             	mov    %rax,%rbx  #如果输入的是英文单词，那么rax为0，爆炸 所以只能输入数字 rax的值等于输入的数字
   40125d:	8d 40 ff             	lea    -0x1(%rax),%eax
   401260:	3d e8 03 00 00       	cmp    $0x3e8,%eax
-  401265:	76 05                	jbe    40126c <secret_phase+0x2a>
+  401265:	76 05                	jbe    40126c <secret_phase+0x2a> #输入的数字减一应该<=0x3e8才不爆炸 也就是说输入的值<=1001
   401267:	e8 ce 01 00 00       	callq  40143a <explode_bomb>
-  40126c:	89 de                	mov    %ebx,%esi
-  40126e:	bf f0 30 60 00       	mov    $0x6030f0,%edi
+
+  40126c:	89 de                	mov    %ebx,%esi #把输入的值赋值给esi 是第二个参数
+  40126e:	bf f0 30 60 00       	mov    $0x6030f0,%edi #这是第一个参数
   401273:	e8 8c ff ff ff       	callq  401204 <fun7>
+
   401278:	83 f8 02             	cmp    $0x2,%eax
-  40127b:	74 05                	je     401282 <secret_phase+0x40>
-  40127d:	e8 b8 01 00 00       	callq  40143a <explode_bomb>
+  40127b:	74 05                	je     401282 <secret_phase+0x40> #fun7返回的值如果与2相等的话则不爆炸 
+  40127d:	e8 b8 01 00 00       	callq  40143a <explode_bomb>  #fun7返回的值如果与2不等爆炸
   401282:	bf 38 24 40 00       	mov    $0x402438,%edi
   401287:	e8 84 f8 ff ff       	callq  400b10 <puts@plt>
   40128c:	e8 33 03 00 00       	callq  4015c4 <phase_defused>
@@ -921,19 +931,20 @@ Disassembly of section .text:
   4015d6:	31 c0                	xor    %eax,%eax
   4015d8:	83 3d 81 21 20 00 06 	cmpl   $0x6,0x202181(%rip)        # 603760 <num_input_strings>
   4015df:	75 5e                	jne    40163f <phase_defused+0x7b>
-  4015e1:	4c 8d 44 24 10       	lea    0x10(%rsp),%r8
-  4015e6:	48 8d 4c 24 0c       	lea    0xc(%rsp),%rcx
-  4015eb:	48 8d 54 24 08       	lea    0x8(%rsp),%rdx
-  4015f0:	be 19 26 40 00       	mov    $0x402619,%esi
-  4015f5:	bf 70 38 60 00       	mov    $0x603870,%edi
-  4015fa:	e8 f1 f5 ff ff       	callq  400bf0 <__isoc99_sscanf@plt>
+  4015e1:	4c 8d 44 24 10       	lea    0x10(%rsp),%r8   #第五个参数
+  4015e6:	48 8d 4c 24 0c       	lea    0xc(%rsp),%rcx   #第四个参数
+  4015eb:	48 8d 54 24 08       	lea    0x8(%rsp),%rdx   #第三个参数
+  4015f0:	be 19 26 40 00       	mov    $0x402619,%esi  #第二个参数
+  4015f5:	bf 70 38 60 00       	mov    $0x603870,%edi  #第一个参数
+  4015fa:	e8 f1 f5 ff ff       	callq  400bf0 <__isoc99_sscanf@plt> #这个函数输入的第一个参数是字符串 
+                                                    #0x603870正好是phase4的输入 第二个参数控制格式 3/4/5参数是解析字符串数据的各地址
   4015ff:	83 f8 03             	cmp    $0x3,%eax
   401602:	75 31                	jne    401635 <phase_defused+0x71>
-  401604:	be 22 26 40 00       	mov    $0x402622,%esi
-  401609:	48 8d 7c 24 10       	lea    0x10(%rsp),%rdi
+  401604:	be 22 26 40 00       	mov    $0x402622,%esi   #第二个参数
+  401609:	48 8d 7c 24 10       	lea    0x10(%rsp),%rdi  #第一个参数
   40160e:	e8 25 fd ff ff       	callq  401338 <strings_not_equal>
   401613:	85 c0                	test   %eax,%eax
-  401615:	75 1e                	jne    401635 <phase_defused+0x71>
+  401615:	75 1e                	jne    401635 <phase_defused+0x71> #当eax等于0时才会进入secret
   401617:	bf f8 24 40 00       	mov    $0x4024f8,%edi
   40161c:	e8 ef f4 ff ff       	callq  400b10 <puts@plt>
   401621:	bf 20 25 40 00       	mov    $0x402520,%edi
