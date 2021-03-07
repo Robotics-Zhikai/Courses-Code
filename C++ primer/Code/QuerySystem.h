@@ -91,7 +91,7 @@ protected:
 	virtual ~Query_base() = default; //但这个作为根节点要用到虚析构函数，因此是protected成员
 private:
 	virtual QueryResult eval(const TextQuery& t)const = 0;
-	virtual string rep()const = 0;
+	virtual string rep()const = 0; //如果去掉virtual的话会报错仅虚拟函数允许纯说明符
 
 };
 
@@ -104,6 +104,14 @@ private:
 	string rep()const override { return "(" + word + ")"; }
 
 	string word;
+
+	static int wr;
+	static void sad() //静态成员不能有this指针 因此也就不能调用非静态成员了
+	{
+		wr = 3;
+		//word = string("saf"); //报错非静态成员必须与特定对象相对 这也就是没有this的问题
+		//string asg = word;  //报错同上
+	}
 };
 
 class Query

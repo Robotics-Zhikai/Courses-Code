@@ -1246,6 +1246,11 @@ void main()
 {
 	try
 	{
+		const string("sag") = string("aha"); //实际上就是一个右值
+		string("asd") = string(""); //这样的赋值是可以的，本质原因是operator=返回的值不是const的引用
+		string & af = string("asd");
+		af = "asg";
+
 		QuerySystem::sec15_9();
 		ex15_30::test();
 		sec15_8::test();

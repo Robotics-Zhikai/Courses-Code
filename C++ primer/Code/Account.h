@@ -9,12 +9,12 @@ class Account
 //银行的宏观调控包括基准利率
 {
 public:
-	/* explicit */Account(std::string HumanIDinput, std::string Combiinput = DefaultCombination) :
+	/* explicit */Account(std::string HumanIDinput, std::string Combiinput = DefaultCombination) :/*test(HumanIDinput),*/
 		ID_credit("ID_card:"+std::to_string(++NumID)), Combination(Combiinput),
 		HumanID(HumanIDinput){ };
 	//默认密码是六个0
 	Account(Account& acc) :ID_credit("ID_credit:" + std::to_string(++NumID)),Combination(DefaultCombination)
-	,HumanID(acc.HumanID),Balence(acc.Balence){}
+	,HumanID(acc.HumanID),Balence(acc.Balence)/*, test(std::string("s"))*/ {}
 	//拷贝构造函数，意味着将银行卡的必要信息挪到另一张卡上，相当于重新开了一张卡，这张卡的密码不应该继承上一张卡，因此设置为默认密码
 	Account& operator= (const Account& acc)//如果不加引用，那么赋值的时候还要调用一波拷贝构造函数，NUmID就又无缘无故加了一次
 	{
@@ -34,6 +34,7 @@ public:
 	static long read_NumID() { return NumID; }
 	
 private:
+	/*std::string & test ;*/
 	double Balence = 9;//存储余额 给每张新开的卡预存9元
 	std::string Combination;
 	static long NumID; //表示本张卡是银行发的第NumID张卡 由于是private的，为了安全只提供只读函数
