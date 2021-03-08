@@ -1242,15 +1242,74 @@ namespace QuerySystem
 		}
 	}
 }
-void main()
+
+
+namespace EffectiveCpp //保存一些在看EffectiveC++时的一些例子
 {
-	try
+	namespace basederive
 	{
+		class base
+		{
+		public:
+			virtual void print()
+			{
+				cout << "base" << endl;
+			}
+			int m;
+		};
+		class derive :public base
+		{
+		public:
+			void print() override
+			{
+				cout << "derive" << endl;
+			}
+			int n;
+		};
+
+		void fcn(shared_ptr<base> ptr)
+		{
+			cout << "fcn(shared_ptr<base> ptr)" << ptr.use_count() << endl;
+			ptr->print();
+		}
+		void fcn1(const shared_ptr<base>& ptr) //如果把const去掉的话编译器会报错，不能传入继承类的智能指针
+		{
+			cout << "fcn1(const shared_ptr<base>& ptr)" << ptr.use_count() << endl;
+			ptr->print();
+		}
+
+		void test()
+		{
+			shared_ptr<derive> d(new derive);
+			fcn(d); //这样的话输出是derive 进入函数后引用计数是2 fcn引用计数要加1好理解，因为是值传递
+			fcn1(d); //这样的话输出还是derive 进入函数后引用计数是2  这个不太好理解，继承类的智能指针传引用给基类智能指针后引用计数加1
+			//？？？？？？？？？？？？？？？？？？？？ 可能要等到看到智能指针的实现和理解更底层的内存机制才能得到解答了
+			//https://stackoverflow.com/questions/56798756/why-is-shared-ptr-counter-incremented-when-passed-as-const-reference-to-base-cla
+			//Stack Overflow的解释 因为这俩是完全不同的类型，有一个共享，所以就增1了 还是不太懂 之后再看吧
+			shared_ptr<base> b(new base);
+			fcn(b); //输出是base 进入函数后引用计数是2
+			fcn1(b); //输出是base 进入函数后引用计数是1 这个由于是完全相同的类进行引用，因此引用计数没有变化
+		}
+	}
+
+	void test()
+	{
+		basederive::test(); //条款20 以const&替换value 测试智能指针和多态
+		int ii5;
+		(ii5 = 3) = 4; //i的结果最终为4；因此可见条款10，operator=应该返回一个引用，而不是值，不是void
 		const string("sag") = string("aha"); //实际上就是一个右值
 		string("asd") = string(""); //这样的赋值是可以的，本质原因是operator=返回的值不是const的引用
 		string & af = string("asd");
 		af = "asg";
+	}
+}
+void main()
+{
+	try
+	{
 
+		EffectiveCpp::test();
+		
 		QuerySystem::sec15_9();
 		ex15_30::test();
 		sec15_8::test();
