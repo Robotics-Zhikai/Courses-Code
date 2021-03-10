@@ -823,13 +823,13 @@ Disassembly of section .text:
 000000000040184c <hexmatch>:
   40184c:	41 54                	push   %r12
   40184e:	55                   	push   %rbp
-  40184f:	53                   	push   %rbx
-  401850:	48 83 c4 80          	add    $0xffffffffffffff80,%rsp
+  40184f:	53                   	push   %rbx #这会使得rsp变化
+  401850:	48 83 c4 80          	add    $0xffffffffffffff80,%rsp #这个是分配128字节的栈空间
   401854:	41 89 fc             	mov    %edi,%r12d
   401857:	48 89 f5             	mov    %rsi,%rbp
   40185a:	64 48 8b 04 25 28 00 	mov    %fs:0x28,%rax
   401861:	00 00 
-  401863:	48 89 44 24 78       	mov    %rax,0x78(%rsp)
+  401863:	48 89 44 24 78       	mov    %rax,0x78(%rsp) #这个是在最顶部的8字节处覆盖fs:0x28，正好覆盖了gets的那最初8字节，因此需要78-8
   401868:	31 c0                	xor    %eax,%eax
   40186a:	e8 41 f5 ff ff       	callq  400db0 <random@plt>
   40186f:	48 89 c1             	mov    %rax,%rcx
@@ -854,8 +854,8 @@ Disassembly of section .text:
   4018ba:	b8 00 00 00 00       	mov    $0x0,%eax
   4018bf:	e8 ac f5 ff ff       	callq  400e70 <__sprintf_chk@plt>
   4018c4:	ba 09 00 00 00       	mov    $0x9,%edx
-  4018c9:	48 89 de             	mov    %rbx,%rsi
-  4018cc:	48 89 ef             	mov    %rbp,%rdi
+  4018c9:	48 89 de             	mov    %rbx,%rsi #第二个参数
+  4018cc:	48 89 ef             	mov    %rbp,%rdi #第一个参数 sval 这个是我控制的
   4018cf:	e8 cc f3 ff ff       	callq  400ca0 <strncmp@plt>
   4018d4:	85 c0                	test   %eax,%eax
   4018d6:	0f 94 c0             	sete   %al
@@ -871,14 +871,14 @@ Disassembly of section .text:
   4018f7:	41 5c                	pop    %r12
   4018f9:	c3                   	retq   
 
-00000000004018fa <touch3>:
-  4018fa:	53                   	push   %rbx
+00000000004018fa <touch3>: 
+  4018fa:	53                   	push   %rbx #这会使得rsp变化
   4018fb:	48 89 fb             	mov    %rdi,%rbx
   4018fe:	c7 05 d4 2b 20 00 03 	movl   $0x3,0x202bd4(%rip)        # 6044dc <vlevel>
   401905:	00 00 00 
   401908:	48 89 fe             	mov    %rdi,%rsi      #rsi是第二个参数
   40190b:	8b 3d d3 2b 20 00    	mov    0x202bd3(%rip),%edi        # 6044e4 <cookie> 0x59b997fa edi是第一个参数
-  401911:	e8 36 ff ff ff       	callq  40184c <hexmatch>
+  401911:	e8 36 ff ff ff       	callq  40184c <hexmatch> #调用函数会使得rsp变化
   401916:	85 c0                	test   %eax,%eax
   401918:	74 23                	je     40193d <touch3+0x43>    #返回值等于0就失败 否则成功
   40191a:	48 89 da             	mov    %rbx,%rdx
@@ -899,7 +899,7 @@ Disassembly of section .text:
   40195e:	bf 00 00 00 00       	mov    $0x0,%edi
   401963:	e8 d8 f4 ff ff       	callq  400e40 <exit@plt>
 
-0000000000401968 <test>:
+0000000000401968 <test>: #这是主要的函数
   401968:	48 83 ec 08          	sub    $0x8,%rsp
   40196c:	b8 00 00 00 00       	mov    $0x0,%eax #至此处rsp=0x5561dca8
   401971:	e8 32 fe ff ff       	callq  4017a8 <getbuf>
