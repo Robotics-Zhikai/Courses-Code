@@ -1248,6 +1248,7 @@ namespace EffectiveCpp //保存一些在看EffectiveC++时的一些例子
 {
 	namespace basederive
 	{
+		
 		class base
 		{
 		public:
@@ -1255,16 +1256,57 @@ namespace EffectiveCpp //保存一些在看EffectiveC++时的一些例子
 			{
 				cout << "base" << endl;
 			}
+			virtual void printthis()
+			{
+				cout << "base:" << this << endl;
+			}
 			int m;
+			virtual void privatevirtual()
+			{
+				cout << "base privatevirtual" << endl;
+			}
+			void protectfuc(int d)
+			{
+
+			}
+		private:
+			class tmp
+			{
+				int m;
+			};
+			void copyfuc(int x)
+			{
+
+			}
+		protected:
+			void protectfuc() //在两个不同的权限域中也是可以进行重载的
+			{
+
+			}
 		};
 		class derive :public base
 		{
 		public:
+			//class tmpderive :public tmp {}; //会报错tmp不可访问 但当把tmp放到public时就不会报错了，正常的继承
 			void print() override
 			{
 				cout << "derive" << endl;
 			}
+			void printthis()override
+			{
+				cout << "derive:" << this << endl;
+			}
 			int n;
+			void copyfuc() //这个抛开权限和名字查找不说，违反了绝不重新定义继承而来的non virtual函数的准则
+			{
+				protectfuc(2);
+				protectfuc(); //在两个不同的权限域中也是可以进行重载的
+			}
+		private:
+			virtual void privatevirtual() override
+			{
+				cout << "derive privatevirtual" << endl;
+			}
 		};
 
 		void fcn(shared_ptr<base> ptr)
@@ -1294,6 +1336,20 @@ namespace EffectiveCpp //保存一些在看EffectiveC++时的一些例子
 
 	void test()
 	{
+		basederive::base b;
+		cout << &b << endl;
+		b.printthis(); //这两个输出的地址完全一样
+		basederive::derive d;
+		basederive::base * bptr;
+		bptr = &d;
+		cout << bptr << endl;
+		bptr->printthis(); //这两个输出的地址也是完全一样 也就是说当用指针访问类的某一成员函数时this指针的值和该指针的值是一样的
+		bptr->privatevirtual(); //动态调用了derive的private的函数 可以看做是通过共有函数接口调用的private的函数 但是具体是怎么操作的还是不知道
+		//虚函数的继承不受private public的影响
+
+		//d.protectfuc(); //这个会报错不可访问 
+		d.protectfuc(1); //这个正常 可见必须是有访问权限的相同作用域才能进行重载
+
 		basederive::test(); //条款20 以const&替换value 测试智能指针和多态
 		int ii5;
 		(ii5 = 3) = 4; //i的结果最终为4；因此可见条款10，operator=应该返回一个引用，而不是值，不是void
