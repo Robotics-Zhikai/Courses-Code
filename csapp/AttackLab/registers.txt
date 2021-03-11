@@ -1,0 +1,25 @@
+rax            0x0      0
+rbx            0x7fffffffe2e8   140737488347880
+rcx            0xc      12
+rdx            0x7ffff7dd3780   140737351858048
+rsi            0xc      12
+rdi            0x60701c 6320156
+rbp            0x7fffffffe1d0   0x7fffffffe1d0
+rsp            0x7fffffff6278   0x7fffffff6278
+r8             0x7ffff7fb0700   140737353811712
+r9             0xc      12
+r10            0x4033d4 4207572
+
+rax            0x0      0
+rbx            0x7fffffffe2e8   140737488347880
+rcx            0xc      12
+rdx            0x7ffff7dd3780   140737351858048
+rsi            0xc      12
+rdi            0x60701c 6320156
+rbp            0x7fffffffe1d0   0x7fffffffe1d0
+rsp            0x7ffffffbd6d8   0x7ffffffbd6d8  #rtarget时 rsp每次运行都不一样 其余的都一样
+r8             0x7ffff7fb0700   140737353811712
+r9             0xc      12
+r10            0x4033d4 4207572
+
+#gdb:info frame
