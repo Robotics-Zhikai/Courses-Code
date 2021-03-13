@@ -213,12 +213,52 @@ void analyseInputData(int argc,char * argv[])
     }
 }
 
-typedef struct cache //有2^s个组 每个组有E行
+typedef struct Index
 {
-    bool valid; //有效位
-    addrType mark; //标记
+    addrType GroupNum; //地址对应的组号
+    addrType Mark; //地址对应的组中的标记(也就是行)
+    addrType offset;  //地址对应的组、行的偏移字节
 
+}Index;
+
+Index analyseAddr(lineData ld) 
+//解析地址 得到应该访问的索引
+{
+    Index result;
+    unsigned char m = sizeof(ld.addr)*8;
+    result.offset = (ld.addr<<(m-b))>>(m-b);
+    result.GroupNum = ((ld.addr>>b)<<(m-s))>>(m-s);
+    result.Mark = ld.addr>>(m-s-b);
+    return result;
+}
+
+typedef struct cacheline //数据块所在的行
+{
+    bool valid ; //有效位
+    addrType mark; //标记
+    char * block; //块的起始地址 块的字节大小为2^b
+}cacheline;
+typedef struct cache //一共有2^s个组 每组有E行  因此一共有E*2^s行cacheline
+{
+    cacheline * cachebeg;
 }cache;
+
+void initcache(cache cacheUsed)
+{
+    addrType linesNum = E*pow(2,s);
+    cacheUsed.cachebeg = (cacheline *)malloc(linesNum*sizeof(cacheline));
+    for (addrType i = 0;i<linesNum;i++)
+    {
+        cacheUsed.cachebeg[i].valid = 0;
+        cacheUsed.cachebeg[i].block = 0;
+        cacheUsed.cachebeg[i].mark = 0;
+    }
+}
+
+void cacheLogic(cache cacheUsed,Index inp) //缓存逻辑
+{
+    
+}
 
 
 int main(int argc,char * argv[]) //argv是储存char*的数组
@@ -228,13 +268,19 @@ int main(int argc,char * argv[]) //argv是储存char*的数组
     // printf("%d",decString2uint("13"));
     analyseInputData(argc,argv);
     printf("%d,%d,%d\r\n",E,s,b);
+
+    cache cacheUsed;
+    initcache(cacheUsed);
     
     char line[100];
     while (fgets(line,100,fp))
     {
        lineData thisd = analyseMemoryLine(line);
+       Index thisindex = analyseAddr(thisd);
+       printf("%ld ",thisindex.GroupNum);
        printf("%d ",thisd.operatrion);
        printf("%ld \r\n",thisd.addr);
+
     }
     
     printSummary(0, 0, 0);
