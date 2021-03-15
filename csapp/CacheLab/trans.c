@@ -35,6 +35,7 @@ void transpose_submit(int M, int N, int A[N][M], int B[M][N])
                     a0 = A[k_x+0][k_x+0];a1 = A[k_x+1][k_x+1];a2 = A[k_x+2][k_x+2];a3 = A[k_x+3][k_x+3];
                     a4 = A[k_x+4][k_x+4];a5 = A[k_x+5][k_x+5];a6 = A[k_x+6][k_x+6];a7 = A[k_x+7][k_x+7];
                     //用多出来的八个局部变量，主要是为了避免对于B[i][i] = A[i][i]对角线上的多出来的两个miss
+                    //注意在写B时由于有写回写分配机制，也需要将B对应的块加载过来
                     //在此题中所示的缓存器结构以及32*32的数组的情况下 对角线上的元素A和B在缓存器上是重叠的
                     for(i=0+k_y;i<8+k_y;i++)
                     {
@@ -79,6 +80,68 @@ void transpose_submit(int M, int N, int A[N][M], int B[M][N])
             }
         }
     }
+    else if (M==N&&M==64) //这个没有到满分 现在时间比较紧，以后有时间再看吧
+    {
+        for (k_x=0;k_x<=60;k_x=k_x+4)
+        {
+            for(k_y=0;k_y<=60;k_y=k_y+4)
+            {
+                if (k_x==k_y)
+                {
+                    a0 = A[k_x+0][k_x+0];a1 = A[k_x+1][k_x+1];a2 = A[k_x+2][k_x+2];a3 = A[k_x+3][k_x+3];
+                    for(i=k_x;i<k_x+4;i++)
+                    {
+                        for(j=k_y;j<k_y+4;j++)
+                        {
+                            if (i!=j)
+                                B[i][j] = A[j][i];
+                            else
+                            {
+                                if (i-k_x==0)
+                                    B[i][i]=a0;
+                                else if (i-k_x==1)
+                                    B[i][i]=a1;
+                                else if (i-k_x==2)
+                                    B[i][i]=a2;
+                                else if (i-k_x==3)
+                                    B[i][i]=a3;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    for(i=k_x;i<k_x+4;i++)
+                    {
+                        for(j=k_y;j<k_y+4;j++)
+                        {
+                            B[i][j] = A[j][i];
+                        }
+                    }
+                }
+                
+            }
+        }
+    }
+    else 
+    {
+        a0 = 16;
+        for(k_y=0;k_y<N;k_y=k_y+a0)
+        {
+            for(k_x=0;k_x<M;k_x=k_x+a0)
+            {
+                for(j=k_x;j<((k_x+a0)>=M?M:(k_x+a0));j++)
+                {
+                    for(i=k_y;i<((k_y+a0>=N)?N:(k_y+a0));i++)
+                    {
+                        B[j][i] = A[i][j];
+                    }
+                }
+            }
+        }
+    }
+    //分块技术很重要 可以充分利用缓存 减小miss 
+    //当缓存空间充分大时，正常的读取操作就可以应付，因为没有随着地址增长大地址取%重复映射到小地址的情况
 }
 
 /* 
