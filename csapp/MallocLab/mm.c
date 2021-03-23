@@ -263,27 +263,48 @@ int mm_init(void)
 
 void * findPlace(size_t size) //size是包括头和填充以及payload等的size
 {
+    //从这里开始写！！！！！！！！！！！！！！！！！！！！
     int group = calculateGroup(size);
     char * p = mem_heap_lo()+headSize;
     char * curpayloadPtr = p;
-    while((curpayloadPtr = getfirstAddr(curpayloadPtr))!= freePayloadptr){p=curpayloadPtr;} 
+    while(((curpayloadPtr = getfirstAddr(curpayloadPtr))!=NULL) && calculateGroup(getSize(curpayloadPtr))< group) 
+    {p=curpayloadPtr;} //p指向上一个结点
 
-    char * p = mem_heap_lo(); //对mem_start_brk做了一个封装，不能直接调用该变量
-    p = p + prologueBlockSize+headSize;
-    size_t Cursize = 0;
-    while((Cursize=getSize(p))!=0)
+    if(curpayloadPtr==NULL) //说明没找到合适的
     {
-        // printf("Cursize1:%d\r\n",Cursize);
-        if(!checkUsed(p)&&Cursize>=size)
-        {
-            // printf("Cursize2:%d\r\n",Cursize);
-            return head(p); //找到了适当的放置位置，将该位置返回
-        }
-            
-        p=nextPtr(p);
+        return NULL;
     }
+    else //说明找到合适的子类了，但是具体有没有还不一定
+    {
+        p = curpayloadPtr;
+        while (p!=NULL)
+        {
+            if (getSize(p)>=size)
+                return head(p);
+            if(checksubclassHeadNode(head(p)))
+                p = getsecondAddr(p);
+            else
+                p = getfirstAddr(p);
+        }
+    }
+    return NULL;
+    
+    // char * p = mem_heap_lo(); //对mem_start_brk做了一个封装，不能直接调用该变量
+    // p = p + prologueBlockSize+headSize;
+    // size_t Cursize = 0;
+    // while((Cursize=getSize(p))!=0)
+    // {
+    //     // printf("Cursize1:%d\r\n",Cursize);
+    //     if(!checkUsed(p)&&Cursize>=size)
+    //     {
+    //         // printf("Cursize2:%d\r\n",Cursize);
+    //         return head(p); //找到了适当的放置位置，将该位置返回
+    //     }
+            
+    //     p=nextPtr(p);
+    // }
 
-    return NULL; //说明没有找到适当的放置位置
+    // return NULL; //说明没有找到适当的放置位置
 }
 
 /* 
