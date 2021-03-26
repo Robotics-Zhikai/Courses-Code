@@ -16,23 +16,67 @@ version 1.0
 非空闲块时没有foot，空闲块时有foot，充分利用头的低3位数据标记前一个相邻块的空闲与否
 立即合并 首次适配 
 
-version2.0 
+
+
+
+version 2.0 
 51（util）+28（thru）= 79/100（不包括realloc测试集）；
-每一个空闲块的head包括implicithead和explicithead foot只包括当前块的大小
-分配了的非空闲块的head仍然包括implicithead和explicithead，没有foot
+1、每一个空闲块的head包括implicithead和explicithead和foot（只包括当前块的大小）；
+2、explicithead由firstaddr和secondaddr组成；
+3、分配了的非空闲块的head仍然包括implicithead和explicithead，没有foot
 这里边implicithead为8字节 explicithead为16字节；
-分离表以ceil(log2(size))作为分组方式；
-子类的头结点由firstaddr链接的单向链表链接起来，子类的头结点的secondaddr指向本子类的第一个内容结点；
-本子类的内容结点由一个双向链表连接起来，firtaddr储存指向下一个内容节点，secondaddr指向上一个内容结点；
-implicithead部分的除低三位部分存放本块的大小，最低一位存放本块是否是空闲块，次低位存放本块相邻的前一块是否是空闲块
+4、分离表以ceil(log2(size))作为分组方式；
+5、子类的头结点由firstaddr链接的单向链表链接起来，子类的头结点的secondaddr指向本子类的第一个内容结点；
+6、本子类的内容结点由一个双向链表连接起来，firtaddr储存指向下一个内容节点，secondaddr指向上一个内容结点；
+7、implicithead部分的除低三位部分存放本块的大小，最低一位存放本块是否是空闲块，次低位存放本块相邻的前一块是否是空闲块
 倒数低三位存放本块是否是子类的头结点；
-每次新创建的空闲块以常数时间加入到对应的子类中；
-malloc一个size后，如果首次适配的空闲块的大小大于smallestBlockSize，那么就把剩下的块加入到空闲块分离表中，
+8、每次新创建的空闲块以线性时间找到子类，并在该子类以常数时间加入到对应的子类中；
+9、malloc一个size后，如果首次适配的空闲块的大小大于smallestBlockSize，那么就把剩下的块加入到空闲块分离表中，
 否则直接把整个空闲块都作为malloc空间；
+10、free了一块空间后，会立即合并相邻的空闲块（如果存在的话）；
 
 利用上述策略除realloc测试集都过了，但是realloc测试集由于内存耗尽的问题过不了。
 因此，需要想一个优化策略。
 
+
+
+
+version 3.0
+1、首先，MAX_HEAP是20*(1<<20)B,也就是说表示一个块的字节大小绝对不会超过32位（4字节）
+因此implicitheadSize可以降到4B，同样的道理，footSize也可以降到4B
+然后，指针也是四字节，因此explicitheadSize为2*4B；
+2、然后对于非空闲块，只要有一个implicithead就够了 空闲块的话最小为implicithead+explicithead+foot（4+8+4=16B）
+但是，算最小块大小的话，只能按空闲块去算，不能按非空闲块算；
+但是，如果把非空闲块和空闲块的头部区分开来的话，又得写很多代码，容易出错，时间有限就不写了。经过分析，这样也不会造成利用率的明显降低
+3、空闲块的头指针必须是4的倍数且不能是8的倍数，这样才能保证malloc的指针是8的倍数，
+要想实现这样的结构，只需要在最开始垫一个四字节的offsetblock就行。
+
+4、3.0实现至此，分数为52 (util) + 40 (thru) = 92/100 （不含realloc测试集）
+利用率稍有增加，吞吐率大幅度增加。主要原因是之前都是把地址看成8个字节的，现在看成了四个字节，
+可能在汇编级每条指令执行的CPU周期更少，进而造成大的吞吐量。
+由此得到一条经验：在编程时尽量提高数据的利用率，减少数据的冗余，否则可能会降低效率
+
+5、而且在realloc的时候，不能简单直接的分配r所指定的大小内存，而应该充分利用已有的内存大小，将已有的内存利用起来，
+否则如果r的大小非常大的话，很容易就超出存储空间了
+将最后一个块如果是空闲块也利用上，那么就解决了realloc超出存储空间的问题，最终整个测试集上得到的分数是
+46 (util) + 39 (thru) = 85/100(含realloc测试集)
+
+
+
+
+version 4.0（时间有限，暂未实现 有前三个版本就差不多了 之后学学malloc的源码是怎么写的 如果时间充足再写吧）
+1、目前还可以想到的优化是子类的分组方式可以改一改，现在的子类分组是通过ceil(log2(size))分的，
+这就造成了子类的容纳空闲块大小范围分布不均匀，进而造成某些子类的内容结点过多；
+但是如果要均匀分配的话，又会造成子类头结点过多，分配时查找花销大的问题。且具体均匀分的间隔是多少没办法确定；
+
+2、还可以的一种方法是每次新加入子类的头结点时,根据一定范围的值维护一个最大堆，堆的每个结点就是各子类的头结点，
+然后每个子类的内容结点又能以该子类头结点为根又维护一个最大堆
+这样可以把空闲块插入的时间降到logn，malloc的时间降到logn，而又不改变空间利用率，增大了吞吐量；
+
+3、再没有想到更好的方法，需要阅读malloc、realloc的源码才能知道。
+
+*/
+/*
  *
  * NOTE TO STUDENTS: Replace this header comment with your own header
  * comment that gives a high level description of your solution.
@@ -71,10 +115,11 @@ int count = 0;
 #define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~0x7) //上取整到ALIGNMENT的倍数
 
 
-#define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
+//#define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
+#define SIZE_T_SIZE 4
 
 #define implicitheadSize SIZE_T_SIZE //存放当前块的大小
-typedef unsigned long addrType; //地址的类型 64位系统就是unsighed long 
+typedef char* addrType; //地址的类型 64位系统就是unsighed long的sizeof
 #define addrSize SIZE_T_SIZE
 #define explicitheadSize (2*addrSize) //存放连接前后链表的地址 先是next 然后是last
 
@@ -84,6 +129,7 @@ typedef unsigned long addrType; //地址的类型 64位系统就是unsighed long
 
 #define prologueBlockSize (headSize+footSize) //序言块的大小
 #define epilogueBlockSize (headSize+footSize) // 结尾块的大小
+#define offsetBlockSize SIZE_T_SIZE //为了保证8字节对齐 需要在一开始加上这么大的offsetblock
 // #define prologueBlockContent ()
 // #define epilogueBlockContent ()
 
@@ -91,8 +137,8 @@ typedef unsigned long addrType; //地址的类型 64位系统就是unsighed long
 #define pack(size,used) ((size)|(used)) //将当前结点的总字节大小和是否被使用的标志位结合起来
                                     //当前结点的总字节大小是ALIGNMENT的倍数
 #define head(payload_ptr) ((char*)(payload_ptr)-headSize) 
-#define get(ptr) (*(size_t*)(ptr))
-#define put(ptr,value) (*(size_t*)(ptr)=(value))
+#define get(ptr) (*(unsigned int*)(ptr))
+#define put(ptr,value) (*(unsigned int*)(ptr)=(value))
 #define getSize(payload_ptr) (get(head(payload_ptr))& (~0x7)) //八的倍数 不受是否使用位的影响
 #define foot(payload_ptr) ( (char*)(payload_ptr) + (getSize(payload_ptr)-headSize-footSize) )
 #define setFlag(ptr,pos,flag) (put(ptr,(get(ptr)& (~pos))| flag )) //对size_t 数据的pos位设置flag pos选中位，flag在对应的位设置0或1
@@ -131,7 +177,7 @@ void addtoSegregateList(void * freePayloadptr) //将空闲块加入到segregateL
     size_t size = getSize(freePayloadptr);
     int group = calculateGroup(size);
 
-    char * p = mem_heap_lo()+headSize;
+    char * p = mem_heap_lo()+offsetBlockSize+headSize;
     char * curpayloadPtr = p;
     while((curpayloadPtr = getfirstAddr(curpayloadPtr))!=NULL)
     {
@@ -173,7 +219,7 @@ void removefromSegregateList(void * freePayloadptr) //将空闲块从segregateLi
     if (checksubclassHeadNode(head(freePayloadptr))) //说明是子类的头结点
     {
         //由于子类的头结点构成的链表不是一个双向链表，因此对其delete需要线性复杂度的时间 但是子类头结点的数量不多，完全是可以接受的复杂度
-        char * p = mem_heap_lo()+headSize;
+        char * p = mem_heap_lo()+offsetBlockSize+headSize;
         char * curpayloadPtr = p;
         while((curpayloadPtr = getfirstAddr(curpayloadPtr))!= freePayloadptr){p=curpayloadPtr;} 
         //当while退出时就可以得到freePayloadptr的前一个子类头结点 储存在p中
@@ -211,7 +257,6 @@ void removefromSegregateList(void * freePayloadptr) //将空闲块从segregateLi
                 put(secondAddr(nextAddr),lastAddr);
         }
     }
-    
 }
 
 void fillinPrologueBlock(void * ptr)
@@ -271,9 +316,12 @@ void fillinNormalBlock(void * ptr,size_t size) //从ptr开始填充普通的空�
 int mm_init(void)
 {
     mem_init();
-    void *p = mem_sbrk(prologueBlockSize+epilogueBlockSize);
+    void *p = mem_sbrk(prologueBlockSize+epilogueBlockSize+offsetBlockSize);
     if (p == (void *)-1)
 	    return -1;
+
+    put(p,0); //offsetblock 为了保证malloc的地址是8的倍数
+    p = (char*)p+offsetBlockSize;
     fillinPrologueBlock(p); //序言块
     fillinEpilogueBlock((char*)p+prologueBlockSize); //尾块
     return 0;
@@ -283,9 +331,8 @@ void * findPlace(size_t size) //size是包括头和填充以及payload等的size
 {
 
     int group = calculateGroup(size);
-    char * p = mem_heap_lo()+headSize;
+    char * p = mem_heap_lo()+offsetBlockSize+headSize;
     char * curpayloadPtr = p;
-
 
     while((curpayloadPtr=getfirstAddr(curpayloadPtr))!=NULL)
     {
@@ -309,45 +356,6 @@ void * findPlace(size_t size) //size是包括头和填充以及payload等的size
     //说明没找到
     //返回NULL
     return NULL;
-
-    // while(((curpayloadPtr = getfirstAddr(curpayloadPtr))!=NULL) && calculateGroup(getSize(curpayloadPtr))< group) 
-    // {p=curpayloadPtr;} //p指向上一个结点
-
-    // if(curpayloadPtr==NULL) //说明没找到合适的
-    // {
-    //     return NULL;
-    // }
-    // else //说明找到合适的子类了，但是具体有没有还不一定
-    // {
-    //     p = curpayloadPtr;
-    //     while (p!=NULL)
-    //     {
-    //         if (getSize(p)>=size)
-    //             return head(p);
-    //         if(checksubclassHeadNode(head(p)))
-    //             p = getsecondAddr(p);
-    //         else
-    //             p = getfirstAddr(p);
-    //     }
-    // }
-    // return NULL;
-    
-    // char * p = mem_heap_lo(); //对mem_start_brk做了一个封装，不能直接调用该变量
-    // p = p + prologueBlockSize+headSize;
-    // size_t Cursize = 0;
-    // while((Cursize=getSize(p))!=0)
-    // {
-    //     // printf("Cursize1:%d\r\n",Cursize);
-    //     if(!checkUsed(p)&&Cursize>=size)
-    //     {
-    //         // printf("Cursize2:%d\r\n",Cursize);
-    //         return head(p); //找到了适当的放置位置，将该位置返回
-    //     }
-            
-    //     p=nextPtr(p);
-    // }
-
-    // return NULL; //说明没有找到适当的放置位置
 }
 
 /* 
@@ -364,36 +372,34 @@ void *mm_malloc(size_t size)
     if (loc == NULL) //说明没找到合适的能存放的地方
     {
         loc = (char*)mem_heap_hi()+1-epilogueBlockSize;
+        //printf("%d\r\n",checkLastFree(loc)); //然后发现很多时候上一个块都是free掉的
 
-        void * retptr = mem_sbrk(newsize); // 直接分配newsize这么大的内存
+        void * retptr;
+        size_t allocsize;
+        if (checkLastFree(loc))
+        {
+            loc = prevPtr((char*)loc+headSize);
+            allocsize = newsize - getSize(loc);
+            retptr = mem_sbrk(allocsize);
+            removefromSegregateList(loc);
+            loc = (char*)loc - headSize;
+        }
+        else
+            retptr = mem_sbrk(newsize);// 直接分配newsize这么大的内存
         if (retptr==(void*)-1)
             return NULL; //说明没地方了 分配完了
 
-        put(loc,pack(newsize,1)); //直接在新分配的内存中分配就行 不需要先加入分离表 然后再释放 再填充 
+        put(loc,pack(newsize,1)); //直接在新分配的内存中分配就行
         result = (char*)loc+headSize;
         loc = (char*)loc + newsize;
         fillinEpilogueBlock(loc);
-        
-        // if (checkLastFree(loc))
-        // {
-        //     loc = prevPtr((char*)loc+headSize);
-        //     mem_sbrk(newsize - getSize(loc));
-        //     loc = (char*)loc - headSize;
-        // }
-        // else
-        //     mem_sbrk(newsize);
-        // put(loc,pack(newsize,0));
-        // fillinNormalBlock(loc,newsize);
-        // result = (char*)loc + headSize;
-        // loc = (char*)loc+newsize;
-        // fillinEpilogueBlock(loc);
     }
     else
     {
         fillinNormalBlock(loc,newsize);
         result = (char*)loc + headSize;
     }
-    //printf("malloc:%d,%x\r\n",count++,result);
+   // printf("malloc:%d,%x\r\n",count++,result);
     return result;
 }
 
