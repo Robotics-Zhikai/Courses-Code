@@ -21,17 +21,26 @@
 ## version 2.0 
 51（util）+28（thru）= 79/100（不包括realloc测试集）；
 1、每一个空闲块的head包括implicithead和explicithead和foot（只包括当前块的大小）；
+
 2、explicithead由firstaddr和secondaddr组成；
+
 3、分配了的非空闲块的head仍然包括implicithead和explicithead，没有foot
 这里边implicithead为8字节 explicithead为16字节；
+
 4、分离表以ceil(log2(size))作为分组方式；
+
 5、子类的头结点由firstaddr链接的单向链表链接起来，子类的头结点的secondaddr指向本子类的第一个内容结点；
+
 6、本子类的内容结点由一个双向链表连接起来，firtaddr储存指向下一个内容节点，secondaddr指向上一个内容结点；
+
 7、implicithead部分的除低三位部分存放本块的大小，最低一位存放本块是否是空闲块，次低位存放本块相邻的前一块是否是空闲块
 倒数低三位存放本块是否是子类的头结点；
+
 8、每次新创建的空闲块以线性时间找到子类，并在该子类以常数时间加入到对应的子类中；
+
 9、malloc一个size后，如果首次适配的空闲块的大小大于smallestBlockSize，那么就把剩下的块加入到空闲块分离表中，
 否则直接把整个空闲块都作为malloc空间；
+
 10、free了一块空间后，会立即合并相邻的空闲块（如果存在的话）；
 
 利用上述策略除realloc测试集都过了，但是realloc测试集由于内存耗尽的问题过不了。
@@ -44,9 +53,11 @@
 1、首先，MAX_HEAP是20*(1<<20)B,也就是说表示一个块的字节大小绝对不会超过32位（4字节）
 因此implicitheadSize可以降到4B，同样的道理，footSize也可以降到4B
 然后，指针也是四字节，因此explicitheadSize为2*4B；
+
 2、然后对于非空闲块，只要有一个implicithead就够了 空闲块的话最小为implicithead+explicithead+foot（4+8+4=16B）
 但是，算最小块大小的话，只能按空闲块去算，不能按非空闲块算；
 但是，如果把非空闲块和空闲块的头部区分开来的话，又得写很多代码，容易出错，时间有限就不写了。经过分析，这样也不会造成利用率的明显降低
+
 3、空闲块的头指针必须是4的倍数且不能是8的倍数，这样才能保证malloc的指针是8的倍数，
 要想实现这样的结构，只需要在最开始垫一个四字节的offsetblock就行。
 
