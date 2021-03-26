@@ -16,7 +16,22 @@ version 1.0
 非空闲块时没有foot，空闲块时有foot，充分利用头的低3位数据标记前一个相邻块的空闲与否
 立即合并 首次适配 
 
+version2.0 
+51（util）+28（thru）= 79/100（不包括realloc测试集）；
+每一个空闲块的head包括implicithead和explicithead foot只包括当前块的大小
+分配了的非空闲块的head仍然包括implicithead和explicithead，没有foot
+这里边implicithead为8字节 explicithead为16字节；
+分离表以ceil(log2(size))作为分组方式；
+子类的头结点由firstaddr链接的单向链表链接起来，子类的头结点的secondaddr指向本子类的第一个内容结点；
+本子类的内容结点由一个双向链表连接起来，firtaddr储存指向下一个内容节点，secondaddr指向上一个内容结点；
+implicithead部分的除低三位部分存放本块的大小，最低一位存放本块是否是空闲块，次低位存放本块相邻的前一块是否是空闲块
+倒数低三位存放本块是否是子类的头结点；
+每次新创建的空闲块以常数时间加入到对应的子类中；
+malloc一个size后，如果首次适配的空闲块的大小大于smallestBlockSize，那么就把剩下的块加入到空闲块分离表中，
+否则直接把整个空闲块都作为malloc空间；
 
+利用上述策略除realloc测试集都过了，但是realloc测试集由于内存耗尽的问题过不了。
+因此，需要想一个优化策略。
 
  *
  * NOTE TO STUDENTS: Replace this header comment with your own header
@@ -99,10 +114,13 @@ typedef unsigned long addrType; //地址的类型 64位系统就是unsighed long
 int calculateGroup(size_t size) //计算size大小的块在哪个group中
 {
     // printf("%f\r\n",ceil(log2(size)));
-    return ceil(log2(size));
+    if (size<=0)
+        return -1; //这是异常情况
+    return ceil(log2(size)); //一般情况下返回值肯定大于0 
 }
 
 void addtoSegregateList(void * freePayloadptr) //将空闲块加入到segregateList中
+//调用这个函数时，freePayloadptr所代表的块必须有head和foot
 //这个只改变显示链表指针的值 不改变其他任何东西
 //每个子类的头结点中，firstAddr指向的是下一个子类的头结点；而secondAddr指向的不是上一个子类的头结点，而是指向的是本子类的下一个内容结点
 //每个子类的内容结点的firstAddr指向的是本子类的下一个内容结点，secondAddr指向的是本子类的上一个内容结点
@@ -123,14 +141,14 @@ void addtoSegregateList(void * freePayloadptr) //将空闲块加入到segregateL
             addrType storeAddr = getsecondAddr(curpayloadPtr);
             if (storeAddr==NULL) //说明找到的本子类中只有一个头结点，也就是本子类只有一个空闲块，那么将新的块添加进去
             {
-                printf("1\r\n");
+                //printf("1\r\n");
                 put(firstAddr(freePayloadptr),NULL); //新的内容结点的firstAddr指向NULL
                 put(secondAddr(freePayloadptr),curpayloadPtr); //新的内容结点的secondAddr指向curpayloadPtr
                 put(secondAddr(curpayloadPtr),freePayloadptr); //头结点的secondAddr指向新加入的内容结点
             }
             else //说明本子类有内容结点 把新块加在头部 LIFO
             {
-                printf("2\r\n");
+                //printf("2\r\n");
                 // addrType storeAddrnext = getfirstAddr(storeAddr);
                 put(firstAddr(freePayloadptr), storeAddr);
                 put(secondAddr(curpayloadPtr),freePayloadptr); //后向列表
@@ -263,31 +281,56 @@ int mm_init(void)
 
 void * findPlace(size_t size) //size是包括头和填充以及payload等的size
 {
-    //从这里开始写！！！！！！！！！！！！！！！！！！！！
+
     int group = calculateGroup(size);
     char * p = mem_heap_lo()+headSize;
     char * curpayloadPtr = p;
-    while(((curpayloadPtr = getfirstAddr(curpayloadPtr))!=NULL) && calculateGroup(getSize(curpayloadPtr))< group) 
-    {p=curpayloadPtr;} //p指向上一个结点
 
-    if(curpayloadPtr==NULL) //说明没找到合适的
+
+    while((curpayloadPtr=getfirstAddr(curpayloadPtr))!=NULL)
     {
-        return NULL;
-    }
-    else //说明找到合适的子类了，但是具体有没有还不一定
-    {
-        p = curpayloadPtr;
-        while (p!=NULL)
+        if (calculateGroup(getSize(curpayloadPtr))>=group)
         {
-            if (getSize(p)>=size)
-                return head(p);
-            if(checksubclassHeadNode(head(p)))
-                p = getsecondAddr(p);
+            char * nextContentNode = getsecondAddr(curpayloadPtr); 
+            //第一个碰到的节点是子类的头结点，子类的头结点和子类的内容节点结构还不是一样的
+            if (getSize(curpayloadPtr)>=size)
+                return head(curpayloadPtr); //说明找到了，就是子类的头结点
             else
-                p = getfirstAddr(p);
+            {
+                while (nextContentNode!=NULL)
+                {
+                    if (getSize(nextContentNode)>=size)
+                        return head(nextContentNode);
+                    nextContentNode = getfirstAddr(nextContentNode); //第二个碰到的节点是子类的第一个内容节点
+                }
+            }
         }
     }
+    //说明没找到
+    //返回NULL
     return NULL;
+
+    // while(((curpayloadPtr = getfirstAddr(curpayloadPtr))!=NULL) && calculateGroup(getSize(curpayloadPtr))< group) 
+    // {p=curpayloadPtr;} //p指向上一个结点
+
+    // if(curpayloadPtr==NULL) //说明没找到合适的
+    // {
+    //     return NULL;
+    // }
+    // else //说明找到合适的子类了，但是具体有没有还不一定
+    // {
+    //     p = curpayloadPtr;
+    //     while (p!=NULL)
+    //     {
+    //         if (getSize(p)>=size)
+    //             return head(p);
+    //         if(checksubclassHeadNode(head(p)))
+    //             p = getsecondAddr(p);
+    //         else
+    //             p = getfirstAddr(p);
+    //     }
+    // }
+    // return NULL;
     
     // char * p = mem_heap_lo(); //对mem_start_brk做了一个封装，不能直接调用该变量
     // p = p + prologueBlockSize+headSize;
@@ -313,7 +356,7 @@ void * findPlace(size_t size) //size是包括头和填充以及payload等的size
  */
 void *mm_malloc(size_t size)
 {
-    size_t newsize = ALIGN(size + headSize);
+    size_t newsize = ALIGN(size + headSize); 
     // printf("newsize:%d\r\n",newsize);
     void * loc = findPlace(newsize);
     void * result;
@@ -321,26 +364,36 @@ void *mm_malloc(size_t size)
     if (loc == NULL) //说明没找到合适的能存放的地方
     {
         loc = (char*)mem_heap_hi()+1-epilogueBlockSize;
-        if (checkLastFree(loc))
-        {
-            loc = prevPtr((char*)loc+headSize);
-            mem_sbrk(newsize - getSize(loc));
-            loc = (char*)loc - headSize;
-        }
-        else
-            mem_sbrk(newsize);
-        put(loc,pack(newsize,0));
-        fillinNormalBlock(loc,newsize);
-        result = (char*)loc + headSize;
-        loc = (char*)loc+newsize;
+
+        void * retptr = mem_sbrk(newsize); // 直接分配newsize这么大的内存
+        if (retptr==(void*)-1)
+            return NULL; //说明没地方了 分配完了
+
+        put(loc,pack(newsize,1)); //直接在新分配的内存中分配就行 不需要先加入分离表 然后再释放 再填充 
+        result = (char*)loc+headSize;
+        loc = (char*)loc + newsize;
         fillinEpilogueBlock(loc);
+        
+        // if (checkLastFree(loc))
+        // {
+        //     loc = prevPtr((char*)loc+headSize);
+        //     mem_sbrk(newsize - getSize(loc));
+        //     loc = (char*)loc - headSize;
+        // }
+        // else
+        //     mem_sbrk(newsize);
+        // put(loc,pack(newsize,0));
+        // fillinNormalBlock(loc,newsize);
+        // result = (char*)loc + headSize;
+        // loc = (char*)loc+newsize;
+        // fillinEpilogueBlock(loc);
     }
     else
     {
         fillinNormalBlock(loc,newsize);
         result = (char*)loc + headSize;
     }
-    printf("malloc:%d,%x\r\n",count++,result);
+    //printf("malloc:%d,%x\r\n",count++,result);
     return result;
 }
 
@@ -406,7 +459,7 @@ void * coalesce(void * payloadPtr) //合并块 这里就不进行合法性检查
  */
 void mm_free(void *ptr)
 {
-    printf("free:%d,%x\r\n",count++,ptr);
+    //printf("free:%d,%x\r\n",count++,ptr);
     // printf("getsize:%d\r\n",getSize(ptr));
     void * headptr = head(ptr);
     setFlag(headptr,0x1,0); //标记最后一位为0 说明释放了当前块
@@ -416,7 +469,7 @@ void mm_free(void *ptr)
     void * nextheadPtr = head(nextPtr(ptr));
     setFlag(nextheadPtr,0x2,0x2); //下一个区块的头的倒数第二位代表上一个区块是否是空，如果为空，则置1 这个机制是为了减少内部碎片，当块分配了时，不需要foot
 
-    void * coalescePtr = coalesce(ptr);//加了这个合并的话由57分增到了62分
+    void * coalescePtr = coalesce(ptr);//加了这个合并的话由57分增到了62分；变成显式链表 分离表之后涨到了79
     
 }
 
@@ -425,7 +478,6 @@ void mm_free(void *ptr)
  */
 void *mm_realloc(void *ptr, size_t size)
 {
-    return realloc(ptr,size);
     void *oldptr = ptr;
     void *newptr;
     size_t copySize;
@@ -433,7 +485,8 @@ void *mm_realloc(void *ptr, size_t size)
     newptr = mm_malloc(size);
     if (newptr == NULL)
       return NULL;
-    copySize = *(size_t *)((char *)oldptr - SIZE_T_SIZE);
+    // copySize = *(size_t *)((char *)oldptr - SIZE_T_SIZE);
+    copySize = getSize(oldptr);
     if (size < copySize)
       copySize = size;
     memcpy(newptr, oldptr, copySize);
