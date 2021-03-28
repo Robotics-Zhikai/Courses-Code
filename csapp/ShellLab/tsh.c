@@ -32,7 +32,7 @@
  *     ST -> FG  : fg command
  *     ST -> BG  : bg command
  *     BG -> FG  : fg command
- * At most 1 job can be in the FG state.
+ * At most 1 job can be in the FG state. 前台只能有一个job
  */
 
 /* Global variables */
@@ -48,6 +48,8 @@ struct job_t {              /* The job struct */
     int state;              /* UNDEF, BG, FG, or ST */
     char cmdline[MAXLINE];  /* command line */
 };
+//jid是本程序人为规定的ID，每加入一个job就增加1(nextjid)；而PID是操作系统内核分配的
+//jid不一定是unique的，当jid累积超过max时，就归一
 struct job_t jobs[MAXJOBS]; /* The job list */
 /* End global variables */
 
@@ -148,6 +150,9 @@ int main(int argc, char **argv)
 	eval(cmdline);
 	fflush(stdout);
 	fflush(stdout);
+    // printf("|||||||||||||||||||||||||\r\n"); //如果不加fflush，printf发出的顺序有点问题 不知道何原因 
+    // fflush(stdout); //跟fflush有关系，原因未知
+
     } 
 
 
@@ -169,8 +174,8 @@ int main(int argc, char **argv)
 */
 void eval(char *cmdline) 
 {
-    static int bgCount = 0; //后台运行子进程的数量
-    printf("new eval\r\n");
+    // static int bgCount = 0; //后台运行子进程的数量
+    // printf("new eval\r\n");
     char * argv[MAXARGS];
     pid_t pid;
 
@@ -179,8 +184,11 @@ void eval(char *cmdline)
     {
         if ((pid=fork())==0)
         {
+            //printf("%s子进程的进程组为:%d\r\n",argv[0],getpgrp());
+            //fflush(stdout); //如果不加fflush，这里的这个就直接不输出了
+            
             execve(argv[0],argv,environ); //execve不返回 如果返回说明没找到命令
-            printf("没找到命令\r\n");
+            printf("没找到命令:%s\r\n",argv[0]);
             exit(0);
         }
         else if (pid == -1)
@@ -188,11 +196,15 @@ void eval(char *cmdline)
             printf("创建子进程失败\r\n");
             exit(0);
         }
+
+        // printf("%s父进程的进程组为:%d\r\n",argv[0],getpgrp());
+        // fflush(stdout);
+
         int status;
-        printf("父进程pid=%d\r\n",pid);
         if (bgflag)
         {
-            printf("[%d] (%d) ",++bgCount,pid,argv[0]);
+            addjob(jobs,pid,BG,cmdline);
+            printf("[%d] (%d) ",pid2jid(pid),pid,argv[0]);
             char ** curargv = argv;
             while (*curargv!=NULL)
             {
@@ -203,8 +215,26 @@ void eval(char *cmdline)
             return; //说明要在后台运行
         }
         else
-            waitpid(pid,&status,0); //默认行为：挂起调用进程，直到子进程终止
-        printf("返回的status=%d\r\n",status);
+        {
+            sigset_t mask,prevMask;
+            sigemptyset(&mask);
+            sigaddset(&mask,SIGINT);
+            sigprocmask(SIG_BLOCK,&mask,&prevMask);//暂时阻塞SIGINT信号的接受，以免出现进入int中断时没有FG
+            addjob(jobs,pid,FG,cmdline);
+            sigprocmask(SIG_SETMASK,&prevMask,NULL); 
+
+            pid_t ptmp = -2;
+            status = -2;
+            if ((ptmp = waitpid(pid,&status,0))<0) //默认行为：挂起调用进程，直到子进程终止 sigint会使waitpid提前退出 status返回2
+                unix_error("waitpid error\r\n");
+            printf("%d,%d\r\n",WIFSIGNALED(status),WTERMSIG(status));
+            // printf("ptmp:%d;status:%d\r\n",ptmp,status);
+            // fflush(stdout);
+            deletejob(jobs,pid); //回收了阻塞进程
+            
+            
+        }
+        // printf("返回的status=%d\r\n",status);
 
     }
 
@@ -277,6 +307,12 @@ int builtin_cmd(char **argv)
 {
     if(strcmp(argv[0],"quit")==0)
         exit(0);
+    else if (strcmp(argv[0],"jobs")==0)
+    {
+        listjobs(jobs); 
+        return 1;
+    }
+        
     // else if (strcmp(argv[0],"/bin/echo")==0)
     //     printf("%d\n",execve(argv[0],argv,environ));
 
@@ -322,9 +358,11 @@ void sigchld_handler(int sig)
  */
 void sigint_handler(int sig) 
 {
-    printf("sigint_handler\r\n");
-    exit(0);
-    //return;
+    pid_t fgPID = fgpid(jobs);
+    if (fgPID!=0)
+        printf("Job [%d] (%d) terminated by signal 2\r\n",pid2jid(fgPID),fgPID);
+    // exit(0); //不应该退出调用进程 因为还要在shell中输入命令
+    return;
 }
 
 /*
@@ -384,7 +422,7 @@ int addjob(struct job_t *jobs, pid_t pid, int state, char *cmdline)
 	if (jobs[i].pid == 0) {
 	    jobs[i].pid = pid;
 	    jobs[i].state = state;
-	    jobs[i].jid = nextjid++;
+	    jobs[i].jid = nextjid++; //人为给定的一个jid
 	    if (nextjid > MAXJOBS)
 		nextjid = 1;
 	    strcpy(jobs[i].cmdline, cmdline);
@@ -394,6 +432,7 @@ int addjob(struct job_t *jobs, pid_t pid, int state, char *cmdline)
             return 1;
 	}
     }
+    //没有找到空闲的能插入的job空位
     printf("Tried to create too many jobs\n");
     return 0;
 }
@@ -417,6 +456,7 @@ int deletejob(struct job_t *jobs, pid_t pid)
 }
 
 /* fgpid - Return PID of current foreground job, 0 if no such job */
+//前台只能有一个job
 pid_t fgpid(struct job_t *jobs) {
     int i;
 
@@ -452,6 +492,7 @@ struct job_t *getjobjid(struct job_t *jobs, int jid)
 }
 
 /* pid2jid - Map process ID to job ID */
+//pid到jid是多对一映射
 int pid2jid(pid_t pid) 
 {
     int i;
