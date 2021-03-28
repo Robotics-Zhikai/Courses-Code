@@ -115,8 +115,7 @@ int main(int argc, char **argv)
             usage();
 	}
     }
-    printf("saga\r\n");
-
+   
     /* Install the signal handlers */
 
     /* These are the ones you will need to implement */
@@ -151,6 +150,7 @@ int main(int argc, char **argv)
 	fflush(stdout);
     } 
 
+
     exit(0); /* control never reaches here */
 }
   
@@ -164,9 +164,50 @@ int main(int argc, char **argv)
  * each child process must have a unique process group ID so that our
  * background children don't receive SIGINT (SIGTSTP) from the kernel
  * when we type ctrl-c (ctrl-z) at the keyboard.  
+ * 每个子进程都必须有一个唯一的进程组ID，否则如果出现前台进程和后台进程属于同一个进程组时，发送SIGTSTP就把后台进程也影响了
+ * 
 */
 void eval(char *cmdline) 
 {
+    static int bgCount = 0; //后台运行子进程的数量
+    printf("new eval\r\n");
+    char * argv[MAXARGS];
+    pid_t pid;
+
+    int bgflag = parseline(cmdline,argv);
+    if (!builtin_cmd(argv))
+    {
+        if ((pid=fork())==0)
+        {
+            execve(argv[0],argv,environ); //execve不返回 如果返回说明没找到命令
+            printf("没找到命令\r\n");
+            exit(0);
+        }
+        else if (pid == -1)
+        {
+            printf("创建子进程失败\r\n");
+            exit(0);
+        }
+        int status;
+        printf("父进程pid=%d\r\n",pid);
+        if (bgflag)
+        {
+            printf("[%d] (%d) ",++bgCount,pid,argv[0]);
+            char ** curargv = argv;
+            while (*curargv!=NULL)
+            {
+                printf("%s ",*curargv);
+                curargv++;
+            }
+            printf("&\r\n");
+            return; //说明要在后台运行
+        }
+        else
+            waitpid(pid,&status,0); //默认行为：挂起调用进程，直到子进程终止
+        printf("返回的status=%d\r\n",status);
+
+    }
+
     return;
 }
 
@@ -180,12 +221,13 @@ void eval(char *cmdline)
 int parseline(const char *cmdline, char **argv) 
 {
     static char array[MAXLINE]; /* holds local copy of command line */
+    //既然是static的array了，肯定能保存住，不会销毁
     char *buf = array;          /* ptr that traverses command line */
     char *delim;                /* points to first space delimiter */
     int argc;                   /* number of args */
     int bg;                     /* background job? */
 
-    strcpy(buf, cmdline);
+    strcpy(buf, cmdline); //第二个参数是源，第一个参数是目的
     buf[strlen(buf)-1] = ' ';  /* replace trailing '\n' with space */
     while (*buf && (*buf == ' ')) /* ignore leading spaces */
 	buf++;
@@ -214,7 +256,7 @@ int parseline(const char *cmdline, char **argv)
 	else {
 	    delim = strchr(buf, ' ');
 	}
-    }
+    } //经过这个循环，就把以空格间隔开的cmdline的参数都放在了argv中
     argv[argc] = NULL;
     
     if (argc == 0)  /* ignore blank line */
@@ -224,7 +266,7 @@ int parseline(const char *cmdline, char **argv)
     if ((bg = (*argv[argc-1] == '&')) != 0) {
 	argv[--argc] = NULL;
     }
-    return bg;
+    return bg; //如果本函数返回1，则说明job不在前台运行
 }
 
 /* 
@@ -233,6 +275,11 @@ int parseline(const char *cmdline, char **argv)
  */
 int builtin_cmd(char **argv) 
 {
+    if(strcmp(argv[0],"quit")==0)
+        exit(0);
+    // else if (strcmp(argv[0],"/bin/echo")==0)
+    //     printf("%d\n",execve(argv[0],argv,environ));
+
     return 0;     /* not a builtin command */
 }
 
@@ -275,7 +322,9 @@ void sigchld_handler(int sig)
  */
 void sigint_handler(int sig) 
 {
-    return;
+    printf("sigint_handler\r\n");
+    exit(0);
+    //return;
 }
 
 /*
