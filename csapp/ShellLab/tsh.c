@@ -180,6 +180,8 @@ void eval(char *cmdline)
     pid_t pid;
 
     int bgflag = parseline(cmdline,argv);
+
+    
     if (!builtin_cmd(argv))
     {
         sigset_t mask,prevMask;
@@ -192,9 +194,11 @@ void eval(char *cmdline)
         {
             //printf("%s子进程的进程组为:%d\r\n",argv[0],getpgrp());
             //fflush(stdout); //如果不加fflush，这里的这个就直接不输出了
-            sigprocmask(SIG_SETMASK,&prevMask,NULL);//子进程继承了父进程的阻塞向量
+            sigprocmask(SIG_SETMASK,&prevMask,NULL);//子进程继承了父进程的阻塞向量,需要解除掉
+            setpgid(0,0); 
+            //这个和setpgid(pid,0)冗余，保证进入execve之后的进程都是属于同一进程组且与父进程的进程组不同；避免竞争
+            execve(argv[0],argv,environ); //execve不返回 如果返回说明没找到命令 
             
-            execve(argv[0],argv,environ); //execve不返回 如果返回说明没找到命令
             printf("没找到命令:%s\r\n",argv[0]);
             exit(0);
         }
@@ -209,7 +213,8 @@ void eval(char *cmdline)
 
         setpgid(pid,0); //将新创建的子进程的进程组设置成为子进程的进程号
         //这样就使得子进程之间有着不同的进程组ID
-        int status;
+        //子进程进入execve后就不能修改子进程的进程组了
+        
         if (bgflag)
         {
             addjob(jobs,pid,BG,cmdline);
@@ -236,28 +241,7 @@ void eval(char *cmdline)
             sigdelset(&mask,SIGTSTP);
             sigprocmask(SIG_SETMASK,&mask,NULL);//取消int和stp堵塞
 
-            pid_t ptmp = -2;
-            status = -2;
-            //sigprocmask(SIG_SETMASK,&prevMask,NULL); //取消sigchild中断的堵塞
-            //sleep(10); //必须在这里堵塞sigchild信号，否则如果sleep（10），运行./myspin 5的话，会造成pid被收回
-
-            
-            //如果在调用waitpid时阻塞了sigchild：当在等待pid的过程中非pid终止，那么由于阻塞sigchild，
-            //暂时不会对其做出响应，只会使得对应的信号为待处理，待解除sigchild阻塞后进入sigchild响应函数处理；
-            //对于pid正常终止，仍旧会使得对应的信号为待处理（pending），但不立即响应，因为sigchild被阻塞，直到
-            //解除阻塞，由于已经被waitpid收回了，因此在sigchild处理函数中就没有子进程了
-
-            //如果在调用waitpid时没有阻塞sigchild：对于pid正常终止时，仍旧会使得对应的信号为待处理（pending），
-            //但是先继续执行waitpid还是先执行sigchild响应函数是不确定的，如果先执行waitpid，那么没有问题，
-            //但是如果先进入sigchild响应函数，把对应的进程释放掉，再出来执行waitpid时，就直接由于没有该进程进入了unix_error
-            if ((ptmp = waitpid(pid,&status,WUNTRACED))<0) //挂起调用进程，直到等待集合中的一个进程变为已终止或被停止 
-                unix_error("waitpid error\r\n");
-            printf("%d,%d,%d\r\n",WIFEXITED(status), WIFSIGNALED(status),WTERMSIG(status));
-
-            // printf("ptmp:%d;status:%d\r\n",ptmp,status);
-            // fflush(stdout);
-            if (!WIFSTOPPED(status))
-                deletejob(jobs,pid); //回收了阻塞进程，这只是把jobs列表移走了，真正的回收步骤不在这
+            waitfg(pid);
             
             sigprocmask(SIG_SETMASK,&prevMask,NULL); //取消sigchild中断的堵塞
             
@@ -342,7 +326,13 @@ int builtin_cmd(char **argv)
     }
     else if (strcmp(argv[0],"bg")==0)
     {
-        
+        do_bgfg(argv);
+        return 1;
+    }
+    else if (strcmp(argv[0],"fg")==0)
+    {
+        do_bgfg(argv);
+        return 1;
     }
         
     // else if (strcmp(argv[0],"/bin/echo")==0)
@@ -356,14 +346,73 @@ int builtin_cmd(char **argv)
  */
 void do_bgfg(char **argv) 
 {
+    sigset_t mask,prevmask;
+    sigfillset(&mask); //阻塞所有信号
+    sigprocmask(SIG_BLOCK,&mask,&prevmask);
+
+    int jid = argv[1][1]-'0';
+    struct job_t * job = getjobjid(jobs,jid);
+    if (job == NULL)
+    {
+        printf("%s:No such job\r\n",argv[1]);
+        return ;
+    }
+        
+    if (strcmp(argv[0],"bg")==0)
+    {
+        if (job->state==ST)
+        {
+            kill(-job->pid,SIGCONT); //这个必须是负的，才会把信号发送到该进程组中的所有进程
+            job->state = BG;
+        }
+        printf("[%d] (%d) %s",job->jid,job->pid,job->cmdline);
+    }
+    else if (strcmp(argv[0],"fg")==0)
+    {
+        if (job->state==ST)
+            kill(-job->pid,SIGCONT);
+        job->state = FG;
+        sigdelset(&mask,SIGINT);
+        sigdelset(&mask,SIGTSTP);
+        sigprocmask(SIG_SETMASK,&mask,NULL);//取消int和stp堵塞
+
+        waitfg(job->pid);
+
+        sigdelset(&mask,SIGCHLD);
+        sigprocmask(SIG_SETMASK,&mask,NULL); //取消sigchild阻塞
+    }
+
+    sigprocmask(SIG_SETMASK,&prevmask,NULL);
     return;
 }
 
 /* 
  * waitfg - Block until process pid is no longer the foreground process
  */
-void waitfg(pid_t pid)
+void waitfg(pid_t pid) //waitfg不应该设置阻塞向量位，由函数外边的环境决定
 {
+    pid_t ptmp = -2;
+    int status = -2;
+    //sigprocmask(SIG_SETMASK,&prevMask,NULL); 
+    //sleep(10); //必须在这里堵塞sigchild信号，否则如果sleep（10），运行./myspin 5的话，会造成pid被收回
+
+    //如果在调用waitpid时阻塞了sigchild：当在等待pid的过程中非pid终止，那么由于阻塞sigchild，
+    //暂时不会对其做出响应，只会使得对应的信号为待处理，待解除sigchild阻塞后进入sigchild响应函数处理；
+    //对于pid正常终止，仍旧会使得对应的信号为待处理（pending），但不立即响应，因为sigchild被阻塞，直到
+    //解除阻塞，由于已经被waitpid收回了，因此在sigchild处理函数中就没有子进程了
+
+    //如果在调用waitpid时没有阻塞sigchild：对于pid正常终止时，仍旧会使得对应的信号为待处理（pending），
+    //但是先继续执行waitpid还是先执行sigchild响应函数是不确定的，如果先执行waitpid，那么没有问题，
+    //但是如果先进入sigchild响应函数，把对应的进程释放掉，再出来执行waitpid时，就直接由于没有该进程进入了unix_error
+    if ((ptmp = waitpid(pid,&status,WUNTRACED))<0) //挂起调用进程，直到等待集合中的一个进程变为已终止或被停止 
+        unix_error("waitpid error\r\n");
+    //printf("%d,%d,%d\r\n",WIFEXITED(status), WIFSIGNALED(status),WTERMSIG(status));
+
+    // printf("ptmp:%d;status:%d\r\n",ptmp,status);
+    // fflush(stdout);
+    if (!WIFSTOPPED(status))
+        deletejob(jobs,pid); //回收了阻塞进程，这只是把jobs列表移走了，真正的回收步骤不在这
+
     return;
 }
 
