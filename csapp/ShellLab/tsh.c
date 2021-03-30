@@ -122,6 +122,7 @@ int main(int argc, char **argv)
 
     /* These are the ones you will need to implement */
     Signal(SIGINT,  sigint_handler);   /* ctrl-c */
+    //Signal(SIGINT,SIG_DFL);
     Signal(SIGTSTP, sigtstp_handler);  /* ctrl-z */
     Signal(SIGCHLD, sigchld_handler);  /* Terminated or stopped child */
 
@@ -242,7 +243,7 @@ void eval(char *cmdline)
             sigprocmask(SIG_SETMASK,&mask,NULL);//取消int和stp堵塞
 
             waitfg(pid);
-            
+
             sigprocmask(SIG_SETMASK,&prevMask,NULL); //取消sigchild中断的堵塞
             
         }
@@ -324,14 +325,14 @@ int builtin_cmd(char **argv)
         listjobs(jobs); 
         return 1;
     }
-    else if (strcmp(argv[0],"bg")==0)
+    else if (strcmp(argv[0],"bg")==0 || strcmp(argv[0],"fg")==0)
     {
-        do_bgfg(argv);
-        return 1;
-    }
-    else if (strcmp(argv[0],"fg")==0)
-    {
-        do_bgfg(argv);
+        if (argv[1]==NULL)
+            printf("%s command requires PID or %%jobid argument\r\n",argv[0]);
+        else if (argv[1][0]=='%'||(argv[1][0]>='0'&&argv[1][0]<='9'))
+            do_bgfg(argv);
+        else
+            printf("%s: argument must be a PID or %%jobid\r\n",argv[0]);
         return 1;
     }
         
@@ -350,14 +351,40 @@ void do_bgfg(char **argv)
     sigfillset(&mask); //阻塞所有信号
     sigprocmask(SIG_BLOCK,&mask,&prevmask);
 
-    int jid = argv[1][1]-'0';
-    struct job_t * job = getjobjid(jobs,jid);
+    int jid;
+    struct job_t * job;
+    if(argv[1][0]=='%')
+    {
+        jid = atoi(&argv[1][1]);
+        if (jid==0)
+        {
+            printf("%s: argument must be a PID or %%jobid\r\n",argv[0]);
+            return;
+        }
+    }
+    else
+    {
+        pid_t pid = atoi(&argv[1][0]);
+        if (pid==0)
+        {
+            printf("%s: argument must be a PID or %%jobid\r\n",argv[0]);
+            return;
+        }
+        jid = pid2jid(pid);
+        if (jid==0)
+        {
+            printf("(%d):No such process\r\n",pid);
+            return;
+        }
+    }
+    job = getjobjid(jobs,jid);
     if (job == NULL)
     {
         printf("%s:No such job\r\n",argv[1]);
         return ;
     }
         
+    
     if (strcmp(argv[0],"bg")==0)
     {
         if (job->state==ST)
@@ -406,12 +433,23 @@ void waitfg(pid_t pid) //waitfg不应该设置阻塞向量位，由函数外边�
     //但是如果先进入sigchild响应函数，把对应的进程释放掉，再出来执行waitpid时，就直接由于没有该进程进入了unix_error
     if ((ptmp = waitpid(pid,&status,WUNTRACED))<0) //挂起调用进程，直到等待集合中的一个进程变为已终止或被停止 
         unix_error("waitpid error\r\n");
-    //printf("%d,%d,%d\r\n",WIFEXITED(status), WIFSIGNALED(status),WTERMSIG(status));
+    //printf("%d,%d,%d\r\n",WIFEXITED(status),WIFSIGNALED(status));
 
     // printf("ptmp:%d;status:%d\r\n",ptmp,status);
     // fflush(stdout);
     if (!WIFSTOPPED(status))
+    {
+        if (WIFSIGNALED(status)) 
+        //如果子进程是因为一个未被捕获的信号终止的，那么就返回真 如果是正常退出，不进入这个if 不知道为何偏偏是未被捕获的信号就返回真这样的机制的原因
+            printf("Job [%d] (%d) terminated by signal %d\r\n",pid2jid(pid),pid,WTERMSIG(status));
         deletejob(jobs,pid); //回收了阻塞进程，这只是把jobs列表移走了，真正的回收步骤不在这
+    }
+    else
+    {
+        printf("Job [%d] (%d) stopped by signal %d\r\n",pid2jid(pid),pid,WSTOPSIG(status));
+        getjobpid(jobs,pid)->state = ST;
+    }
+
 
     return;
 }
@@ -452,7 +490,7 @@ void sigchld_handler(int sig)
  *    user types ctrl-c at the keyboard.  Catch it and send it along
  *    to the foreground job.  
  */
-void sigint_handler(int sig) 
+void sigint_handler(int sig)  //sig存储被捕获的信号！！！！！！！
 {
     sigset_t mask,prevmask;
     sigfillset(&mask); //阻塞所有信号
@@ -461,8 +499,10 @@ void sigint_handler(int sig)
     pid_t fgPID = fgpid(jobs);
     if (fgPID>0)
     {
-        printf("Job [%d] (%d) terminated by signal %d\r\n",pid2jid(fgPID),fgPID,SIGINT);
-        kill(-fgPID,SIGKILL); //发送给fgPID号进程组，使其进程终止
+        //printf不是异步信号安全的，因此尽量不要造信号处理函数中使用
+        //kill(-fgPID,SIGKILL); //发送给fgPID号进程组，使其进程终止 这里的本意应该是要子进程调用捕获的信号
+        kill(-fgPID,sig);//应该发送给子进程捕获的信号，然后让子进程自己选到底是捕获该信号按照非默认方式处理还是不捕获该信号按照默认方式处理
+
     }
         
     // exit(0); //不应该退出调用进程 因为还要在shell中输入命令
@@ -486,9 +526,8 @@ void sigtstp_handler(int sig)
     pid_t fgPID = fgpid(jobs);
     if (fgPID>0)
     {
-        printf("Job [%d] (%d) stopped by signal %d\r\n",pid2jid(fgPID),fgPID,SIGTSTP);
-        getjobpid(jobs,fgPID)->state = ST;
-        kill(-fgPID,SIGSTOP); //发送给fgPID号进程组，使其进程停止
+        //kill(-fgPID,SIGSTOP); //发送给fgPID号进程组，使其进程停止
+        kill(-fgPID,SIGTSTP); //应该发送给子进程捕获的信号，然后让子进程自己选到底是捕获该信号按照非默认方式处理还是不捕获该信号按照默认方式处理
     }
 
     sigprocmask(SIG_SETMASK,&prevmask,NULL);
