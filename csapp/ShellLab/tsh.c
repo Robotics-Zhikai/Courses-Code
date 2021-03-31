@@ -3,6 +3,8 @@
  * 
  * <Put your name and login ID here>
  */
+//./tsh 运行后，对于Linux shell来说是一个前台运行的进程，通过终端给到的信号是给到的tiny shell的父进程也就是.tsh中的main
+//这也给了我们能够模拟前台后台运行程序的机会
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
