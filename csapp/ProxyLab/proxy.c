@@ -11,10 +11,12 @@
 
 #define MAXLINE 8192
 
+//在函数前边加上static能保证本页的函数名字不与其他页的函数名字相冲突
+
 /* You won't lose style points for including this long line in your code */
 static const char *user_agent_hdr = "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:10.0.3) Gecko/20120305 Firefox/10.0.3\r\n";
 
-int openlisten_fd(char * port)
+static int openlisten_fd(char * port)
 {
     struct addrinfo hints;
     struct addrinfo * result,*p;
@@ -72,12 +74,225 @@ int openlisten_fd(char * port)
     return listenfd;
 }
 
-void doit(int fd)
+static int openclient_fd(char * host,char * port)
 {
-    char buf[MAXLINE];
-    read(fd,buf,MAXLINE);
-    printf("%s\n",buf);
+    struct addrinfo hints;
+    struct addrinfo * result,*p;
+    
+    memset(&hints,0,sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags |= AI_ADDRCONFIG;
+    getaddrinfo(host,port,&hints,&result); //DNS查询IP地址
+
+    int clientfd;
+    for(p=result;p;p=p->ai_next)
+    {
+        if ((clientfd = socket(p->ai_family,p->ai_socktype,p->ai_protocol))<0)
+            continue;
+        if (connect(clientfd,p->ai_addr,p->ai_addrlen)<0)
+        {
+            close(clientfd);
+            continue;
+        }
+        break;
+    }
+
+    freeaddrinfo(result);
+    if (!p) //说明链表中的所有IP都不行
+        return -1;
+    return clientfd;
 }
+
+
+#define RIO_BUFSIZE 8192
+typedef struct 
+{
+    int rio_fd; //将缓冲区与文件符连接起来
+    int rio_cnt; //未读的数据还有多少
+    char * rio_bufptr; //当前第一个未读数据的指针
+    char rio_buf[RIO_BUFSIZE]; //内部缓冲区
+}rIo_t;
+
+static void rio_readinitb(rIo_t * rp,int fd)
+{
+    rp->rio_fd = fd;
+    rp->rio_cnt = 0;
+    rp->rio_bufptr = rp->rio_buf;
+}
+
+static int rio_read(rIo_t* rp,char * buf,size_t n)
+{
+    while(rp->rio_cnt<=0)
+    {
+        //当浏览器发送的目标IP地址正确，但是端口错误时，read一开始会阻塞一会儿，然后取消阻塞，返回0
+        rp->rio_cnt = read(rp->rio_fd,rp->rio_buf,sizeof(rp->rio_buf));
+        //read有可能读取出错，返回-1，因此while(rp->rio_cnt<=0)循环
+        //当其为空时，fill the buf
+        if (rp->rio_cnt==0)
+            return 0; //说明遇到EOF了 fd里没东西 等作为客户端的时候探究一下read write的机制
+        else if (rp->rio_buf<0)
+            if (errno!=EINTR)
+                return -1; //被信号打断了
+        else 
+            rp->rio_bufptr = rp->rio_buf;
+    }
+    if (n > rp->rio_cnt)
+        n = rp->rio_cnt;
+    memcpy(buf,rp->rio_bufptr,n);
+    rp->rio_bufptr+=n;
+    rp->rio_cnt-=n;
+    return n;
+}
+
+static ssize_t rio_readlineb(rIo_t * rp,char * buf,size_t maxlen)//读取一行
+{
+    char * pcur = buf;
+    int rc;
+    for(int i = 0;i<maxlen;i++)
+    {
+        char c;
+        if ((rc = rio_read(rp,&c,1))>0)
+        {
+            *(pcur++) = c;
+            if (c=='\n')
+               break;
+        }
+        else if (rc==0)
+        {
+            if (i==0) //说明遇到EOF了,读完了
+                return 0;
+            else
+                break;
+        }
+        else
+            return -1; //读取出错
+        
+    }
+    *pcur = '\0';
+    return pcur-buf;
+}
+
+static ssize_t rio_writen(int fd,char * buf,size_t n) //需要保证一定 write n字节
+{
+    size_t leftn = n;
+    char * p = buf;
+    int wc;
+    while(leftn>0)
+    {
+        wc = write(fd,p,leftn); //否则的话这个如果被中断就直接退出了
+        //https://stackoverflow.com/questions/11844284/why-isnt-write2-returning-eintr
+        //write在进行写磁盘时，会处于不可被中断的情形；但是当在进行写socket时，中断是会发生的，需要处理EINTR
+        //被中断的write返回-1，fd的当前位置不变
+        if (wc<=0)
+        {
+            if (errno==EINTR) //被中断
+                wc = 0;
+            else 
+                return -1;
+        }
+        leftn-=wc;
+        p+=wc;
+    }
+    return n;
+}
+
+static void clienterror(int fd,char * cause,char *errnum,char* shortmsg,char * longmsg)
+{
+    char printfbuf[MAXLINE];
+
+    //输出HTTP响应报文头
+    sprintf(printfbuf,"HTTP/1.0 %s %s\r\n",errnum,shortmsg);
+    rio_writen(fd,printfbuf,strlen(printfbuf));
+    sprintf(printfbuf,"Content-type: text/html\r\n \r\n");
+    rio_writen(fd,printfbuf,strlen(printfbuf));
+
+    //输出HTTP响应报文
+    sprintf(printfbuf,"<html><title>Proxy Error</title>");
+    rio_writen(fd,printfbuf,strlen(printfbuf));
+    sprintf(printfbuf,"<body bgcolor=""ffffff"">\r\n");
+    rio_writen(fd,printfbuf,strlen(printfbuf));
+    sprintf(printfbuf,"%s: %s\r\n",errnum,shortmsg);
+    rio_writen(fd,printfbuf,strlen(printfbuf));
+    sprintf(printfbuf,"<p>%s: %s\r\n",longmsg,cause);
+    rio_writen(fd,printfbuf,strlen(printfbuf));
+    sprintf(printfbuf,"<hr><em>The proxy server\r\n");
+    rio_writen(fd,printfbuf,strlen(printfbuf));
+    
+}
+
+static void parseURI(char * URI,char * host,char * port,char * filename)
+{
+    char * pbegin = URI;
+    char * pend = pbegin;
+
+    if (strstr(URI,"http://")==URI) //说明URI的开头是http://
+    {
+        pbegin+=strlen("http://");
+        
+        if ((pend=strchr(pbegin,':'))==NULL)
+        {
+            pend = strchr(pbegin,'/');
+            memcpy(host,pbegin,pend-pbegin);
+            *(host+(pend-pbegin)) = '\0';
+
+            memcpy(port,"80",2); //默认的端口号是80
+            *(port+2) = '\0';
+        }
+        else
+        {
+            memcpy(host,pbegin,pend-pbegin);
+            *(host+(pend-pbegin)) = '\0';
+
+            pbegin = pend+1;
+            pend = strchr(pbegin,'/');
+            memcpy(port,pbegin,pend-pbegin);
+            *(port+(pend-pbegin)) = '\0';
+        }
+        pbegin =pend;
+    }
+    else if (strchr(URI,'/')==NULL) //连/都没找到，说明URI是无效的
+    {
+        *host = '\0';
+        *port = '\0';
+        *filename = '\0';
+        return;
+    }
+    //否则的话就是浏览器中的URL直连web proxy
+    strcpy(filename,pbegin);
+}
+
+static void doit(int fd)
+{
+    printf("fd:%d\n",fd);
+    char buf[MAXLINE];
+    memset(buf,0,MAXLINE);
+    rIo_t riobuffer;
+    
+    // read(fd,buf,MAXLINE);
+    // printf("%s\n",buf);
+
+    rio_readinitb(&riobuffer,fd);
+    rio_readlineb(&riobuffer,buf,MAXLINE);//为了防止溢出，所以有第三个参数
+
+    char method[MAXLINE],URI[MAXLINE],version[MAXLINE];
+    sscanf(buf,"%s %s %s",method,URI,version);
+
+    if (strcasecmp(method,"GET")!=0) //第一个字符串不是GET
+    {
+        clienterror(fd,method,"501","Not Implemented","Proxy server Not implement this method");
+        return;
+    }
+    
+    char host[MAXLINE],port[MAXLINE],filename[MAXLINE];
+    parseURI(URI,host,port,filename);
+        
+    openclient_fd(host,port); //写到这了 4.9
+
+    printf("URI:%s host:%s port:%s filename:%s\n",URI,host,port,filename);
+}
+
+
 
 int main(int argc,char ** argv)
 {
@@ -89,6 +304,7 @@ int main(int argc,char ** argv)
     }
     char * port = argv[1];
     int listenfd = openlisten_fd(port);
+    
     char host[MAXLINE];
     char service[MAXLINE];
 
@@ -100,12 +316,16 @@ int main(int argc,char ** argv)
     {
         int connfd = accept(listenfd,&socketclient,&clientlen);
         //等待来自客户端的链接请求到达侦听描述符listenfd，然后在socketclient中写入客户端的套接字地址，并返回一个已连接描述符
+        //当浏览器处发送的端口不是监听端口的话，也会取消accept的阻塞
         
         getnameinfo(&socketclient,sizeof(struct sockaddr),host,MAXLINE,service,MAXLINE,NI_NUMERICHOST);
         printf("get connection from (%s:%s)\n",host,service);
         printf("%d,%d\n",count++,connfd);
 
         doit(connfd);
+        //浏览器只要输对了目标IP信息，就会给服务器发送过来，connfd就会接收到，也就是取消accept的阻塞
+        //只不过对于监听端口能够接收到正确的信息
+        //而浏览器如果没有输对端口，那么connfd收到的是空信息
     
         close(connfd);
     }
