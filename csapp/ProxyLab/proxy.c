@@ -4,6 +4,7 @@
 #include <netdb.h> //addrinfo
 #include <unistd.h> //close 
 #include <errno.h> //errno
+#include <fcntl.h> // open
 
 /* Recommended max cache and object sizes */
 #define MAX_CACHE_SIZE 1049000
@@ -131,7 +132,7 @@ static int rio_read(rIo_t* rp,char * buf,size_t n)
         //当其为空时，fill the buf
         if (rp->rio_cnt==0)
             return 0; //说明遇到EOF了 fd里没东西 等作为客户端的时候探究一下read write的机制
-        else if (rp->rio_buf<0)
+        else if (rp->rio_cnt<0)
             if (errno!=EINTR)
                 return -1; //被信号打断了
         else 
@@ -145,7 +146,19 @@ static int rio_read(rIo_t* rp,char * buf,size_t n)
     return n;
 }
 
-static ssize_t rio_readlineb(rIo_t * rp,char * buf,size_t maxlen)//读取一行
+static void rio_writeFlushALL(int fd,rIo_t * rp) //把所有缓冲中未处理的数据处理一遍，把rio_cnt置0
+{
+    if(rp->rio_cnt==0)
+    {
+        rp->rio_bufptr = rp->rio_buf;
+        return;
+    }
+    Rio_writen(fd,rp->rio_bufptr,rp->rio_cnt);
+    rp->rio_bufptr = rp->rio_buf;
+    rp->rio_cnt = 0;
+}
+
+static ssize_t rio_readlineb(rIo_t * rp,char * buf,size_t maxlen)//读取一行 //为了防止溢出，所以有第三个参数
 {
     char * pcur = buf;
     int rc;
@@ -154,7 +167,7 @@ static ssize_t rio_readlineb(rIo_t * rp,char * buf,size_t maxlen)//读取一行
         char c;
         if ((rc = rio_read(rp,&c,1))>0)
         {
-            *(pcur++) = c;
+            *(pcur++) = c;//'\n'也读进去了
             if (c=='\n')
                break;
         }
@@ -173,7 +186,7 @@ static ssize_t rio_readlineb(rIo_t * rp,char * buf,size_t maxlen)//读取一行
     return pcur-buf;
 }
 
-static ssize_t rio_writen(int fd,char * buf,size_t n) //需要保证一定 write n字节
+static ssize_t rio_writen(int fd,const char * buf,const size_t n) //需要保证一定 write n字节
 {
     size_t leftn = n;
     char * p = buf;
@@ -195,6 +208,11 @@ static ssize_t rio_writen(int fd,char * buf,size_t n) //需要保证一定 write
         p+=wc;
     }
     return n;
+}
+static void Rio_writen(int fd,const char * buf,const size_t n)
+{
+    if (rio_writen(fd,buf,n)!=n)
+        printf("rio_writen函数写错啦！！！！！！！！！！！！\n");
 }
 
 static void clienterror(int fd,char * cause,char *errnum,char* shortmsg,char * longmsg)
@@ -226,6 +244,9 @@ static void parseURI(char * URI,char * host,char * port,char * filename)
     char * pbegin = URI;
     char * pend = pbegin;
 
+    *host = '\0';
+    *port = '\0';
+    *filename = '\0';
     if (strstr(URI,"http://")==URI) //说明URI的开头是http://
     {
         pbegin+=strlen("http://");
@@ -252,15 +273,101 @@ static void parseURI(char * URI,char * host,char * port,char * filename)
         pbegin =pend;
     }
     else if (strchr(URI,'/')==NULL) //连/都没找到，说明URI是无效的
-    {
-        *host = '\0';
-        *port = '\0';
-        *filename = '\0';
         return;
-    }
     //否则的话就是浏览器中的URL直连web proxy
     strcpy(filename,pbegin);
 }
+
+typedef struct 
+{
+    char * headContent[MAXLINE];
+}Httpheader;
+
+static void sendHTTPheaderTofd(int fd,Httpheader * hp)
+{
+    char ** p = hp->headContent;
+    char buf[MAXLINE];
+    while(*p!=NULL)
+    {
+        if((strstr(*p,"Connection"))==*p)
+        {
+            sprintf(buf,"Connection: close\r\n");
+            strcpy(*p,buf);
+        }
+        rio_writen(fd,*p,strlen(*p));
+        p++;
+    }    
+    // sprintf(buf,"GET %s HTTP/1.0\r\n",URI);
+    // rio_writen(clientfd,buf,strlen(buf));
+    // sprintf(buf,"User-Agent: %s\r\n",user_agent_hdr);
+    // rio_writen(clientfd,buf,strlen(buf));
+    // sprintf(buf,"Connection: close\r\n");
+    // rio_writen(clientfd,buf,strlen(buf));
+    // sprintf(buf,"Proxy-Connection: close\r\n");
+    // rio_writen(clientfd,buf,strlen(buf));
+}
+
+// static int servestatic(char * filename)
+// {
+//     char filepath[MAXLINE];
+//     strcpy(filepath,".");
+//     strcat(filepath,filename);
+
+// }
+
+
+
+static int parseHTTPheader(rIo_t * rp,Httpheader * hp) //解析HTTP报文头 不包括实体体
+{
+    char buf[MAXLINE];
+    char ** p = hp->headContent;
+    ssize_t rc;
+    while((rc=rio_readlineb(rp,buf,MAXLINE))>0)
+    {
+        *p = malloc(strlen(buf)+1);
+        memcpy(*p,buf,strlen(buf)+1);
+        p++;
+        if(strcmp(buf,"\r\n")==0)
+            break;
+    }
+    *p = NULL;
+    if (rc<=0)
+        return -1; //说明没有读到任何东西
+    return 0;
+}
+static void ParseHTTPheader(rIo_t * rp,Httpheader * hp)
+{
+    if (parseHTTPheader(rp,hp)==-1)
+    {
+        printf("parseHTTPheader(&riobuffer,&hp)==-1\n");
+        return;
+    }
+}
+
+static int getHTTPbodyContentSize(Httpheader * hp)
+{
+    char ** p = hp->headContent;
+    unsigned long size = 0;
+    char buf[MAXLINE];
+    while(*p!=NULL)
+    {
+        if((strstr(*p,"Content-Length"))==*p) //这个字段指的是entity body 的字节大小
+        {
+            char *pbegin,*pend;
+            pbegin = strchr(*p,' ')+1;
+            pend = strstr(*p,"\r\n");
+            memcpy(buf,pbegin,pend-pbegin);
+            *(buf+(pend-pbegin)) = '\0';
+            size = atoi(buf);
+        }
+        p++;
+    }
+    if (*p==NULL)//说明HTTP报文中没有Content-Length字段
+        return -1;
+    return size;
+
+}
+
 
 static void doit(int fd)
 {
@@ -271,9 +378,10 @@ static void doit(int fd)
     
     // read(fd,buf,MAXLINE);
     // printf("%s\n",buf);
-
+    Httpheader hp;
     rio_readinitb(&riobuffer,fd);
-    rio_readlineb(&riobuffer,buf,MAXLINE);//为了防止溢出，所以有第三个参数
+    ParseHTTPheader(&riobuffer,&hp);
+    strcpy(buf,hp.headContent[0]);
 
     char method[MAXLINE],URI[MAXLINE],version[MAXLINE];
     sscanf(buf,"%s %s %s",method,URI,version);
@@ -286,10 +394,41 @@ static void doit(int fd)
     
     char host[MAXLINE],port[MAXLINE],filename[MAXLINE];
     parseURI(URI,host,port,filename);
-        
-    openclient_fd(host,port); //写到这了 4.9
-
     printf("URI:%s host:%s port:%s filename:%s\n",URI,host,port,filename);
+        
+    // if(strlen(host)==0&&strlen(port)==0&&strlen(filename)!=0)//说明浏览器直连proxy，需要访问filename指示的文件
+    // {
+
+    // }
+    int clientfd = openclient_fd(host,port); 
+    if (clientfd<=0)
+    {
+        clienterror(fd,URI,"601","Not Connect","Web server Not Connect to host:port");
+        return;
+    }
+    
+    sendHTTPheaderTofd(clientfd,&hp);//proxy把从浏览器接收到的Get请求报文转发给server
+
+    //接下来就开始处理从server返回的数据了,需要把返回的数据发送给浏览器
+    rIo_t riobufferClient;
+    rio_readinitb(&riobufferClient,clientfd);
+    Httpheader hpClient;
+    ParseHTTPheader(&riobufferClient,&hpClient);
+    
+    int ContentLength = getHTTPbodyContentSize(&hpClient);
+    rio_writeFlushALL(clientfd,&riobufferClient);
+    rio_read(&riobufferClient,buf,)//从这里开始写 4.10 
+
+
+    char * contenttmp = (char *)malloc(ContentLength);
+
+    
+   // open("./cache/",)
+    read(clientfd,buf,sizeof(buf));
+    write(fd,buf,sizeof(buf));
+    printf("%s\r\n",buf);
+
+    
 }
 
 
