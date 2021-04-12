@@ -123,6 +123,7 @@ static void rio_readinitb(rIo_t * rp,int fd)
 }
 
 static int rio_read(rIo_t* rp,char * buf,size_t n)
+//buf等于null时可以用在不断将缓冲区充满的用途上
 {
     while(rp->rio_cnt<=0)
     {
@@ -134,56 +135,24 @@ static int rio_read(rIo_t* rp,char * buf,size_t n)
             return 0; //说明遇到EOF了 fd里没东西 等作为客户端的时候探究一下read write的机制
         else if (rp->rio_cnt<0)
             if (errno!=EINTR)
-                return -1; //被信号打断了
+                //return -1; //被信号打断了 这个还不知道该怎么处理
+                //printf("errno!=EINTR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+                ;
         else 
             rp->rio_bufptr = rp->rio_buf;
     }
-    if (n > rp->rio_cnt)
+    if (buf!=NULL)
+    {
+        if (n > rp->rio_cnt)
         n = rp->rio_cnt;
-    memcpy(buf,rp->rio_bufptr,n);
-    rp->rio_bufptr+=n;
-    rp->rio_cnt-=n;
-    return n;
-}
-
-static void rio_writeFlushALL(int fd,rIo_t * rp) //把所有缓冲中未处理的数据处理一遍，把rio_cnt置0
-{
-    if(rp->rio_cnt==0)
-    {
-        rp->rio_bufptr = rp->rio_buf;
-        return;
+        memcpy(buf,rp->rio_bufptr,n);
+        rp->rio_bufptr+=n;
+        rp->rio_cnt-=n;
+        return n;
     }
-    Rio_writen(fd,rp->rio_bufptr,rp->rio_cnt);
-    rp->rio_bufptr = rp->rio_buf;
-    rp->rio_cnt = 0;
-}
-
-static ssize_t rio_readlineb(rIo_t * rp,char * buf,size_t maxlen)//读取一行 //为了防止溢出，所以有第三个参数
-{
-    char * pcur = buf;
-    int rc;
-    for(int i = 0;i<maxlen;i++)
-    {
-        char c;
-        if ((rc = rio_read(rp,&c,1))>0)
-        {
-            *(pcur++) = c;//'\n'也读进去了
-            if (c=='\n')
-               break;
-        }
-        else if (rc==0)
-        {
-            if (i==0) //说明遇到EOF了,读完了
-                return 0;
-            else
-                break;
-        }
-        else
-            return -1; //读取出错
-        
-    }
-    *pcur = '\0';
-    return pcur-buf;
+    else
+        return rp->rio_cnt; 
+    
 }
 
 static ssize_t rio_writen(int fd,const char * buf,const size_t n) //需要保证一定 write n字节
@@ -214,6 +183,50 @@ static void Rio_writen(int fd,const char * buf,const size_t n)
     if (rio_writen(fd,buf,n)!=n)
         printf("rio_writen函数写错啦！！！！！！！！！！！！\n");
 }
+
+static void rio_writeFlushALL(int fd,rIo_t * rp) //把所有缓冲中未处理的数据处理一遍，把rio_cnt置0
+{
+    if(rp->rio_cnt==0)
+    {
+        rp->rio_bufptr = rp->rio_buf;
+        return;
+    }
+    Rio_writen(fd,rp->rio_bufptr,rp->rio_cnt);
+    rp->rio_bufptr = rp->rio_buf;
+    rp->rio_cnt = 0;
+}
+
+static ssize_t rio_readlineb(rIo_t * rp,char * buf,size_t maxlen)//读取一行 //为了防止溢出，所以有第三个参数
+{
+    char * pcur = buf;
+    int rc;
+    for(int i = 0;i<maxlen;i++)
+    {
+        char c;
+        rc = rio_read(rp,&c,1);
+        //printf("rc:%d\n",rc);
+        if (rc>0)
+        {
+            *(pcur++) = c;//'\n'也读进去了
+            if (c=='\n')
+               break;
+        }
+        else if (rc==0)
+        {
+            if (i==0) //说明遇到EOF了,读完了
+                return 0;
+            else
+                break;
+        }
+        else
+            return -1; //读取出错
+        
+    }
+    *pcur = '\0';
+    return pcur-buf;
+}
+
+
 
 static void clienterror(int fd,char * cause,char *errnum,char* shortmsg,char * longmsg)
 {
@@ -289,6 +302,22 @@ static void sendHTTPheaderTofd(int fd,Httpheader * hp)
     char buf[MAXLINE];
     while(*p!=NULL)
     {
+        if ((strstr(*p,"GET"))==*p)
+        {
+            char * locHost = strstr(*p,"localhost");
+            //如果是localhost的话，就把localhost去掉，单纯保留后边的filename
+            //因为如果是浏览器直接指名道姓连ip的话，浏览器发出的URI没有http 只有filename
+            if (locHost!=NULL)
+            {
+                char* beg = strstr(locHost,"/");
+                char* end = strstr(locHost,"\n")+1;
+                memcpy(buf,beg,end-beg);
+                *(buf+(end-beg)) = '\0';
+                sprintf(*p,"GET %s",buf);
+            }
+                
+        }
+
         if((strstr(*p,"Connection"))==*p)
         {
             sprintf(buf,"Connection: close\r\n");
@@ -327,21 +356,29 @@ static int parseHTTPheader(rIo_t * rp,Httpheader * hp) //解析HTTP报文头 不
         *p = malloc(strlen(buf)+1);
         memcpy(*p,buf,strlen(buf)+1);
         p++;
+        //printf("%s\n",buf);
         if(strcmp(buf,"\r\n")==0)
             break;
     }
     *p = NULL;
-    if (rc<=0)
-        return -1; //说明没有读到任何东西
-    return 0;
-}
-static void ParseHTTPheader(rIo_t * rp,Httpheader * hp)
-{
-    if (parseHTTPheader(rp,hp)==-1)
+    if (rc<0)
     {
-        printf("parseHTTPheader(&riobuffer,&hp)==-1\n");
-        return;
+        if (rc==0)
+            printf("%d\n",rc);
+        return -1; //说明读取出错
     }
+    else if (rc==0)
+        return 0; //说明没有读到任何东西
+    return rc;
+}
+static int ParseHTTPheader(rIo_t * rp,Httpheader * hp)
+{
+    int rc;
+    if ((rc=parseHTTPheader(rp,hp))<=0)
+    {
+        printf("parseHTTPheader(&riobuffer,&hp)==-1:rc=%d\n",rc);
+    }
+    return rc;
 }
 
 static int getHTTPbodyContentSize(Httpheader * hp)
@@ -359,6 +396,7 @@ static int getHTTPbodyContentSize(Httpheader * hp)
             memcpy(buf,pbegin,pend-pbegin);
             *(buf+(pend-pbegin)) = '\0';
             size = atoi(buf);
+            break;
         }
         p++;
     }
@@ -380,7 +418,8 @@ static void doit(int fd)
     // printf("%s\n",buf);
     Httpheader hp;
     rio_readinitb(&riobuffer,fd);
-    ParseHTTPheader(&riobuffer,&hp);
+    if (ParseHTTPheader(&riobuffer,&hp)==0) //当是post时，就会返回0 不知道为啥
+        return;
     strcpy(buf,hp.headContent[0]);
 
     char method[MAXLINE],URI[MAXLINE],version[MAXLINE];
@@ -400,7 +439,7 @@ static void doit(int fd)
     // {
 
     // }
-    int clientfd = openclient_fd(host,port); 
+    int clientfd = openclient_fd(host,port); //代理服务器作为客户端，查IP地址并建立连接请求，旨在和已有的服务器建立连接
     if (clientfd<=0)
     {
         clienterror(fd,URI,"601","Not Connect","Web server Not Connect to host:port");
@@ -416,18 +455,30 @@ static void doit(int fd)
     ParseHTTPheader(&riobufferClient,&hpClient);
     
     int ContentLength = getHTTPbodyContentSize(&hpClient);
-    rio_writeFlushALL(clientfd,&riobufferClient);
-    rio_read(&riobufferClient,buf,)//从这里开始写 4.10 
+    printf("ContentLength:%d\n",ContentLength);
+    sendHTTPheaderTofd(fd,&hpClient); //发送报文头给浏览器
 
-
-    char * contenttmp = (char *)malloc(ContentLength);
+    // 跟http协议有关，有时候没有ContentLength字段，但是会有实体体，也需要进行发送
+    while(rio_read(&riobufferClient,NULL,-1))//不断填满缓冲区然后发送，只有当遇到EOF时才退出while
+    //如果直接read write的话，由于maxline的限制，不能把所有的字节都传递到位，会有丢失，导致浏览页面内容的丢失
+    {   
+        printf("last:%d\n",riobufferClient.rio_cnt);
+        rio_writeFlushALL(fd,&riobufferClient);
+        printf("after:%d\n",riobufferClient.rio_cnt);
+        // if (rior==ContentLength)
+        //     break;
+    }
+    
+        
+    // char * contenttmp = (char *)malloc(ContentLength);
 
     
    // open("./cache/",)
-    read(clientfd,buf,sizeof(buf));
-    write(fd,buf,sizeof(buf));
-    printf("%s\r\n",buf);
+    // read(clientfd,buf,sizeof(buf));
+    // write(fd,buf,sizeof(buf));
+    //printf("%s\r\n",buf);
 
+    close(clientfd);
     
 }
 
@@ -453,7 +504,7 @@ int main(int argc,char ** argv)
     int clientlen = sizeof(struct sockaddr);
     while (1)
     {
-        int connfd = accept(listenfd,&socketclient,&clientlen);
+        int connfd = accept(listenfd,&socketclient,&clientlen);//这是一个首先建立链接的过程
         //等待来自客户端的链接请求到达侦听描述符listenfd，然后在socketclient中写入客户端的套接字地址，并返回一个已连接描述符
         //当浏览器处发送的端口不是监听端口的话，也会取消accept的阻塞
         
