@@ -132,12 +132,18 @@ static int rio_read(rIo_t* rp,char * buf,size_t n)
         //read有可能读取出错，返回-1，因此while(rp->rio_cnt<=0)循环
         //当其为空时，fill the buf
         if (rp->rio_cnt==0)
+        {
             return 0; //说明遇到EOF了 fd里没东西 等作为客户端的时候探究一下read write的机制
+        }
         else if (rp->rio_cnt<0)
+        {
             if (errno!=EINTR)
                 //return -1; //被信号打断了 这个还不知道该怎么处理
                 //printf("errno!=EINTR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
                 ;
+            else if (errno==EINTR)
+                printf("errno==EINTR\n");
+        }
         else 
             rp->rio_bufptr = rp->rio_buf;
     }
@@ -154,6 +160,41 @@ static int rio_read(rIo_t* rp,char * buf,size_t n)
         return rp->rio_cnt; 
     
 }
+
+// /* $begin rio_read */
+// static ssize_t rio_read(rIo_t *rp, char *usrbuf, size_t n)
+// {
+//     int cnt;
+
+//     while (rp->rio_cnt <= 0) {  /* Refill if buf is empty */
+// 	rp->rio_cnt = read(rp->rio_fd, rp->rio_buf, 
+// 			   sizeof(rp->rio_buf));
+// 	if (rp->rio_cnt < 0) {
+// 	    if (errno != EINTR) /* Interrupted by sig handler return */
+// 		return -1;
+// 	}
+// 	else if (rp->rio_cnt == 0)  /* EOF */
+// 	    return 0;
+// 	else 
+// 	    rp->rio_bufptr = rp->rio_buf; /* Reset buffer ptr */
+//     }
+
+//     if (usrbuf!=NULL)
+//     {
+//         /* Copy min(n, rp->rio_cnt) bytes from internal buf to user buf */
+//         cnt = n;          
+//         if (rp->rio_cnt < n)   
+//         cnt = rp->rio_cnt;
+//         memcpy(usrbuf, rp->rio_bufptr, cnt);
+//         rp->rio_bufptr += cnt;
+//         rp->rio_cnt -= cnt;
+//         return cnt;
+//     }
+//     else
+//         return rp->rio_cnt; 
+    
+// }
+// /* $end rio_read */
 
 static ssize_t rio_writen(int fd,const char * buf,const size_t n) //需要保证一定 write n字节
 {
@@ -323,6 +364,13 @@ static void sendHTTPheaderTofd(int fd,Httpheader * hp)
             sprintf(buf,"Connection: close\r\n");
             strcpy(*p,buf);
         }
+
+        if((strstr(*p,"Proxy-Connection"))==*p)
+        {
+            sprintf(buf,"Proxy-Connection: close\r\n");
+            strcpy(*p,buf);
+        }
+
         rio_writen(fd,*p,strlen(*p));
         p++;
     }    
@@ -336,15 +384,6 @@ static void sendHTTPheaderTofd(int fd,Httpheader * hp)
     // rio_writen(clientfd,buf,strlen(buf));
 }
 
-// static int servestatic(char * filename)
-// {
-//     char filepath[MAXLINE];
-//     strcpy(filepath,".");
-//     strcat(filepath,filename);
-
-// }
-
-
 
 static int parseHTTPheader(rIo_t * rp,Httpheader * hp) //解析HTTP报文头 不包括实体体
 {
@@ -356,15 +395,13 @@ static int parseHTTPheader(rIo_t * rp,Httpheader * hp) //解析HTTP报文头 不
         *p = malloc(strlen(buf)+1);
         memcpy(*p,buf,strlen(buf)+1);
         p++;
-        //printf("%s\n",buf);
+        printf("%s\n",buf);
         if(strcmp(buf,"\r\n")==0)
             break;
     }
     *p = NULL;
     if (rc<0)
     {
-        if (rc==0)
-            printf("%d\n",rc);
         return -1; //说明读取出错
     }
     else if (rc==0)
@@ -418,6 +455,7 @@ static void doit(int fd)
     // printf("%s\n",buf);
     Httpheader hp;
     rio_readinitb(&riobuffer,fd);
+    //ParseHTTPheader(&riobuffer,&hp);
     if (ParseHTTPheader(&riobuffer,&hp)==0) //当是post时，就会返回0 不知道为啥
         return;
     strcpy(buf,hp.headContent[0]);
@@ -452,7 +490,14 @@ static void doit(int fd)
     rIo_t riobufferClient;
     rio_readinitb(&riobufferClient,clientfd);
     Httpheader hpClient;
-    ParseHTTPheader(&riobufferClient,&hpClient);
+
+    //sleep(1); 
+    //proxy作为客户端报文头给远程server后，远程server给proxy发送http响应，响应具体是由响应头和响应数据主体组成的
+    //如果不sleep(1)，那么如果proxy发送的报文头立刻就送到了远程server，然后远程server立刻开始写数据，
+    //proxy在远程server写数据的过程中也开始读对应的套接字，这样会造成冲突，导致proxy读到的数据和远程server发送的数据不一样，会有数据的丢失
+    //目前暂时不知道原因为何
+    ParseHTTPheader(&riobufferClient,&hpClient); 
+    
     
     int ContentLength = getHTTPbodyContentSize(&hpClient);
     printf("ContentLength:%d\n",ContentLength);
