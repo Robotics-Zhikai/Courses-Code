@@ -131,16 +131,23 @@ static int rio_read(rIo_t* rp,char * buf,size_t n)
         rp->rio_cnt = read(rp->rio_fd,rp->rio_buf,sizeof(rp->rio_buf));
         //read有可能读取出错，返回-1，因此while(rp->rio_cnt<=0)循环
         //当其为空时，fill the buf
+
+        // printf("----------------------------------------------------------\n");
+        // printf("%s\n",rp->rio_buf); //这里输出的值是没有任何问题的，完全按照预期 
+        // printf("----------------------------------------------------------\n");
+
         if (rp->rio_cnt==0)
         {
             return 0; //说明遇到EOF了 fd里没东西 等作为客户端的时候探究一下read write的机制
         }
         else if (rp->rio_cnt<0)
-        {
+        { //如果把这里的大括号去了就会出现read到的数据和server write的数据不一致的情况
+          //从反汇编来看，可能是不加大括号的话会把read到的数据给弄乱
+          //从上面printf出来的情况来看，printf出的是没什么问题的，主要是后边的代码把数据给弄乱了
             if (errno!=EINTR)
                 //return -1; //被信号打断了 这个还不知道该怎么处理
                 //printf("errno!=EINTR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-                ;
+                return -1;
             else if (errno==EINTR)
                 printf("errno==EINTR\n");
         }
@@ -337,6 +344,16 @@ typedef struct
     char * headContent[MAXLINE];
 }Httpheader;
 
+void freeHttpheader(Httpheader * hp) //释放内存 防止内存泄露
+{
+    char ** p = hp->headContent;
+    while(*p!=NULL)
+    {
+        free(*p);
+        p++;
+    }
+}
+
 static void sendHTTPheaderTofd(int fd,Httpheader * hp)
 {
     char ** p = hp->headContent;
@@ -395,7 +412,7 @@ static int parseHTTPheader(rIo_t * rp,Httpheader * hp) //解析HTTP报文头 不
         *p = malloc(strlen(buf)+1);
         memcpy(*p,buf,strlen(buf)+1);
         p++;
-        printf("%s\n",buf);
+        //printf("%s\n",buf);
         if(strcmp(buf,"\r\n")==0)
             break;
     }
@@ -457,7 +474,18 @@ static void doit(int fd)
     rio_readinitb(&riobuffer,fd);
     //ParseHTTPheader(&riobuffer,&hp);
     if (ParseHTTPheader(&riobuffer,&hp)==0) //当是post时，就会返回0 不知道为啥
+    {
+        char ** p = hp.headContent;
+        while (*p!=NULL)
+        {
+            printf("%s\n",*p);
+            p++;
+        }
+
+        freeHttpheader(&hp);
         return;
+    }
+        
     strcpy(buf,hp.headContent[0]);
 
     char method[MAXLINE],URI[MAXLINE],version[MAXLINE];
@@ -473,10 +501,7 @@ static void doit(int fd)
     parseURI(URI,host,port,filename);
     printf("URI:%s host:%s port:%s filename:%s\n",URI,host,port,filename);
         
-    // if(strlen(host)==0&&strlen(port)==0&&strlen(filename)!=0)//说明浏览器直连proxy，需要访问filename指示的文件
-    // {
 
-    // }
     int clientfd = openclient_fd(host,port); //代理服务器作为客户端，查IP地址并建立连接请求，旨在和已有的服务器建立连接
     if (clientfd<=0)
     {
@@ -494,26 +519,40 @@ static void doit(int fd)
     //sleep(1); 
     //proxy作为客户端报文头给远程server后，远程server给proxy发送http响应，响应具体是由响应头和响应数据主体组成的
     //如果不sleep(1)，那么如果proxy发送的报文头立刻就送到了远程server，然后远程server立刻开始写数据，
-    //proxy在远程server写数据的过程中也开始读对应的套接字，这样会造成冲突，导致proxy读到的数据和远程server发送的数据不一样，会有数据的丢失
-    //目前暂时不知道原因为何
+    //proxy在远程server写数据的过程中也开始读对应的套接字，
+    //这样看似会造成冲突，导致proxy读到的数据和远程server发送的数据不一样，会有数据的丢失
+    //但实际上是没有冲突的，主要是与rio_read里边if的一个大括号有关系
     ParseHTTPheader(&riobufferClient,&hpClient); 
     
     
     int ContentLength = getHTTPbodyContentSize(&hpClient);
     printf("ContentLength:%d\n",ContentLength);
     sendHTTPheaderTofd(fd,&hpClient); //发送报文头给浏览器
+    if (ContentLength==-1)//当没有ContentLength字段时，可能是image/jpeg类型的数据，也可能是Not modified，被浏览器缓存的数据
+    {
+        char ** p = hpClient.headContent;
+        while (*p!=NULL)
+        {
+            printf("%s\n",*p);
+            p++;
+        }
+            
+    }
 
+    int receivedData = 0;
     // 跟http协议有关，有时候没有ContentLength字段，但是会有实体体，也需要进行发送
     while(rio_read(&riobufferClient,NULL,-1))//不断填满缓冲区然后发送，只有当遇到EOF时才退出while
     //如果直接read write的话，由于maxline的限制，不能把所有的字节都传递到位，会有丢失，导致浏览页面内容的丢失
     {   
-        printf("last:%d\n",riobufferClient.rio_cnt);
+        receivedData+=riobufferClient.rio_cnt;
+        // printf("last:%d\n",riobufferClient.rio_cnt);
         rio_writeFlushALL(fd,&riobufferClient);
-        printf("after:%d\n",riobufferClient.rio_cnt);
+        // printf("after:%d\n",riobufferClient.rio_cnt);
+
         // if (rior==ContentLength)
         //     break;
     }
-    
+    printf("receivedData:%dB\n",receivedData);
         
     // char * contenttmp = (char *)malloc(ContentLength);
 
@@ -523,15 +562,15 @@ static void doit(int fd)
     // write(fd,buf,sizeof(buf));
     //printf("%s\r\n",buf);
 
+    freeHttpheader(&hp);
+    freeHttpheader(&hpClient);
     close(clientfd);
     
 }
 
 
-
 int main(int argc,char ** argv)
 {
-    
     if (argc!=2)
     {
         fprintf(stderr,"usage:%s <port>\r\n",argv[0]);
