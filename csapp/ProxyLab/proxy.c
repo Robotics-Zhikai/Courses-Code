@@ -473,6 +473,7 @@ static void doit(int fd)
     Httpheader hp;
     rio_readinitb(&riobuffer,fd);
     //ParseHTTPheader(&riobuffer,&hp);
+
     if (ParseHTTPheader(&riobuffer,&hp)==0) //当是post时，就会返回0 不知道为啥
     {
         char ** p = hp.headContent;
@@ -485,6 +486,7 @@ static void doit(int fd)
         freeHttpheader(&hp);
         return;
     }
+    
         
     strcpy(buf,hp.headContent[0]);
 
@@ -588,6 +590,9 @@ int main(int argc,char ** argv)
     int clientlen = sizeof(struct sockaddr);
     while (1)
     {
+        //以浏览器相对于proxy的角度来说，一问一答就做一个循环
+        //实际上在打开hit.edu.cn的过程中，要从同一主机发很多链接，经过很多次一问一答
+
         int connfd = accept(listenfd,&socketclient,&clientlen);//这是一个首先建立链接的过程
         //等待来自客户端的链接请求到达侦听描述符listenfd，然后在socketclient中写入客户端的套接字地址，并返回一个已连接描述符
         //当浏览器处发送的端口不是监听端口的话，也会取消accept的阻塞
@@ -595,8 +600,9 @@ int main(int argc,char ** argv)
         getnameinfo(&socketclient,sizeof(struct sockaddr),host,MAXLINE,service,MAXLINE,NI_NUMERICHOST);
         printf("get connection from (%s:%s)\n",host,service);
         printf("%d,%d\n",count++,connfd);
+        //每次得到的service都不一样
 
-        doit(connfd);
+        doit(connfd); //这里可能会出现的一个bug是可能在connfd连续发送多个请求报文，而目前实现的只处理一个请求报文然后返回，这样会丢失信息
         //浏览器只要输对了目标IP信息，就会给服务器发送过来，connfd就会接收到，也就是取消accept的阻塞
         //只不过对于监听端口能够接收到正确的信息
         //而浏览器如果没有输对端口，那么connfd收到的是空信息
@@ -607,3 +613,6 @@ int main(int argc,char ** argv)
     printf("%s", user_agent_hdr);
     return 0;
 }
+
+//关于并发服务器：可以采用生产者消费者模型来进行编写。主线程不停地接收来自客户端的链接请求（作为单一生产者），然后多个消费者进程
+//在适当实际处理对应的连接
