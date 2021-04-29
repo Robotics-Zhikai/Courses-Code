@@ -5,6 +5,7 @@
 #include <unistd.h> //close 
 #include <errno.h> //errno
 #include <fcntl.h> // open
+#include <pthread.h> //与线程有关的函数
 
 /* Recommended max cache and object sizes */
 #define MAX_CACHE_SIZE 1049000
@@ -523,9 +524,9 @@ static void doit(int fd)
     //如果不sleep(1)，那么如果proxy发送的报文头立刻就送到了远程server，然后远程server立刻开始写数据，
     //proxy在远程server写数据的过程中也开始读对应的套接字，
     //这样看似会造成冲突，导致proxy读到的数据和远程server发送的数据不一样，会有数据的丢失
-    //但实际上是没有冲突的，主要是与rio_read里边if的一个大括号有关系
+    //但实际上是没有冲突的，造成上边的看似bug的原因主要是与rio_read里边if的一个大括号有关系
     ParseHTTPheader(&riobufferClient,&hpClient); 
-    
+    //给fd写数据是不断拓展fd的数据流，读fd是不断从头追赶数据流的末尾
     
     int ContentLength = getHTTPbodyContentSize(&hpClient);
     printf("ContentLength:%d\n",ContentLength);
@@ -570,6 +571,19 @@ static void doit(int fd)
     
 }
 
+void * thread(void * argp)
+{
+    int connfd = *((int*)argp);
+    pthread_detach(pthread_self());//分离当前线程，使得当前线程完成后能够被自动回收
+    free(argp);
+    //if ((i++)%5==0) //浏览器点击f12的网络选项能看到发送了什么HTTP请求以及对应的请求是否收到
+    doit(connfd); //这里可能会出现的一个bug是可能在connfd连续发送多个请求报文，而目前实现的只处理一个请求报文然后返回，这样会丢失信息
+    //浏览器只要输对了目标IP信息，就会给服务器发送过来，connfd就会接收到，也就是取消accept的阻塞
+    //只不过对于监听端口能够接收到正确的信息
+    //而浏览器如果没有输对端口，那么connfd收到的是空信息
+
+    close(connfd);
+}
 
 int main(int argc,char ** argv)
 {
@@ -588,31 +602,35 @@ int main(int argc,char ** argv)
     struct sockaddr socketclient;
     int count = 0;
     int clientlen = sizeof(struct sockaddr);
+    int * connfdp = NULL;
+    pthread_t tid;
     while (1)
     {
         //以浏览器相对于proxy的角度来说，一问一答就做一个循环
         //实际上在打开hit.edu.cn的过程中，要从同一主机发很多链接，经过很多次一问一答
 
-        int connfd = accept(listenfd,&socketclient,&clientlen);//这是一个首先建立链接的过程
+        connfdp = (int *)malloc(sizeof(int));
+        *connfdp = accept(listenfd,&socketclient,&clientlen);//这是一个首先建立链接的过程
         //等待来自客户端的链接请求到达侦听描述符listenfd，然后在socketclient中写入客户端的套接字地址，并返回一个已连接描述符
         //当浏览器处发送的端口不是监听端口的话，也会取消accept的阻塞
         
         getnameinfo(&socketclient,sizeof(struct sockaddr),host,MAXLINE,service,MAXLINE,NI_NUMERICHOST);
         printf("get connection from (%s:%s)\n",host,service);
-        printf("%d,%d\n",count++,connfd);
+        printf("%d,%d\n",count++,*connfdp);
         //每次得到的service都不一样
+        pthread_create(&tid,NULL,thread,connfdp);
 
-        doit(connfd); //这里可能会出现的一个bug是可能在connfd连续发送多个请求报文，而目前实现的只处理一个请求报文然后返回，这样会丢失信息
-        //浏览器只要输对了目标IP信息，就会给服务器发送过来，connfd就会接收到，也就是取消accept的阻塞
-        //只不过对于监听端口能够接收到正确的信息
-        //而浏览器如果没有输对端口，那么connfd收到的是空信息
-    
-        close(connfd);
+
+        // doit(*connfdp); //注释掉的这两行是序列化的服务器，如果用序列化的服务器的化很容易就broken pipe
+        // close(*connfdp); 
     }
     
     printf("%s", user_agent_hdr);
     return 0;
 }
 
+
+
 //关于并发服务器：可以采用生产者消费者模型来进行编写。主线程不停地接收来自客户端的链接请求（作为单一生产者），然后多个消费者进程
-//在适当实际处理对应的连接
+//在适当时机处理对应的连接
+
