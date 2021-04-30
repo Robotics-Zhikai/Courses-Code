@@ -6,6 +6,7 @@
 #include <errno.h> //errno
 #include <fcntl.h> // open
 #include <pthread.h> //与线程有关的函数
+#include <semaphore.h> //与信号量有关的函数，用于多线程加锁
 
 /* Recommended max cache and object sizes */
 #define MAX_CACHE_SIZE 1049000
@@ -168,41 +169,6 @@ static int rio_read(rIo_t* rp,char * buf,size_t n)
         return rp->rio_cnt; 
     
 }
-
-// /* $begin rio_read */
-// static ssize_t rio_read(rIo_t *rp, char *usrbuf, size_t n)
-// {
-//     int cnt;
-
-//     while (rp->rio_cnt <= 0) {  /* Refill if buf is empty */
-// 	rp->rio_cnt = read(rp->rio_fd, rp->rio_buf, 
-// 			   sizeof(rp->rio_buf));
-// 	if (rp->rio_cnt < 0) {
-// 	    if (errno != EINTR) /* Interrupted by sig handler return */
-// 		return -1;
-// 	}
-// 	else if (rp->rio_cnt == 0)  /* EOF */
-// 	    return 0;
-// 	else 
-// 	    rp->rio_bufptr = rp->rio_buf; /* Reset buffer ptr */
-//     }
-
-//     if (usrbuf!=NULL)
-//     {
-//         /* Copy min(n, rp->rio_cnt) bytes from internal buf to user buf */
-//         cnt = n;          
-//         if (rp->rio_cnt < n)   
-//         cnt = rp->rio_cnt;
-//         memcpy(usrbuf, rp->rio_bufptr, cnt);
-//         rp->rio_bufptr += cnt;
-//         rp->rio_cnt -= cnt;
-//         return cnt;
-//     }
-//     else
-//         return rp->rio_cnt; 
-    
-// }
-// /* $end rio_read */
 
 static ssize_t rio_writen(int fd,const char * buf,const size_t n) //需要保证一定 write n字节
 {
@@ -585,7 +551,7 @@ void * thread(void * argp)
     close(connfd);
 }
 
-int main(int argc,char ** argv)
+int simpleMultithread(int argc,char ** argv)
 {
     if (argc!=2)
     {
@@ -618,7 +584,11 @@ int main(int argc,char ** argv)
         printf("get connection from (%s:%s)\n",host,service);
         printf("%d,%d\n",count++,*connfdp);
         //每次得到的service都不一样
+
         pthread_create(&tid,NULL,thread,connfdp);
+        //这样的话每一个TCP链接都要开一个线程，当CPU只有四核时，开四个线程是最高效的，
+        //但是这样的实现需要开远远超过四个线程，这样的话每个核就有多个线程运行，就会造成非常大的线程切换的开销
+        //因为这样的原因，并行程序常常被写为核数和线程数一样
 
 
         // doit(*connfdp); //注释掉的这两行是序列化的服务器，如果用序列化的服务器的化很容易就broken pipe
@@ -627,6 +597,113 @@ int main(int argc,char ** argv)
     
     printf("%s", user_agent_hdr);
     return 0;
+}
+
+typedef struct {
+    int * buf; //储存buf
+    unsigned int n; //最多能储存多少个fd
+    unsigned int front; //循环存放数据，指向数据的第一个元素
+    unsigned int rear; //指向数据的最后一个元素的右侧 也就是说整个数据区间是前闭后开
+    sem_t mutex; //借助这个变量给buf加锁
+    sem_t filledN; //已经存放的元素个数
+    sem_t emptyN; //空闲的元素个数
+}sbuf;
+
+void initsbuf(sbuf * ptr,unsigned int N)
+{
+    ptr->n = N;
+    ptr->buf = (int *)malloc(N*sizeof(int));
+    ptr->front = 0;
+    ptr->rear = 0;
+    sem_init(&ptr->mutex,0,1);
+    sem_init(&ptr->filledN,0,0);
+    sem_init(&ptr->emptyN,0,N);
+} 
+void freesbuf(sbuf * ptr)
+{
+    free(ptr->buf);
+}
+void insertfd(sbuf * ptr,int fd)
+{
+    sem_wait(&ptr->emptyN);
+    sem_wait(&ptr->mutex);
+    ptr->buf[(ptr->rear++)%ptr->n] = fd;
+    sem_post(&ptr->mutex);
+    sem_post(&ptr->filledN);
+}
+void removefd(sbuf * ptr,int * removedfd)
+{
+    sem_wait(&ptr->filledN);
+    sem_wait(&ptr->mutex);
+    *removedfd = ptr->buf[(ptr->front++)%ptr->n];
+    sem_post(&ptr->mutex);
+    sem_post(&ptr->emptyN);
+}
+
+void * Consumerthread(void * arg) //消费者线程
+{   
+    pthread_detach(pthread_self()); //把自己detach了，以便能够被系统自动回收
+    sbuf * sbufthis = (sbuf*)arg;
+    int connfd;
+    while (1){
+        removefd(sbufthis,&connfd);
+        doit(connfd);
+        close(connfd);
+    }
+}
+
+int prethreading(int argc,char ** argv) //使用生产者消费者模型 预线程化的并发服务器
+{
+    if (argc!=2)
+    {
+        fprintf(stderr,"usage:%s <port>\r\n",argv[0]);
+        exit(1); //退出当前进程
+    }
+    char * port = argv[1];
+    int listenfd = openlisten_fd(port);
+    
+    char host[MAXLINE];
+    char service[MAXLINE];
+    struct sockaddr socketclient;
+    int count = 0;
+    int clientlen = sizeof(struct sockaddr);
+    int connfd;
+    const int threadNum = 8; //对于四核CPU来说，总线程数量达到4个是差不多的
+    pthread_t tid; //因为消费者线程一直在运行，所以不需要记住消费者线程的线程号
+
+    sbuf fdbuf;
+    initsbuf(&fdbuf,500); //初始化缓冲区长度为500 
+    //缓冲区的大小和threadNum会影响broken pipe的出现概率 
+    //如果缓冲区过小，那么会出现丢失数据的情况
+    
+    for (int i = 0;i<threadNum;i++)
+        pthread_create(&tid,NULL,Consumerthread,&fdbuf);
+
+    while (1)
+    {
+        //以浏览器相对于proxy的角度来说，一问一答就做一个循环
+        //实际上在打开hit.edu.cn的过程中，要从同一主机发很多链接，经过很多次一问一答
+
+        connfd = accept(listenfd,&socketclient,&clientlen);//这是一个首先建立链接的过程
+        //等待来自客户端的链接请求到达侦听描述符listenfd，然后在socketclient中写入客户端的套接字地址，并返回一个已连接描述符
+        //当浏览器处发送的端口不是监听端口的话，也会取消accept的阻塞
+        
+        getnameinfo(&socketclient,sizeof(struct sockaddr),host,MAXLINE,service,MAXLINE,NI_NUMERICHOST);
+        printf("get connection from (%s:%s)\n",host,service);
+        printf("%d,%d\n",count++,connfd);
+        //每次得到的service都不一样
+
+        insertfd(&fdbuf,connfd);//生产者模型，不断接收TCP链接
+    }
+    
+    printf("%s", user_agent_hdr);
+    return 0;
+}
+
+int main(int argc,char ** argv)
+{
+    //simpleMultithread(argc,argv); //简单的一个TCP链接分配一个线程
+   prethreading(argc,argv); //生产者消费者模型
 }
 
 
