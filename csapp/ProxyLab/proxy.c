@@ -8,6 +8,7 @@
 #include <pthread.h> //与线程有关的函数
 #include <semaphore.h> //与信号量有关的函数，用于多线程加锁
 
+
 /* Recommended max cache and object sizes */
 #define MAX_CACHE_SIZE 1049000
 #define MAX_OBJECT_SIZE 102400
@@ -427,9 +428,227 @@ static int getHTTPbodyContentSize(Httpheader * hp)
 
 }
 
+const char cacheRoot[MAXLINE] = "cache";
+void getCacheName(char * host,char * filename,char * cachefile)
+{
+    strcpy(cachefile,cacheRoot);
+    if (strcmp(host,"")!=0)
+        strcat(cachefile,"/");
+    strcat(cachefile,host); 
+    strcat(cachefile,filename);
+    // printf("CacheFilename %s\n",CacheFilename);   
+}
 
+typedef struct 
+{
+    char * buf; //存放缓存的数据
+    unsigned int Bytes; //缓存数据内容的大小
+    char * URI; //提取数据所需要的URI
+    unsigned int readCount; //储存本元素被读了多少次了
+
+    struct cacheElement * Elementnext; 
+}cacheElement;
+
+typedef struct 
+{
+    cacheElement * Elementbegin; //缓存多个cacheElement的链表头 只有弄成链表的结构才能不断的动态扩充
+    cacheElement * Elementlast; //最后的一个Element地址
+
+    unsigned int cacheN; //缓存cacheElement的数量
+    unsigned int SumBytes; //缓存的总字节数
+    sem_t writemutex;
+    sem_t readnumMutex;
+
+    unsigned int readNum; //读者写者模型中，读者有多少个
+    unsigned int writeNum; //读者写者模型中，写者有多少个
+}cacheBlock; //缓存内容的数据结构 
+
+void cacheElementfree(cacheElement * elementptr)
+{//不释放Elementnext，因为释放它的资源不关我事
+    if (elementptr->buf!=NULL){
+        free(elementptr->buf);
+        elementptr->buf = NULL;
+    }
+    if (elementptr->URI!=NULL){
+        free(elementptr->URI);
+        elementptr->URI = NULL;
+    }
+}
+void cacheBlockinit(cacheBlock * blockPtr)
+{
+    blockPtr->Elementbegin = NULL; //事先链表为空
+    blockPtr->Elementlast = NULL; 
+    blockPtr->cacheN = 0;
+    blockPtr->SumBytes = 0;
+
+    blockPtr->readNum = 0;
+    blockPtr->writeNum = 0;
+    sem_init(&blockPtr->writemutex,0,1);
+    sem_init(&blockPtr->readnumMutex,0,1);
+}
+void cacheBlockfree(cacheBlock * blockPtr)
+{
+    cacheElement * cur = blockPtr->Elementbegin;
+    while(cur!=NULL){
+        cacheElementfree(cur);
+        cur = cur->Elementnext;
+    }
+}
+cacheElement * findIncacheBlock(cacheBlock * blockptr,const char * URI) 
+//这个没有加锁，需要在调用这个函数的函数中加锁 因为找到后可能还做其他事情
+{
+    cacheElement * cur = blockptr->Elementbegin;
+    while(cur!=NULL){
+        if (strcmp(cur->URI,URI)==0)
+            break;
+        cur=cur->Elementnext;
+    }
+    return cur;
+}
+int insertcacheElement(cacheBlock * blockptr,cacheElement * elementptr)
+//返回0时表明elementptr为NULL 返回1表示单个object超过了最大内存 返回2表示如果插入，则超过了最大缓存总内存 返回3表示正常插入成功
+{
+    int success = 0;
+    // sem_wait(blockptr->mutex);
+    if (elementptr==NULL){
+        success = 0;     
+    }else if (elementptr->Bytes>MAX_OBJECT_SIZE){
+        success = 1;    //单个object超过了最大内存
+    }else if (elementptr->Bytes+blockptr->SumBytes>MAX_CACHE_SIZE){
+        success = 2;    //如果插入，则超过了最大缓存总内存
+    }else{
+        if(blockptr->Elementbegin==NULL){
+            blockptr->Elementbegin = elementptr;
+        }else{
+            blockptr->Elementlast->Elementnext = elementptr;
+        }
+        blockptr->Elementlast = elementptr;
+        blockptr->cacheN++;
+        blockptr->SumBytes+=elementptr->Bytes;
+        success = 3;
+    }
+    // sem_post(blockptr->mutex);
+    return success;
+}
+int removecacheElement(cacheBlock * blockptr,cacheElement * elementptr)
+{
+    //返回0代表移除失败 返回1代表移除成功
+    int successremove = 0;
+    // sem_wait(blockptr->mutex); //这个作为被调用的子函数，外边再用一个锁的话会造成死锁
+    if (blockptr->Elementbegin==NULL)
+        successremove = 0;
+    else{
+        if (elementptr==blockptr->Elementbegin){
+            if (blockptr->Elementlast==blockptr->Elementbegin)
+                blockptr->Elementlast = blockptr->Elementbegin->Elementnext;
+            blockptr->Elementbegin = blockptr->Elementbegin->Elementnext;
+            successremove = 1;
+        }else{
+            cacheElement * before = blockptr->Elementbegin;
+            cacheElement * cur = before->Elementnext;
+            while(cur!=NULL){
+                if (cur==elementptr){
+                    if (cur==blockptr->Elementlast)
+                        blockptr->Elementlast = before; //如果删除的是最后一个的话 就修改对应的Elementlast
+                    before->Elementnext = cur->Elementnext;
+                    successremove = 1;
+                    break;
+                }
+                before = cur;
+                cur = cur->Elementnext;
+            }
+        }
+        if (successremove==1){
+            cacheElementfree(elementptr);
+            blockptr->cacheN--;
+            blockptr->SumBytes-=elementptr->Bytes;
+        }
+    }
+    // sem_post(blockptr->mutex);
+    return successremove;
+}
+
+cacheElement * cacheElementinit(const char * URI,const char * data,unsigned int Bytes)
+{
+    cacheElement * newEle = (cacheElement*)malloc(sizeof(cacheElement));
+    newEle->Bytes = Bytes;
+    newEle->buf = (char*)malloc(Bytes);
+    memcpy(newEle->buf,data,Bytes);
+    newEle->URI = (char*)malloc(MAXLINE);
+    strcpy(newEle->URI,URI);
+    newEle->Elementnext =NULL;
+    newEle->readCount = 0;
+    return newEle;
+}
+cacheElement * findMINcountincache(cacheBlock * blockptr)
+{
+    cacheElement * cur = blockptr->Elementbegin;
+    unsigned int minnest = 999999;
+    cacheElement * minnestptr = cur;
+    while(cur!=NULL){
+        if(cur->readCount<minnest){
+            minnest = cur->readCount;
+            minnestptr = cur;
+        }
+        cur = cur->Elementnext;
+    }
+    return minnestptr;
+}
+
+int writeIncache(cacheBlock * blockptr,const char * URI,char * data,unsigned int Bytes)
+{
+    int success = 0;
+    sem_wait(&blockptr->writemutex);
+    if (Bytes>MAX_OBJECT_SIZE)
+        success = 0;
+    else if (findIncacheBlock(blockptr,URI)!=NULL){ //待写的数据就在cache里，不需要写
+        success = 1;
+    }else{
+        cacheElement * newEle = cacheElementinit(URI,data,Bytes);
+        while (insertcacheElement(blockptr,newEle)==2) {
+            if (removecacheElement(blockptr,findMINcountincache(blockptr))==0) {
+                success = 2; //说明逻辑写的有问题或者设置的最大值出问题，即便是把所有结点都移除，都不能顺利插入
+                break;
+            }
+        }//表明insert后的object超出了内存限度，需要进行置换
+        if (success!=2)
+            success = 3;
+    }
+    sem_post(&blockptr->writemutex);
+    return success;
+}
+int readIncache(cacheBlock * blockptr,const char * URI,char * cachedata,unsigned int * bytes) //输出的数据存储在cachedata中
+//读取成功返回1，否则返回0
+{
+    sem_wait(&blockptr->readnumMutex);
+    blockptr->readNum++;
+    if (blockptr->readNum==1)
+        sem_wait(&blockptr->writemutex); //只要有一个读者，就不能写
+    sem_post(&blockptr->readnumMutex);
+
+    int success = 0;
+    cacheElement * found = findIncacheBlock(blockptr,URI);
+    if(found!=NULL){
+        found->readCount++;
+        memcpy(cachedata,found->buf,found->Bytes);
+        // strcpy(cachedata,found->buf); //应该不能用strcpy，因为传输的数据很可能在数据的中间就有'\0'所代表的ASCII
+        *bytes = found->Bytes;
+        success = 1;
+    }
+
+    sem_wait(&blockptr->readnumMutex);
+    blockptr->readNum--;
+    if (blockptr->readNum==0)
+        sem_post(&blockptr->writemutex);
+    sem_post(&blockptr->readnumMutex);
+    return success;
+}
+
+
+cacheBlock cache; //全局变量 缓存区
 static void doit(int fd)
 {
+    
     printf("fd:%d\n",fd);
     char buf[MAXLINE];
     memset(buf,0,MAXLINE);
@@ -469,7 +688,15 @@ static void doit(int fd)
     char host[MAXLINE],port[MAXLINE],filename[MAXLINE];
     parseURI(URI,host,port,filename);
     printf("URI:%s host:%s port:%s filename:%s\n",URI,host,port,filename);
-        
+
+    char cachedata[MAX_OBJECT_SIZE];
+    unsigned int bytes;
+    if(readIncache(&cache,URI,cachedata,&bytes)==1){
+        rio_writen(fd,cachedata,bytes); //直接从缓存中读取
+    }
+    
+    // char CacheFilename[MAXLINE];
+    // getCacheName(host,filename,CacheFilename);
 
     int clientfd = openclient_fd(host,port); //代理服务器作为客户端，查IP地址并建立连接请求，旨在和已有的服务器建立连接
     if (clientfd<=0)
@@ -507,6 +734,11 @@ static void doit(int fd)
         }
             
     }
+
+
+    // open(CacheFilename,O_CREAT|O_TRUNC|O_RDWR,S_IWGRP); 
+    //如果用这种open read write方式的话，就相当于先从网络上得到的数据到主存中，然后再从主存写数据到磁盘
+    //这是比较低效的。但是如果直接用malloc，把数据直接复制到主存中，不经过与磁盘的交互，效率会更高
 
     int receivedData = 0;
     // 跟http协议有关，有时候没有ContentLength字段，但是会有实体体，也需要进行发送
@@ -674,8 +906,10 @@ int prethreading(int argc,char ** argv) //使用生产者消费者模型 预线�
     sbuf fdbuf;
     initsbuf(&fdbuf,500); //初始化缓冲区长度为500 
     //缓冲区的大小和threadNum会影响broken pipe的出现概率 
-    //如果缓冲区过小，那么会出现丢失数据的情况
-    
+    //如果缓冲区过小，那么会出现丢失数据的情况,可能是因为一下子过来大量的链接请求，很容易就充满了缓冲区，然后阻塞在insertfd，再来的请求就被丢弃了
+
+    cacheBlockinit(&cache);
+
     for (int i = 0;i<threadNum;i++)
         pthread_create(&tid,NULL,Consumerthread,&fdbuf);
 
@@ -689,12 +923,14 @@ int prethreading(int argc,char ** argv) //使用生产者消费者模型 预线�
         //当浏览器处发送的端口不是监听端口的话，也会取消accept的阻塞
         
         getnameinfo(&socketclient,sizeof(struct sockaddr),host,MAXLINE,service,MAXLINE,NI_NUMERICHOST);
-        printf("get connection from (%s:%s)\n",host,service);
+        printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~get connection from (%s:%s)\n",host,service);
         printf("%d,%d\n",count++,connfd);
         //每次得到的service都不一样
 
         insertfd(&fdbuf,connfd);//生产者模型，不断接收TCP链接
     }
+
+    cacheBlockfree(&cache);
     
     printf("%s", user_agent_hdr);
     return 0;
