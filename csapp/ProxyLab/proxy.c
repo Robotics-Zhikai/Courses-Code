@@ -322,10 +322,12 @@ void freeHttpheader(Httpheader * hp) //释放内存 防止内存泄露
     }
 }
 
-static void sendHTTPheaderTofd(int fd,Httpheader * hp)
+static void sendHTTPheaderTofd(int fd,Httpheader * hp,char * headerbuf,unsigned int* size)
 {
     char ** p = hp->headContent;
     char buf[MAXLINE];
+    if (size!=NULL)
+        *size = 0;
     while(*p!=NULL)
     {
         if ((strstr(*p,"GET"))==*p)
@@ -356,17 +358,14 @@ static void sendHTTPheaderTofd(int fd,Httpheader * hp)
             strcpy(*p,buf);
         }
 
-        rio_writen(fd,*p,strlen(*p));
+        rio_writen(fd,*p,strlen(*p)); //没把字符串最后的'\0'发送过去
+
+        if (headerbuf!=NULL && size!=NULL){
+            memcpy(headerbuf+(*size),*p,strlen(*p)); //把头数据储存在headerbuf中
+            (*size)+=strlen(*p);
+        }
         p++;
     }    
-    // sprintf(buf,"GET %s HTTP/1.0\r\n",URI);
-    // rio_writen(clientfd,buf,strlen(buf));
-    // sprintf(buf,"User-Agent: %s\r\n",user_agent_hdr);
-    // rio_writen(clientfd,buf,strlen(buf));
-    // sprintf(buf,"Connection: close\r\n");
-    // rio_writen(clientfd,buf,strlen(buf));
-    // sprintf(buf,"Proxy-Connection: close\r\n");
-    // rio_writen(clientfd,buf,strlen(buf));
 }
 
 
@@ -378,7 +377,7 @@ static int parseHTTPheader(rIo_t * rp,Httpheader * hp) //解析HTTP报文头 不
     while((rc=rio_readlineb(rp,buf,MAXLINE))>0)
     {
         *p = malloc(strlen(buf)+1);
-        memcpy(*p,buf,strlen(buf)+1);
+        memcpy(*p,buf,strlen(buf)+1); //连同末尾的'\0'都复制过去了
         p++;
         //printf("%s\n",buf);
         if(strcmp(buf,"\r\n")==0)
@@ -428,7 +427,7 @@ static int getHTTPbodyContentSize(Httpheader * hp)
 
 }
 
-const char cacheRoot[MAXLINE] = "cache";
+const char cacheRoot[MAXLINE] = "";
 void getCacheName(char * host,char * filename,char * cachefile)
 {
     strcpy(cachefile,cacheRoot);
@@ -499,8 +498,11 @@ cacheElement * findIncacheBlock(cacheBlock * blockptr,const char * URI)
 {
     cacheElement * cur = blockptr->Elementbegin;
     while(cur!=NULL){
-        if (strcmp(cur->URI,URI)==0)
+        if (strcmp(cur->URI,URI)==0){
+            // printf("%s,%s\n",cur->URI,URI);
             break;
+        }
+            
         cur=cur->Elementnext;
     }
     return cur;
@@ -580,7 +582,7 @@ cacheElement * cacheElementinit(const char * URI,const char * data,unsigned int 
     newEle->readCount = 0;
     return newEle;
 }
-cacheElement * findMINcountincache(cacheBlock * blockptr)
+cacheElement * findMINcountincache(cacheBlock * blockptr) //找到访问量最少的Element
 {
     cacheElement * cur = blockptr->Elementbegin;
     unsigned int minnest = 999999;
@@ -595,10 +597,10 @@ cacheElement * findMINcountincache(cacheBlock * blockptr)
     return minnestptr;
 }
 
-int writeIncache(cacheBlock * blockptr,const char * URI,char * data,unsigned int Bytes)
+int writeIncache(cacheBlock * blockptr,const char * URI,const char * data,unsigned int Bytes)
 {
     int success = 0;
-    sem_wait(&blockptr->writemutex);
+    sem_wait(&blockptr->writemutex); //如果不加锁的话可能出现double free
     if (Bytes>MAX_OBJECT_SIZE)
         success = 0;
     else if (findIncacheBlock(blockptr,URI)!=NULL){ //待写的数据就在cache里，不需要写
@@ -648,8 +650,9 @@ int readIncache(cacheBlock * blockptr,const char * URI,char * cachedata,unsigned
 cacheBlock cache; //全局变量 缓存区
 static void doit(int fd)
 {
-    
-    printf("fd:%d\n",fd);
+    printf("Used cache Size: %uB Limit:%u rate:%f cacheN:%d\n",cache.SumBytes,MAX_CACHE_SIZE,
+        (float)cache.SumBytes/(float)MAX_CACHE_SIZE,cache.cacheN);
+    // printf("begin doit%u fd:%d\n",pthread_self(), fd);
     char buf[MAXLINE];
     memset(buf,0,MAXLINE);
     rIo_t riobuffer;
@@ -687,17 +690,21 @@ static void doit(int fd)
     
     char host[MAXLINE],port[MAXLINE],filename[MAXLINE];
     parseURI(URI,host,port,filename);
-    printf("URI:%s host:%s port:%s filename:%s\n",URI,host,port,filename);
+    // printf("URI:%s host:%s port:%s filename:%s\n",URI,host,port,filename);
 
     char cachedata[MAX_OBJECT_SIZE];
+    char CacheFilename[MAXLINE]; 
+    getCacheName(host,filename,CacheFilename);
+    // printf("CacheFilename:%s\n",CacheFilename);
     unsigned int bytes;
-    if(readIncache(&cache,URI,cachedata,&bytes)==1){
+    if(readIncache(&cache,CacheFilename,cachedata,&bytes)==1){
+        printf("read:CacheFilename:%s,bytes:%d，thread:%u\n",CacheFilename,bytes,pthread_self());
         rio_writen(fd,cachedata,bytes); //直接从缓存中读取
+        freeHttpheader(&hp);
+        return;
     }
     
-    // char CacheFilename[MAXLINE];
-    // getCacheName(host,filename,CacheFilename);
-
+    
     int clientfd = openclient_fd(host,port); //代理服务器作为客户端，查IP地址并建立连接请求，旨在和已有的服务器建立连接
     if (clientfd<=0)
     {
@@ -705,7 +712,7 @@ static void doit(int fd)
         return;
     }
     
-    sendHTTPheaderTofd(clientfd,&hp);//proxy把从浏览器接收到的Get请求报文转发给server
+    sendHTTPheaderTofd(clientfd,&hp,NULL,NULL);//proxy把从浏览器接收到的Get请求报文转发给server
 
     //接下来就开始处理从server返回的数据了,需要把返回的数据发送给浏览器
     rIo_t riobufferClient;
@@ -722,19 +729,23 @@ static void doit(int fd)
     //给fd写数据是不断拓展fd的数据流，读fd是不断从头追赶数据流的末尾
     
     int ContentLength = getHTTPbodyContentSize(&hpClient);
-    printf("ContentLength:%d\n",ContentLength);
-    sendHTTPheaderTofd(fd,&hpClient); //发送报文头给浏览器
+    char  Headerbuf[MAXLINE];
+    unsigned int Headersize = 0;
+    // printf("ContentLength:%d\n",ContentLength);
+    sendHTTPheaderTofd(fd,&hpClient,Headerbuf,&Headersize); //发送报文头给浏览器
     if (ContentLength==-1)//当没有ContentLength字段时，可能是image/jpeg类型的数据，也可能是Not modified，被浏览器缓存的数据
     {
         char ** p = hpClient.headContent;
         while (*p!=NULL)
         {
-            printf("%s\n",*p);
+            //printf("%s\n",*p);
             p++;
         }
             
     }
 
+    int flagwrite = 1;//为1时说明需要将收到的数据写入缓存
+    memcpy(cachedata,Headerbuf,Headersize); //必须把头数据写入
 
     // open(CacheFilename,O_CREAT|O_TRUNC|O_RDWR,S_IWGRP); 
     //如果用这种open read write方式的话，就相当于先从网络上得到的数据到主存中，然后再从主存写数据到磁盘
@@ -742,26 +753,28 @@ static void doit(int fd)
 
     int receivedData = 0;
     // 跟http协议有关，有时候没有ContentLength字段，但是会有实体体，也需要进行发送
-    while(rio_read(&riobufferClient,NULL,-1))//不断填满缓冲区然后发送，只有当遇到EOF时才退出while
+    while(rio_read(&riobufferClient,NULL,-1)){//不断填满缓冲区然后发送，只有当遇到EOF时才退出while
     //如果直接read write的话，由于maxline的限制，不能把所有的字节都传递到位，会有丢失，导致浏览页面内容的丢失
-    {   
+        if(flagwrite &&receivedData+Headersize+riobufferClient.rio_cnt<=MAX_OBJECT_SIZE){
+            memcpy(cachedata+Headersize+receivedData,riobufferClient.rio_bufptr,riobufferClient.rio_cnt);
+        }else{
+            flagwrite = 0;
+        }
         receivedData+=riobufferClient.rio_cnt;
-        // printf("last:%d\n",riobufferClient.rio_cnt);
         rio_writeFlushALL(fd,&riobufferClient);
-        // printf("after:%d\n",riobufferClient.rio_cnt);
-
-        // if (rior==ContentLength)
-        //     break;
     }
-    printf("receivedData:%dB\n",receivedData);
+    if (flagwrite){
+        if (receivedData!=0){ //认为只有有实体体的才需要缓存 否则可能会出现304NOt modified的情况
+            writeIncache(&cache,CacheFilename,cachedata,receivedData+Headersize);
+            printf("write:CacheFilename:%s,receivedData:%d,thread:%u\n",CacheFilename,receivedData,pthread_self());
+        }
         
-    // char * contenttmp = (char *)malloc(ContentLength);
-
+    }
     
-   // open("./cache/",)
-    // read(clientfd,buf,sizeof(buf));
-    // write(fd,buf,sizeof(buf));
-    //printf("%s\r\n",buf);
+    // printf("begin\n");
+    // printf("thread:%d,receivedData:%dB\n",pthread_self(),receivedData);
+    // printf("thread:%d,contentlength:%d\n",pthread_self(),ContentLength);
+    // printf("end\n"); //从这个发现即便是ContentLength=-1，receiveData都可能为一个比较大的值
 
     freeHttpheader(&hp);
     freeHttpheader(&hpClient);
@@ -923,8 +936,8 @@ int prethreading(int argc,char ** argv) //使用生产者消费者模型 预线�
         //当浏览器处发送的端口不是监听端口的话，也会取消accept的阻塞
         
         getnameinfo(&socketclient,sizeof(struct sockaddr),host,MAXLINE,service,MAXLINE,NI_NUMERICHOST);
-        printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~get connection from (%s:%s)\n",host,service);
-        printf("%d,%d\n",count++,connfd);
+        // printf("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~get connection from (%s:%s)\n",host,service);
+        // printf("%d,%d\n",count++,connfd);
         //每次得到的service都不一样
 
         insertfd(&fdbuf,connfd);//生产者模型，不断接收TCP链接
@@ -938,8 +951,9 @@ int prethreading(int argc,char ** argv) //使用生产者消费者模型 预线�
 
 int main(int argc,char ** argv)
 {
+    printf("pid:%d\n",getpid());
     //simpleMultithread(argc,argv); //简单的一个TCP链接分配一个线程
-   prethreading(argc,argv); //生产者消费者模型
+    prethreading(argc,argv); //生产者消费者模型
 }
 
 
