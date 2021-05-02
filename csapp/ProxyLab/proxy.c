@@ -7,6 +7,7 @@
 #include <fcntl.h> // open
 #include <pthread.h> //与线程有关的函数
 #include <semaphore.h> //与信号量有关的函数，用于多线程加锁
+#include <signal.h> //处理broken pipe错误
 
 
 /* Recommended max cache and object sizes */
@@ -197,7 +198,7 @@ static ssize_t rio_writen(int fd,const char * buf,const size_t n) //需要保证
 static void Rio_writen(int fd,const char * buf,const size_t n)
 {
     if (rio_writen(fd,buf,n)!=n)
-        printf("rio_writen函数写错啦！！！！！！！！！！！！\n");
+        printf("rio_written 中的write遇到了brokenpipe\n");
 }
 
 static void rio_writeFlushALL(int fd,rIo_t * rp) //把所有缓冲中未处理的数据处理一遍，把rio_cnt置0
@@ -250,21 +251,21 @@ static void clienterror(int fd,char * cause,char *errnum,char* shortmsg,char * l
 
     //输出HTTP响应报文头
     sprintf(printfbuf,"HTTP/1.0 %s %s\r\n",errnum,shortmsg);
-    rio_writen(fd,printfbuf,strlen(printfbuf));
+    Rio_writen(fd,printfbuf,strlen(printfbuf));
     sprintf(printfbuf,"Content-type: text/html\r\n \r\n");
-    rio_writen(fd,printfbuf,strlen(printfbuf));
+    Rio_writen(fd,printfbuf,strlen(printfbuf));
 
     //输出HTTP响应报文
     sprintf(printfbuf,"<html><title>Proxy Error</title>");
-    rio_writen(fd,printfbuf,strlen(printfbuf));
+    Rio_writen(fd,printfbuf,strlen(printfbuf));
     sprintf(printfbuf,"<body bgcolor=""ffffff"">\r\n");
-    rio_writen(fd,printfbuf,strlen(printfbuf));
+    Rio_writen(fd,printfbuf,strlen(printfbuf));
     sprintf(printfbuf,"%s: %s\r\n",errnum,shortmsg);
-    rio_writen(fd,printfbuf,strlen(printfbuf));
+    Rio_writen(fd,printfbuf,strlen(printfbuf));
     sprintf(printfbuf,"<p>%s: %s\r\n",longmsg,cause);
-    rio_writen(fd,printfbuf,strlen(printfbuf));
+    Rio_writen(fd,printfbuf,strlen(printfbuf));
     sprintf(printfbuf,"<hr><em>The proxy server\r\n");
-    rio_writen(fd,printfbuf,strlen(printfbuf));
+    Rio_writen(fd,printfbuf,strlen(printfbuf));
     
 }
 
@@ -358,7 +359,7 @@ static void sendHTTPheaderTofd(int fd,Httpheader * hp,char * headerbuf,unsigned 
             strcpy(*p,buf);
         }
 
-        rio_writen(fd,*p,strlen(*p)); //没把字符串最后的'\0'发送过去
+        Rio_writen(fd,*p,strlen(*p)); //没把字符串最后的'\0'发送过去
 
         if (headerbuf!=NULL && size!=NULL){
             memcpy(headerbuf+(*size),*p,strlen(*p)); //把头数据储存在headerbuf中
@@ -699,7 +700,7 @@ static void doit(int fd)
     unsigned int bytes;
     if(readIncache(&cache,CacheFilename,cachedata,&bytes)==1){
         printf("read:CacheFilename:%s,bytes:%d，thread:%u\n",CacheFilename,bytes,pthread_self());
-        rio_writen(fd,cachedata,bytes); //直接从缓存中读取
+        Rio_writen(fd,cachedata,bytes); //直接从缓存中读取 如果这个由于brokenpipe造成写失败的话，不会造成内存泄露
         freeHttpheader(&hp);
         return;
     }
@@ -732,7 +733,7 @@ static void doit(int fd)
     char  Headerbuf[MAXLINE];
     unsigned int Headersize = 0;
     // printf("ContentLength:%d\n",ContentLength);
-    sendHTTPheaderTofd(fd,&hpClient,Headerbuf,&Headersize); //发送报文头给浏览器
+    sendHTTPheaderTofd(fd,&hpClient,Headerbuf,&Headersize); //发送报文头给浏览器 这个brokenpipe也不会造成内存泄露
     if (ContentLength==-1)//当没有ContentLength字段时，可能是image/jpeg类型的数据，也可能是Not modified，被浏览器缓存的数据
     {
         char ** p = hpClient.headContent;
@@ -761,7 +762,7 @@ static void doit(int fd)
             flagwrite = 0;
         }
         receivedData+=riobufferClient.rio_cnt;
-        rio_writeFlushALL(fd,&riobufferClient);
+        rio_writeFlushALL(fd,&riobufferClient); //这个brokenpipe也不会造成内存泄露
     }
     if (flagwrite){
         if (receivedData!=0){ //认为只有有实体体的才需要缓存 否则可能会出现304NOt modified的情况
@@ -949,9 +950,22 @@ int prethreading(int argc,char ** argv) //使用生产者消费者模型 预线�
     return 0;
 }
 
+static void unix_error(char *msg) /* Unix-style error */
+{
+    fprintf(stderr, "%s: %s\n", msg, strerror(errno));
+    exit(0);
+}
+void sigpipe_handler(int sig) //默认情况下直接就退出进程了 但是加上这个处理函数的话，就不是默认，就不退出进程
+//而上边又详细的分析了涉及到write的brokenpipe时不会造成内存泄露 因此是安全的
+{
+    printf("catch sigpipe\n"); 
+    fflush(stdout);
+}
 int main(int argc,char ** argv)
 {
     printf("pid:%d\n",getpid());
+    if (signal(SIGPIPE,sigpipe_handler)==SIG_ERR)//通过添加SIGPIPE信号处理函数防止出现brokenpipe造成服务器进程提前终止
+        unix_error("signal error\n");
     //simpleMultithread(argc,argv); //简单的一个TCP链接分配一个线程
     prethreading(argc,argv); //生产者消费者模型
 }
