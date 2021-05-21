@@ -1,2 +1,15 @@
-# Courses Code
-This Repository is storing the courses' code that I study
+## Courses Code
+* 一些课程的代码
+* CS144 6.s081 6.824等课程的代码由于明确要求不可以public,因此这些都以private repo的形式存在
+
+### 课程
+* 数值分析
+* 数字图像处理
+* 操作系统
+* 计算机网络
+* 深入理解计算机系统(csapp)
+* 模式识别
+* C++ primer
+* 控制理论
+* 设计模式
+* 持续更新中......
