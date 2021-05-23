@@ -23,7 +23,8 @@
  	* 下边的是序号之间的转换关系
  
  ![序列转换](./image/序列转换.png)
- 	* window size是first_unassembled和first_unacceptable之间的距离
+ 	
+	* window size是first_unassembled和first_unacceptable之间的距离
 	 * 每次将32位的seqno解压（unwrap）成64位的uint时，需要设定一个基准：(uint64_t)checkpoint。这个checkpoint是last reassembled byte。
  	* 一个TCP段中可能SYN和FIN都置1
  	* 如果FIN标志置位的话，说明payload的最后一位是eof，即是字节流中的最后一位
