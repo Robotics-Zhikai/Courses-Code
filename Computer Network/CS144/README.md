@@ -12,21 +12,22 @@
 * 实现过程的挑战：一开始没有彻底理解这个数据结构的作用，用的是优先队列的方法，比较繁琐；后来看了测试数据后，大概理解了stream_reassember的作用，就开始实现现在所看到的数据结构；对于边界条件和EOF比较麻烦，对于EOF的处理，加了一个新的private变量EOFindex标记EOF的位置就使得程序变得简单
 ## lab2
 * 实验文档随笔
- * 需要实现接收TCP报文段，重装数据流，将以TCP协议发送的数据经过unwrap转化到stream中。为了确认和流量控制需要从receiver返回给sender的数据。
- * 应用程序从ByteStream中读取数据，这个数据是连续的。也就是从TCPsocket中读。
- * 逻辑开始SYN和逻辑终止FIN占据单独的序列号（sequence number）。SYN的第一个序列号是ISN，第一个真实数据是ISN+1而不是ISN+0.
- * 需要注意区分序列号（sequence number）、绝对序列号（absolute sequence number）、数据流索引（stream index）这三个概念的区别。之所以有这个区别是因为stream index、absolute sequence是64位的，而TCP头部的空间是有限的，能用32位就绝不用64位。
- * 在0-2^32范围内随机ISN能够增强安全性，防止旧的连接的TCP段干扰新连接的TCP段。之所以能够防止干扰，是因为每个TCP的payload为了适合单个链路层帧，最多不能超过1500字节（引自计算机网络自顶向下，和[链接](https://stackoverflow.com/questions/2613734/maximum-packet-size-for-a-tcp-connection#:~:text=10%20Answers&text=The%20absolute%20limitation%20on%20TCP,for%20instance%2C%20is%201500%20bytes.),这个链接也指出了如果更大的payload会造成数据截断、数据出错等问题），而这个1500字节相比于2^32是一个很窄很窄的范围。我每次都随机一个ISN，旧的TCP对新的TCP造成干扰的概率是1500/2^32=0.000000375,更不用说还需要事先判断源端口号是否相同，这会进一步降低碰撞概率。
- * TCP每次接收的stream index域的序号范围（也是unwrap的输出uint64_t范围）在[checkpoint-2^32/2,checkpoint+2^32/2]范围内（checkpoint反映了当前receiver接收到的stream index域的序号），如果sender很早以前的TCP没有被路由器丢弃，且TCP连接在很长时间过后还没有断开，那么经过很长时间后，很早以前的TCP被receiver收到了，此时碰撞的概率还是1500/2^32。但这是假设没有被丢弃以及TCP没有断开连接，实际中很可能早就断开或者丢弃了。而且根据TCP协议，当前receiver想要的在window范围中的数据会更小，碰撞导致出错的概率就更低了。
- * 本实验重点关注如下
+ 	* 需要实现接收TCP报文段，重装数据流，将以TCP协议发送的数据经过unwrap转化到stream中。为了确认和流量控制需要从receiver返回给sender的数据。
+ 	* 应用程序从ByteStream中读取数据，这个数据是连续的。也就是从TCPsocket中读。
+	 * 逻辑开始SYN和逻辑终止FIN占据单独的序列号（sequence number）。SYN的第一个序列号是ISN，第一个真实数据是ISN+1而不是ISN+0.
+	 * 需要注意区分序列号（sequence number）、绝对序列号（absolute sequence number）、数据流索引（stream index）这三个概念的区别。之所以有这个区别是因为stream index、absolute sequence是64位的，而TCP头部的空间是有限的，能用32位就绝不用64位。
+	 * 在0-2^32范围内随机ISN能够增强安全性，防止旧的连接的TCP段干扰新连接的TCP段。之所以能够防止干扰，是因为每个TCP的payload为了适合单个链路层帧，最多不能超过1500字节（引自计算机网络自顶向下，和[链接](https://stackoverflow.com/questions/2613734/maximum-packet-size-for-a-tcp-connection#:~:text=10%20Answers&text=The%20absolute%20limitation%20on%20TCP,for%20instance%2C%20is%201500%20bytes.),这个链接也指出了如果更大的payload会造成数据截断、数据出错等问题），而这个1500字节相比于2^32是一个很窄很窄的范围。我每次都随机一个ISN，旧的TCP对新的TCP造成干扰的概率是1500/2^32=0.000000375,更不用说还需要事先判断源端口号是否相同，这会进一步降低碰撞概率。
+ 	* TCP每次接收的stream index域的序号范围（也是unwrap的输出uint64_t范围）在[checkpoint-2^32/2,checkpoint+2^32/2]范围内（checkpoint反映了当前receiver接收到的stream index域的序号），如果sender很早以前的TCP没有被路由器丢弃，且TCP连接在很长时间过后还没有断开，那么经过很长时间后，很早以前的TCP被receiver收到了，此时碰撞的概率还是1500/2^32。但这是假设没有被丢弃以及TCP没有断开连接，实际中很可能早就断开或者丢弃了。而且根据TCP协议，当前receiver想要的在window范围中的数据会更小，碰撞导致出错的概率就更低了。
+	 * 本实验重点关注如下
 ![TCPlab2](./image/TCPlab2.png)
- * 下边的是序号之间的转换关系
+ 	* 下边的是序号之间的转换关系
+ 
  ![序列转换](./image/序列转换.png)
- * window size是first_unassembled和first_unacceptable之间的距离
- * 每次将32位的seqno解压（unwrap）成64位的uint时，需要设定一个基准：(uint64_t)checkpoint。这个checkpoint是last reassembled byte。
- * 一个TCP段中可能SYN和FIN都置1
- * 如果FIN标志置位的话，说明payload的最后一位是eof，即是字节流中的最后一位
- * 2^64个字节用11TB/s的速度传送的话需要50年，而2^32个字节用相同的速度传送只需要0.33秒。
+ 	* window size是first_unassembled和first_unacceptable之间的距离
+	 * 每次将32位的seqno解压（unwrap）成64位的uint时，需要设定一个基准：(uint64_t)checkpoint。这个checkpoint是last reassembled byte。
+ 	* 一个TCP段中可能SYN和FIN都置1
+ 	* 如果FIN标志置位的话，说明payload的最后一位是eof，即是字节流中的最后一位
+     * 2^64个字节用11TB/s的速度传送的话需要50年，而2^32个字节用相同的速度传送只需要0.33秒。
 * 实验过程
 	* 首先是将uint64_t的绝对序列号转化成uint32_t的序列号，转换方法lab2文档中有。接着是将uint32_t的序列号根据checkpoint的基准转化成uint64_t的绝对序列号。unwrap和wrap
 	* TCPsegment类中实现了header和payload数据的解析，也通过计算机网络自顶向下中对UDP数据可靠性检验的校验和描述的原理进行了检验。也可见[链接](https://en.wikipedia.org/wiki/IPv4_header_checksum)中对检验和(checksum)的描述。
