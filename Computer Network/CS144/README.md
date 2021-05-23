@@ -23,12 +23,11 @@
  	* 下边的是序号之间的转换关系
  
  ![序列转换](./image/序列转换.png)
- 	
 	* window size是first_unassembled和first_unacceptable之间的距离
-	 * 每次将32位的seqno解压（unwrap）成64位的uint时，需要设定一个基准：(uint64_t)checkpoint。这个checkpoint是last reassembled byte。
- 	* 一个TCP段中可能SYN和FIN都置1
- 	* 如果FIN标志置位的话，说明payload的最后一位是eof，即是字节流中的最后一位
-     * 2^64个字节用11TB/s的速度传送的话需要50年，而2^32个字节用相同的速度传送只需要0.33秒。
+	* 每次将32位的seqno解压（unwrap）成64位的uint时，需要设定一个基准：(uint64_t)checkpoint。这个checkpoint是last reassembled byte。
+	* 一个TCP段中可能SYN和FIN都置1
+	* 如果FIN标志置位的话，说明payload的最后一位是eof，即是字节流中的最后一位
+	* 2^64个字节用11TB/s的速度传送的话需要50年，而2^32个字节用相同的速度传送只需要0.33秒。
 * 实验过程
 	* 首先是将uint64_t的绝对序列号转化成uint32_t的序列号，转换方法lab2文档中有。接着是将uint32_t的序列号根据checkpoint的基准转化成uint64_t的绝对序列号。unwrap和wrap
 	* TCPsegment类中实现了header和payload数据的解析，也通过计算机网络自顶向下中对UDP数据可靠性检验的校验和描述的原理进行了检验。也可见[链接](https://en.wikipedia.org/wiki/IPv4_header_checksum)中对检验和(checksum)的描述。
