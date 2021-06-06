@@ -36,3 +36,9 @@
 	*  SYN TCP段，在计算机网络自顶向下中提到是不携带payload的，但是在实现TCPReceiver::segment_received的过程中，只有假设SYN段也可能携带数据才能通过所有测试集。具体的原因见[链接](https://blog.csdn.net/dog250/article/details/108540823#:~:text=%E4%BC%97%E6%89%80%E5%91%A8%E7%9F%A5%EF%BC%8CTCP%E7%9A%84SYN%E6%8A%A5,%E6%95%B0%E6%8D%AE%E7%9A%84%E5%BA%8F%E5%88%97%E5%8F%B7%E5%8C%BA%E9%97%B4%E3%80%82).
 	*  FIN和SYN可能同时置位，FIN置位代表当前payload的最后一位是eof，需要使得Bytestream endinput。
 	*  本实验的核心就是充分理解seqno、absoluteseqno、streamindex的相互转化关系，然后调用前两个实验的函数实现。wrap和unwrap借助ISN将uint64_t压缩到uint_32_t或者将uint32_t解压缩到uint64_t,这两个转换是可逆且无失真的.
+## lab3
+* 实验文档随笔
+	* 需要跟踪所有没有被确认的TCPsegment，如果超出一定时间没有回复，则进行重传（超时重传）
+	* SYN和FIN也占据window的空间
+	* 不用考虑receiver接收的数据被截断、然后返回的ackno是截断的序号。返回的ackno肯定能确认所有之前发送的某一TCPsegment的payload。见FAQ
+	* 每隔few milliseconds调用一次tick，指示上一次调用到现在经过了多少ms
