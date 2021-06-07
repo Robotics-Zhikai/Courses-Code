@@ -37,8 +37,13 @@
 	*  FIN和SYN可能同时置位，FIN置位代表当前payload的最后一位是eof，需要使得Bytestream endinput。
 	*  本实验的核心就是充分理解seqno、absoluteseqno、streamindex的相互转化关系，然后调用前两个实验的函数实现。wrap和unwrap借助ISN将uint64_t压缩到uint_32_t或者将uint32_t解压缩到uint64_t,这两个转换是可逆且无失真的.
 ## lab3
-* 实验文档随笔
+* 实验[文档](./file/lab3.pdf)随笔
 	* 需要跟踪所有没有被确认的TCPsegment，如果超出一定时间没有回复，则进行重传（超时重传）
 	* SYN和FIN也占据window的空间
 	* 不用考虑receiver接收的数据被截断、然后返回的ackno是截断的序号。返回的ackno肯定能确认所有之前发送的某一TCPsegment的payload。见FAQ
 	* 每隔few milliseconds调用一次tick，指示上一次调用到现在经过了多少ms
+	* 实验文档中所述的定时器管理机制和计算机网络自顶向下描述的是差不多的，包括_clock的启动、重设、超时等等。有一个指数增长的超时重传机制
+* 实验过程
+	* 本实验主要实现的是一个TCPsender，主体功能是在已知receiver端windowsize的情况下尽可能把sender端Bytestream中的数据read后发送给receiver端，同时需要注意SYN和FIN也占据windowsize的空间。主要的复杂度在如何处理各种边界情况。
+	* 主要的代码写在[tcp_sender.hh](./code/tcp_sender.hh)和[tcp_sender.cc](./code/tcp_sender.cc)两个文件中。主要实现的函数包括tick、ack_received、fill_window和FirstPushTO_segments_out、RetransPushTO_segments_out。具体函数的功能实现及注释见源代码。
+	* 使用时，主要是先ack_received，更新receiver端的窗口大小并确认暂存队列的TCPsegments，然后调用fill_window尽可能的发送sender端的Bytestream的数据，并把发送的数据暂存队列中，在此期间由tick主要进行定时器管理，并在超时时重发最久远没有被确认的seg（重发机制涉及到receiver窗口非0时指数重传和receiver窗口为0时的等时重传）。需要注意的是，在发送sender端的Bytestream时，要把整个流理解为在核心数据的首部之前加SYN，核心数据的末尾（eof）后加FIN的抽象数据流，把抽象数据流转换成一块块的TCPsegment发送给receiver。

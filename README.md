@@ -1,6 +1,5 @@
 ## Courses Code
 * 一些课程的代码
-* CS144 6.s081 6.824等课程的代码由于明确要求不可以public,因此这些都以private repo的形式存在
 
 ### 课程
 * [数值分析](./Numerical%20Analysis)
