@@ -47,3 +47,16 @@
 	* 本实验主要实现的是一个TCPsender，主体功能是在已知receiver端windowsize的情况下尽可能把sender端Bytestream中的数据read后发送给receiver端，同时需要注意SYN和FIN也占据windowsize的空间。主要的复杂度在如何处理各种边界情况。
 	* 主要的代码写在[tcp_sender.hh](./code/tcp_sender.hh)和[tcp_sender.cc](./code/tcp_sender.cc)两个文件中。主要实现的函数包括tick、ack_received、fill_window和FirstPushTO_segments_out、RetransPushTO_segments_out。具体函数的功能实现及注释见源代码。
 	* 使用时，主要是先ack_received，更新receiver端的窗口大小并确认暂存队列的TCPsegments，然后调用fill_window尽可能的发送sender端的Bytestream的数据，并把发送的数据暂存队列中，在此期间由tick主要进行定时器管理，并在超时时重发最久远没有被确认的seg（重发机制涉及到receiver窗口非0时指数重传和receiver窗口为0时的等时重传）。需要注意的是，在发送sender端的Bytestream时，要把整个流理解为在核心数据的首部之前加SYN，核心数据的末尾（eof）后加FIN的抽象数据流，把抽象数据流转换成一块块的TCPsegment发送给receiver。
+## lab4
+* 实验文档随笔
+	* 不鼓励阅读测试集代码，除非已经走投无路。阅读测试集写出来的代码可能鲁棒性不好。
+	* tick函数被操作系统周期性的调用。
+	* 最难的部分在于什么时候彻底终止TCPConnection并宣布不再active了。
+	* 本实验主要就是把_sender和_receiver的东西用起来,并解决两个合在一起造成的问题
+	* 全双工通道见下图
+		* ![全双工通道](./image/全双工通道.png)
+	* 所有ackno有效的TCPsegment都置ack为1
+	* 当receiver想要告诉对端一个比uint16还大的windowsize时，需要有限幅
+	* 有两种方法使得connection end
+		* 一种是unclean shutdown，发送或接收到了RST，此时输出输入流应该set error，active应return false
+		* 另一种是clean shutdown， 结束without an error，且确保两方的数据都完整的被对方接收到

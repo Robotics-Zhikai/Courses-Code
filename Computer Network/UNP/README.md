@@ -6,7 +6,7 @@
 	*  这一端的TCP提取**套接字发送缓冲区**中的数据并把它发送给对端TCP，其过程基于TCP数据传送的所有规则。对端TCP必须确认收到的数据，伴随来自对端的ACK的不断到达，本端TCP至此才能从套接字发送缓冲区中丢弃已确认的数据。TCP必须为已发送的数据保留一个副本，直到他被对端确认为止。（可参考CS144中sender的实现：发送缓冲区可看做Bytestream，通过read Bytestream发送TCPsegment，并把未确认的TCPsegment保存到一队列中，直到对端发来ACK确认就把相应的TCPsegment副本丢弃。值得一提的是，read Bytestream这一动作就使得Bytestream空出来了空间，也就是使得套接字发送缓冲区空出来了空间，能够被应用进程write继续写入）
 ## 第三章 套接字编程简介
 * 字节流套接字上的read和write函数所表现的行为不同于通常的文件I/O。字节流套接字上调用read或write输入或输出的字节数可能比请求的数量少，然而这不是出错的状态。这个现象的原因在于内核中用于套接字的缓冲区可能已到达了极限。**值不足的现象在read一个字节流套接字时很常见，但是在write一个字节流套接字时只能在该套接字为非阻塞的前提下才出现**
-* write到内核缓冲区的数据不一定全部都发到对端了，实际上就是CS144中所讲的write到Bytestream，然后按照TCP协议去发。read的话就是read Bytestream，Bytestream是TCP协议交付数据存放的地点，可以把Bytestream 当成内核缓冲区（见[本笔记这里](#第二章 传输层：TCP、UDP和SCTP)）。
+* write到内核缓冲区的数据不一定全部都发到对端了，实际上就是CS144中所讲的write到Bytestream，然后按照TCP协议去发。read的话就是read Bytestream，Bytestream是TCP协议交付数据存放的地点，可以把Bytestream 当成内核缓冲区（见[本笔记这里](#第二章)）。
 
 ## 第四章 基本TCP套接字编程
 * close一个TCP套接字后，该套接字描述符不能再由调用进程使用，也就是说它不能再作为read或write的第一个参数。
@@ -69,3 +69,11 @@
 * SO_RCVLOWAT和SO_SNDLOWAT套接字选项设置接收低水位标记和发送低水位标记，供给select函数使用。标记可读可写标志在缓冲区的临界值
 * SO_RCVTIMEO和SO_SNDTIMEO套接字选项可以给套接字的接收和发送设置一个超时值。可以用秒数和微秒数来规定超时。如果I/O操作超时，将返回一个错误（读errno可知）。接收超时影响5个输入函数：read、readv、recv、recvfrom和recvmsg；发送超时影响5个输出函数：write、writev、send、sendto和sendmsg。
 * fcntl函数可以设置套接字为非阻塞式I/O或者信号驱动式I/O等等
+## 第14章 高级I/O函数
+* 套接字设置超时的三种方法：
+	* 调用alarm，超时期慢产生SIGALARM信号，需要设置信号处理函数
+	* 在select中阻塞等待I/O
+	* 使用SO_RCVTIMEO和SO_SNDTIMEO套接字选项（二者都不能用于为connect设置超时）
+* recv和send函数，类似于标准的read和write函数，不过需要一个额外的参数，这个额外的参数可用于发送或接收带外数据、窥看外来数据（recv之后没有把对应数据从缓冲区丢弃，可用于读取排队在socket上的数据量）、等待所有数据（告知内核不要在尚未读入请求数目的字节之前让一个读操作返回，可代替readn）
+* readv和writev函数，允许单个系统调用读入到或写出自一个或多个缓冲区，分散读和集中写。writev函数从缓冲区中聚集输出数据的顺序是：iov[0]、iov[1]直至iov[iovcnt-1]，writev返回输出的字节总数，通常应等于所有缓冲区长度之和；readv函数则将读入的数据按照上述同样的顺序散布到缓冲区中。readv总是先填满一个缓冲区然后再填写下一个。
+* recvmsg和sendmsg函数，这两个函数是最通用的I/O函数，组合了recv和send、recvfrom和sendto、readv和writev的能力，还增加了两个新特性：给应用进程返回标志、接受或发送辅助数据。
