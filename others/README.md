@@ -20,3 +20,8 @@
 		* 工作集和驻留集（充分权衡多进程的并发性和单个进程的缺页率） 
 	* 局部页面置换算法 
 		* 进程内的页面
+* [Telnet用法](https://blog.csdn.net/u011889811/article/details/43356075?utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7Edefault-3.nonecase&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7Edefault-3.nonecase)
+* [task_struct结构体成员详解](https://blog.csdn.net/bit_clearoff/article/details/54292300)
+	* csapp的p581只对mm做了阐述
+	* 具体包括：进程标识符、进程状态、进程标记符、表示进程亲属关系的成员、ptrace系统调用、进程调度优先级、进程地址空间	 
+
