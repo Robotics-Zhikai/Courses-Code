@@ -24,4 +24,5 @@
 * [task_struct结构体成员详解](https://blog.csdn.net/bit_clearoff/article/details/54292300)
 	* csapp的p581只对mm做了阐述
 	* 具体包括：进程标识符、进程状态、进程标记符、表示进程亲属关系的成员、ptrace系统调用、进程调度优先级、进程地址空间	 
-
+* [C++派生类指针和基类指针相互的转化和赋值](http://c.biancheng.net/view/260.html)
+	* 配合深度探索C++对象模型深刻理解
