@@ -32,3 +32,43 @@
 * ROS操作系统
 	* 设计的初衷，就是使机器人开发能够像计算机开发一样，屏蔽其底层硬件及接口的不一致，最终使得软件可以复用。ROS能够以统一消息格式来使得大家只需要关注算法层面的设计，而底层硬件的根本目的是接收各种各样的消息，如图像、数据等，各个硬件厂商将接收到的数据都统一到ROS所规定的统一消息格式下，即可让用户方便的使用各种开源的机器人相关算法。
 	* ROS已经彻底重构，推出了实时性更强的2.0版本，解决了ROS实时性问题，未来很有可能被直接用于实际产品的研发，为推进工业级机器人和服务机器人的应用做出重要贡献
+* ROS1与ROS2
+	* [ROS与ROS2比较](https://blog.csdn.net/tuziaaa/article/details/103358145?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522162609279016780262576720%2522%252C%2522scm%2522%253A%252220140713.130102334..%2522%257D&request_id=162609279016780262576720&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~baidu_landing_v2~default-1-103358145.first_rank_v2_pc_rank_v29_1&utm_term=ROS2%E4%B8%8EROS1%E7%9A%84%E5%8C%BA%E5%88%AB&spm=1018.2226.3001.4187)
+	* [ROS学习笔记-ROS1和ROS2](https://blog.csdn.net/weixin_51244852/article/details/116421194?ops_request_misc=&request_id=&biz_id=102&utm_term=ROS2%E4%B8%8EROS1%E7%9A%84%E5%8C%BA%E5%88%AB&utm_medium=distribute.pc_search_result.none-task-blog-2~all~sobaiduweb~default-5-.first_rank_v2_pc_rank_v29_1&spm=1018.2226.3001.4187)
+	* [ros1 和 ros2的区别](https://mengleil.blog.csdn.net/article/details/104751581?utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7Edefault-5.essearch_pc&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromBaidu%7Edefault-5.essearch_pc)
+	* ROS2的目标：支持多机器人系统、铲除原型与产品之间的鸿沟、支持微控制器、支持实时控制、跨系统平台支持
+	* ROS2可靠性更高，不会出现一个master挂掉整个都挂掉的情形，是一个分布式的实现。且在网络可靠性较低时能够很好地处理。
+* struct的内存占用
+	```
+	struct A {
+		int a; //4
+		bool b; //1
+		bool * c; //8
+		bool d; //1 注意bool变量是1字节
+	};
+	//这个占用内存空间24字节（注意不能是20字节，20字节的话到A[1].c就没法对齐了）
+	struct A {
+		int a; //4
+		bool b; //1
+		bool * c; //8
+	};
+	//这个占用内存空间16字节 
+	//总之是按照某一数据类型存放的地址是该数据类型内存大小的倍数的原则来进行的
+	//同时也要考虑到A的结构体数组在连续存放时应能够满足对齐要求
+	```
+* [sizeof() 类大小，空类大小](https://blog.csdn.net/liu_qiqi/article/details/9344627)
+	* 空类实例化的对象的大小为1字节，为了能够使得每个对象都有特异的地址。
+	* 1、为类的非静态成员数据的类型大小之和。2、由编译器额外加入的成员变量的大小，用来支持语言的某些特性（如：指向虚函数的指针）。3、为了优化存取效率，进行的边缘调整（对齐）。4、与类中的构造函数，析构函数以及其他的成员函数无关。
+* C的结构体和C++结构体的区别
+	* C的结构体内不允许有函数存在，C++允许有内部成员函数，且允许该函数是虚函数。所以C的结构体是没有构造函数、析构函数、和this指针的。
+	* C的结构体对内部成员变量的访问权限只能是public，而C++允许public,protected,private三种。
+	* C语言的结构体是不可以继承的，C++的结构体是可以从其他的结构体或者类继承过来的。
+   	* 以上都是表面的区别，实际区别就是面向过程和面向对象编程思路的区别：C的结构体只是把数据变量给包裹起来了，并不涉及算法。而C++是把数据变量及对这些数据变量的相关算法给封装起来，并且给对这些数据和类不同的访问权限。C语言中是没有类的概念的，但是C语言可以通过结构体内创建函数指针实现面向对象思想。
+* C++的结构体和C++类的区别
+	* C++结构体内部成员变量及成员函数默认的访问级别是public,而c++类的内部成员变量及成员函数的默认访问级别是private。
+	* C++结构体的继承默认是public，而c++类的继承默认是private。
+* [在 C＋＋ 里是怎么实现 delete[] 的？](https://www.zhihu.com/question/291750903/answer/477557020)
+* [map/unordered_map原理和使用整理](https://blog.csdn.net/Blues1021/article/details/45054159?utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-2.essearch_pc&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-2.essearch_pc)
+	* map的内部实现是二叉平衡树(红黑树)；hash_map内部是一个hash_table一般是由一个大vector，vector元素节点可挂接链表来解决冲突，来实现.
+	* 非频繁的查询用map比较稳定；频繁的查询用hash_map效率会高一些，c++11中的unordered_map查询效率会更高一些但是内存占用比hash_map稍微大点。unordered_map 就是 boost 里面的 hash_map 实现。其他性能特点见链接
+* [C++---静态多态与动态多态](https://blog.csdn.net/qq_37934101/article/details/81365449)
