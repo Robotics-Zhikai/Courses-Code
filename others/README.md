@@ -80,4 +80,5 @@
 	* [教你初步了解红黑树](https://blog.csdn.net/v_JULY_v/article/details/6105630) 
 	* [红黑树，超强动静图详解，简单易懂](https://zhuanlan.zhihu.com/p/79980618)
 	* [红黑树和AVL树（平衡二叉树）区别](https://blog.csdn.net/u010899985/article/details/80981053)
+	* [为什么工程中都用红黑树，而不是其他平衡二叉树？](https://www.zhihu.com/question/27542473)
 	* 红黑树能够以 O(logn) 的时间复杂度进行搜索、插入、删除操作。此外，由于它的设计，任何不平衡都会在三次旋转之内解决。
