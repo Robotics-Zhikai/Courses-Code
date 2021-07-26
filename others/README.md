@@ -72,3 +72,12 @@
 	* map的内部实现是二叉平衡树(红黑树)；hash_map内部是一个hash_table一般是由一个大vector，vector元素节点可挂接链表来解决冲突，来实现.
 	* 非频繁的查询用map比较稳定；频繁的查询用hash_map效率会高一些，c++11中的unordered_map查询效率会更高一些但是内存占用比hash_map稍微大点。unordered_map 就是 boost 里面的 hash_map 实现。其他性能特点见链接
 * [C++---静态多态与动态多态](https://blog.csdn.net/qq_37934101/article/details/81365449)
+* 红黑树
+	* 红黑树特点
+		* 根节点和NULL是黑节点
+		* 从NULL到根节点的黑节点数量相同
+		* 红节点的父节点和儿子节点都为黑节点 
+	* [教你初步了解红黑树](https://blog.csdn.net/v_JULY_v/article/details/6105630) 
+	* [红黑树，超强动静图详解，简单易懂](https://zhuanlan.zhihu.com/p/79980618)
+	* [红黑树和AVL树（平衡二叉树）区别](https://blog.csdn.net/u010899985/article/details/80981053)
+	* 红黑树能够以 O(logn) 的时间复杂度进行搜索、插入、删除操作。此外，由于它的设计，任何不平衡都会在三次旋转之内解决。
