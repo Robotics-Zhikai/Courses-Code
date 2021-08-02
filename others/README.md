@@ -82,6 +82,6 @@
 	* [红黑树和AVL树（平衡二叉树）区别](https://blog.csdn.net/u010899985/article/details/80981053)
 	* [为什么工程中都用红黑树，而不是其他平衡二叉树？](https://www.zhihu.com/question/27542473)
 	* 红黑树能够以 O(logn) 的时间复杂度进行搜索、插入、删除操作。此外，由于它的设计，任何不平衡都会在三次旋转之内解决。
-* [C与C++之间的相互调用](https://blog.csdn.net/this_is_me_anyway/article/details/79397018?utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-3.readhide&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-3.readhide)
+* [C与C++之间的相互调用](https://blog.csdn.net/shaosunrise/article/details/81176880?utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.readhide&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.readhide)
 	* 正因为他们两者编译函数的时候，生成的符号规则不一样，所以，在混合编程中，如果我们不进行任何处理，而相互调用的话，必然会出现在链接的时候，找不到符号链接的情况。
 	* 解决方法是声明extern C
