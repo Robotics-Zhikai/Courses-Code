@@ -87,3 +87,52 @@
 	* 正因为他们两者编译函数的时候，生成的符号规则不一样，所以，在混合编程中，如果我们不进行任何处理，而相互调用的话，必然会出现在链接的时候，找不到符号链接的情况。
 	* 解决方法是声明extern C
 	* 结合csapp第七章看
+* C++编译
+	* 单文件编译方法
+		```
+		touch main.cpp //新建一个main.cpp 并写对应的代码
+		g++ main.cpp //编译main.cpp，会产生一个a.out的文件
+		./a.out //可以直接运行
+
+		g++ main.cpp -o hello //会产生一个名为hello的文件
+		./hello //可以直接运行
+		```
+	* 工程编译方法 CMakeLists.txt
+		```
+		//CMakeLists.txt 文件的内容
+		cmake_minimum_required( VERSION 2.8 )
+		project( hello )
+		add_executable( hello main.cpp ) //把main.cpp编译成一个可执行程序
+
+		add_library( hello1 hello.cpp ) //外边有一个hello.cpp文件，生成一个库，会生成一个libhello1.a的文件。需要定义一个hello.h hello.cpp
+		
+		add_executable( useHello useHello.cpp ) //useHello.cpp用到了hello.h中的函数。这是经过了编译器
+		target_link_libraries( useHello hello1 ) //将库与useHello进行链接。这是经过了链接器
+		```
+		```
+		cmake . //在当前目录下生成makefile等一系列中间文件,但这样的话比较乱，把原来的不是自动生成的文件给掩盖了，因此可以考虑在build中进行编译的操作
+		mkdir build
+		cd build 
+		cmake .. 
+		make 	//实际进行编译的操作，输出一个hello的文件 
+		./hello
+		```	
+* [gdb调试coredump](https://blog.csdn.net/qq_39759656/article/details/82858101?utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7EsearchFromBaidu%7Edefault-2.pc_relevant_baidujshouduan&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7EsearchFromBaidu%7Edefault-2.pc_relevant_baidujshouduan)
+	* [coredump产生的几种可能情况](https://blog.csdn.net/ydyang1126/article/details/51769010)
+	* 进程运行时在突然崩溃的那一刻的一个内存快照；操作系统在程序发生异常而异常在进程内部又没有被捕获的情况下，会把进程此刻内存、寄存器状态、运行堆栈等信息转储保存在一个文件里。coredump是一个二进制文件，可以使用gdb进行调试
+	* 可以使用info frame查看栈帧信息
+	* Segmentation fault(core dumped)，比如free一个没有经过malloc的内存或者引用一个非法指针会出现这个fault
+	* 通过设置，可以使得程序coredump的时候在指定路径按照指定的规则命名生成core文件
+	* gdb打开core文件的格式为：gdb CorefilePath corefilename
+	* gdb打开core文件时，如果显示没有调试信息，是因为之前编译的时候没有带上-g选项，没有调试信息是正常的，实际上它也不影响调试core文件。可在gcc时加上-g调试选项.可以用where或者bt查看出现异常的原文件所在详细位置。
+	* 往往正常发布环境是不会带上调试信息的，因为调试信息通常会占用比较大的存储空间，一般都会在编译的时候把-g选项去掉.没有调试信息的情况下可先gdb打开core，然后bt得到coredump堆栈，f num跳到自己写的最下层的函数中，然后输入disassemble打开该函数的反汇编代码，就可从标记的箭头处推测出coredump的位置及原因。
+	
+
+
+
+
+
+
+
+
+		
