@@ -126,7 +126,8 @@
 	* gdb打开core文件的格式为：gdb CorefilePath corefilename
 	* gdb打开core文件时，如果显示没有调试信息，是因为之前编译的时候没有带上-g选项，没有调试信息是正常的，实际上它也不影响调试core文件。可在gcc时加上-g调试选项.可以用where或者bt查看出现异常的原文件所在详细位置。
 	* 往往正常发布环境是不会带上调试信息的，因为调试信息通常会占用比较大的存储空间，一般都会在编译的时候把-g选项去掉.没有调试信息的情况下可先gdb打开core，然后bt得到coredump堆栈，f num跳到自己写的最下层的函数中，然后输入disassemble打开该函数的反汇编代码，就可从标记的箭头处推测出coredump的位置及原因。
-	
+* [weak_ptr浅析](https://blog.csdn.net/albertsh/article/details/82286999)
+	* 用来解决shared_ptr的引用计数机制造成的循环引用
 
 
 
