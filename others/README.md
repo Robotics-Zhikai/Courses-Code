@@ -161,13 +161,22 @@
 		* 监控系统、日志、人机交互界面
 		* 云
 * I/O多路复用
-	* [深入理解select、poll和epoll及区别](https://blog.csdn.net/wteruiycbqqvwt/article/details/90299610?utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.control&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.control)
+	* [深入理解select、poll和epoll及区别,这个看看就行了说的不清楚](https://blog.csdn.net/wteruiycbqqvwt/article/details/90299610?utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.control&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.control)
+	* 这个系列说的非常清楚，底下的评论也非常有用
+		* [网卡接收数据，如何知道接收到了数据](https://zhuanlan.zhihu.com/p/63179839)
+			* Q:数据经由网卡传送到内存（步骤②），然后网卡通过中断信号通知cpu有数据到达，cpu执行中断程序（步骤③）。此处的中断程序主要有两项功能，先将网络数据写入到对应socket的接收缓冲区里面（步骤④），再唤醒进程A（步骤⑤），重新将进程A放入工作队列中。select低效的另一个原因在于程序不知道哪些socket收到数据，只能一个个遍历。进程被唤醒后，程序并不知道哪些socket收到数据，还需要遍历一次。这是不是有矛盾？数据传到内存时，中断程序必然知道哪个socket收到程序，并写入对应缓冲区。那为啥select时中断程序就不知道哪个socket收到程序？
+			* A:内核当然知道哪个socket收到数据，不然select返回的时候也不能正确标识有数据的槽位。问题是select的实现机制造成的，他没有明确指出哪些描述符有数据，哪些没有，这就需要应用程序遍历一次才知道。当然这是历史原因，select这种实现当时应该满足需要了，但没料到网络发展这么迅猛，对性能要求越来越高。其实就是如果想收到数据就知道是哪个socket的话需要耗费空间进行记忆，但是为了不耗费空间，只能是以时间的消耗去遍历。
+		* [内核接收网络数据全过程](https://zhuanlan.zhihu.com/p/64138532)
+		* [epoll原理和流程](https://zhuanlan.zhihu.com/p/64746509)
+			* select返回后还要来个for loop去检查所有fd;epoll返回的只有状态变了的fd.
+			* O(1)是因为epoll的回调机制，在执行epoll_ctl时，除了把socket放到对应的红黑树上之外，还会给内核中断处理程序注册一个回调函数(中断系统里注册一个监听回调函数都是操作系统做的事情)，告诉内核，如果这个句柄的中断到了，就把它放到准备就绪rdlist链表里。所以，当一个socket上有数据到了，内核除了把网卡上的数据copy到内存中，还会把该socket插入到准备就绪链链表里。对于select中断处理程序仅是把数据从网卡拷贝到内存，而epoll多了一个回调函数的执行，即把有事件发生的文件描述符引用放到就绪链表中.
+			* 而所有添加到epoll中的事件都会与设备(网卡)驱动程序建立回调关系，也就是说，当相应的事件发生时会调用这个回调方法。这个回调方法在内核中叫ep_poll_callback,它会将发生的事件添加到rdlist双链表中。
 	* [Linux下I/O多路复用系统调用(select, poll, epoll)介绍](https://zhuanlan.zhihu.com/p/22834126)
+		* 采用回调的方式，效率提升。只有活跃可用的fd才会调用callback函数，也就是说 epoll 只管你“活跃”的连接，而跟连接总数无关，因此在实际的网络环境中，epoll的效率就会远远高于select和poll。
 	* select 
 		* 时间复杂度O(n),无差别轮询所有流，找出能读出数据，或者写入数据的流，对他们进行操作
 		* 每次调用select，都需要把fd集合从用户态拷贝到内核态，这个开销在fd很多时会很大
 		* 每次调用select都需要在内核遍历传递进来的所有fd，这个开销在fd很多时也很大
-		* fdset从用户态复制到内核态，然后内核遍历所有fd，每次访问到fd时都调用poll回调将current进程挂到设备的等待队列中，不同的设备有不同的等待队列，在设备收到一条消息（网络设备）或填写完文件数据（磁盘设备）后，会唤醒设备等待队列上睡眠的进程，这时current便被唤醒了。回调返回时会设置mask，进而由mask设置fdset，标志就绪状态。如果遍历完所有的fd，还没有返回一个可读写的mask掩码，则调用select的进程（也就是current）进入睡眠。当设备驱动发生自身资源可读写后，会唤醒其等待队列上睡眠的进程。如果超过一定的超时时间（schedule_timeout指定），还是没人唤醒，则select重新遍历fd，判断有没有就绪的fd。可能是经过多个schedule_timeout后select才返回。[参考链接](https://blog.csdn.net/wteruiycbqqvwt/article/details/90299610?utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.control&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.control)
 	* poll 
 		* 时间复杂度O(n),它将用户传入的数组拷贝到内核空间，然后查询每个fd对应的设备状态， 但是它没有最大连接数的限制，原因是它是基于链表来存储的.
 		* 管理多个描述符也是进行轮询
@@ -177,11 +186,4 @@
 		* 每次注册新的事件到epoll句柄中时（在epoll_ctl中指定EPOLL_CTL_ADD），会把所有的fd拷贝进内核，而不是在epoll_wait的时候重复拷贝。epoll保证了每个fd在整个过程中只会拷贝一次。
 		* 内存拷贝，利用mmap()文件映射内存加速与内核空间的消息传递；即epoll使用mmap减少复制开销
 		* LT模式下，只要这个fd还有数据可读，每次 epoll_wait都会返回它的事件，提醒用户程序去操作，而在ET（边缘触发）模式中，它只会提示一次，直到下次再有数据流入之前都不会再提示了，无论fd中是否还有数据可读
-	* select，poll，epoll本质上都是同步I/O，因为他们都需要在读写事件就绪后自己负责进行读写，也就是说这个读写过程是阻塞的，而异步I/O则无需自己负责进行读写，异步I/O的实现会负责把数据从内核拷贝到用户空间。  
-
-
-
-
-
-
-		
+	* select，poll，epoll本质上都是同步I/O，因为他们都需要在读写事件就绪后应用层自己负责进行读写，也就是说这个读写过程是阻塞的，而异步I/O则无需自己负责进行读写，异步I/O的实现会负责把数据从内核拷贝到用户空间。 		
