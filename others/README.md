@@ -160,7 +160,24 @@
 		* 传感器驱动
 		* 监控系统、日志、人机交互界面
 		* 云
-
+* I/O多路复用
+	* [深入理解select、poll和epoll及区别](https://blog.csdn.net/wteruiycbqqvwt/article/details/90299610?utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.control&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.control)
+	* [Linux下I/O多路复用系统调用(select, poll, epoll)介绍](https://zhuanlan.zhihu.com/p/22834126)
+	* select 
+		* 时间复杂度O(n),无差别轮询所有流，找出能读出数据，或者写入数据的流，对他们进行操作
+		* 每次调用select，都需要把fd集合从用户态拷贝到内核态，这个开销在fd很多时会很大
+		* 每次调用select都需要在内核遍历传递进来的所有fd，这个开销在fd很多时也很大
+		* fdset从用户态复制到内核态，然后内核遍历所有fd，每次访问到fd时都调用poll回调将current进程挂到设备的等待队列中，不同的设备有不同的等待队列，在设备收到一条消息（网络设备）或填写完文件数据（磁盘设备）后，会唤醒设备等待队列上睡眠的进程，这时current便被唤醒了。回调返回时会设置mask，进而由mask设置fdset，标志就绪状态。如果遍历完所有的fd，还没有返回一个可读写的mask掩码，则调用select的进程（也就是current）进入睡眠。当设备驱动发生自身资源可读写后，会唤醒其等待队列上睡眠的进程。如果超过一定的超时时间（schedule_timeout指定），还是没人唤醒，则select重新遍历fd，判断有没有就绪的fd。可能是经过多个schedule_timeout后select才返回。[参考链接](https://blog.csdn.net/wteruiycbqqvwt/article/details/90299610?utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.control&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.control)
+	* poll 
+		* 时间复杂度O(n),它将用户传入的数组拷贝到内核空间，然后查询每个fd对应的设备状态， 但是它没有最大连接数的限制，原因是它是基于链表来存储的.
+		* 管理多个描述符也是进行轮询
+		* poll和select同样存在一个缺点就是，包含大量文件描述符的数组被整体复制于用户态和内核的地址空间之间，而不论这些文件描述符是否就绪，它的开销随着文件描述符数量的增加而线性增大。
+	* epoll
+		* 时间复杂度O(1),epoll会把哪个流发生了怎样的I/O事件通知我们
+		* 每次注册新的事件到epoll句柄中时（在epoll_ctl中指定EPOLL_CTL_ADD），会把所有的fd拷贝进内核，而不是在epoll_wait的时候重复拷贝。epoll保证了每个fd在整个过程中只会拷贝一次。
+		* 内存拷贝，利用mmap()文件映射内存加速与内核空间的消息传递；即epoll使用mmap减少复制开销
+		* LT模式下，只要这个fd还有数据可读，每次 epoll_wait都会返回它的事件，提醒用户程序去操作，而在ET（边缘触发）模式中，它只会提示一次，直到下次再有数据流入之前都不会再提示了，无论fd中是否还有数据可读
+	* select，poll，epoll本质上都是同步I/O，因为他们都需要在读写事件就绪后自己负责进行读写，也就是说这个读写过程是阻塞的，而异步I/O则无需自己负责进行读写，异步I/O的实现会负责把数据从内核拷贝到用户空间。  
 
 
 
