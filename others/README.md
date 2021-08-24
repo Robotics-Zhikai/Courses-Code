@@ -201,3 +201,12 @@
 	* 通过超线程技术可以实现单个物理核实现线程级并行计算，但是比不上性能两个物理核。---超线程技术实现了单个物理核心同时两个线程，也就是别人常说的虚拟内核数。比如单物理核心实现的双线程，它同时可以处理两个线程，它的物理核心数其实是是1个，通过Hyperthreading技术实现的线程级并行(Thread Lever Parallelism)。
 	* core i7 10 Gen处理器是Six-core/2 computing threads per core。
 * 可以用加锁复制技术将线程不安全的函数变成线程安全的函数。
+* [多线程死锁的产生以及如何避免死锁](https://blog.csdn.net/ls5718/article/details/51896159)
+* [C++11中静态局部变量初始化的线程安全性](https://blog.csdn.net/imred/article/details/89069750)
+	* 在C++11标准中，要求**局部静态变量初始化**具有线程安全性，所以我们可以很容易实现一个线程安全的单例类
+* [C++ 单例模式总结与剖析](https://www.cnblogs.com/sunchaothu/p/10389842.html)
+* [单例模式——饿汉模式](https://blog.csdn.net/lvyibin890/article/details/81943637?utm_source=app)
+	* 饿汉模式：像一个饿汉一样，不管需不需要用到实例都要去创建实例，即在类产生的时候就创建好实例，这是一种空间换时间的做法
+	* 懒汉模式：像一个懒汉一样，需要用到创建实例了程序再去创建实例，不需要创建实例程序就“懒得”去创建实例，这是一种时间换空间的做法，这体现了“懒汉的本性”
+* [#define与const的区别](https://blog.csdn.net/qew2017/article/details/104857491)
+	* #define不做类型检查，没有作用域限制
